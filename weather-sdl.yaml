@@ -1,0 +1,814 @@
+# ============================================================
+# Weather Display — SDL Simulator
+# 800x480 LVGL v9 Dashboard with dummy data
+#
+# Prerequisites (macOS):
+#   brew install sdl2
+#   pip install esphome
+#
+# Run:
+#   esphome run weather-sdl.yaml
+# ============================================================
+
+esphome:
+  name: weather-display-sdl
+  friendly_name: Weather Display SDL
+
+host:
+
+logger:
+  level: INFO
+
+# ---------------------------------------------------------------------------
+# SDL display — software render for layout iteration
+# ---------------------------------------------------------------------------
+display:
+  - platform: sdl
+    id: lvgl_display
+    width: 800
+    height: 480
+    update_interval: 16ms
+
+# ---------------------------------------------------------------------------
+# Fonts
+# ---------------------------------------------------------------------------
+font:
+  - file: "gfonts://Roboto"
+    id: font_xs
+    size: 11
+    bpp: 4
+  - file: "gfonts://Roboto"
+    id: font_sm
+    size: 13
+    bpp: 4
+  - file: "gfonts://Roboto"
+    id: font_md
+    size: 16
+    bpp: 4
+  - file: "gfonts://Roboto"
+    id: font_lg
+    size: 20
+    bpp: 4
+  - file: "gfonts://Roboto"
+    id: font_xl
+    size: 32
+    bpp: 4
+  - file: "gfonts://Roboto"
+    id: font_xxl
+    size: 48
+    bpp: 4
+
+# ---------------------------------------------------------------------------
+# LVGL
+# ---------------------------------------------------------------------------
+lvgl:
+  displays:
+    - lvgl_display
+  color_depth: 16
+  bg_color: 0x0A1628
+  default_font: font_sm
+
+  pages:
+    - id: main_page
+      bg_color: 0x0A1628
+
+      widgets:
+
+        # ==============================================================
+        # STATUS BAR  (full width, 32 px tall)
+        # ==============================================================
+        - obj:
+            id: status_bar
+            x: 0
+            y: 0
+            width: 800
+            height: 32
+            bg_color: 0x0D1F35
+            border_side: BOTTOM
+            border_color: 0x1E3050
+            border_width: 1
+            radius: 0
+            pad_all: 0
+
+            children:
+              - label:
+                  id: lbl_date
+                  text: "Fri, 12 Jun 2026"
+                  align: CENTER
+                  text_color: 0xFFFFFF
+                  text_font: font_md
+              - label:
+                  id: lbl_time
+                  text: "14:57:04"
+                  align: RIGHT_MID
+                  x: -10
+                  text_color: 0xFFFFFF
+                  text_font: font_md
+
+        # ==============================================================
+        # VERTICAL DIVIDER  (between left and right panels)
+        # ==============================================================
+        - obj:
+            x: 450
+            y: 32
+            width: 1
+            height: 448
+            bg_color: 0x1E3050
+            border_width: 0
+            radius: 0
+
+        # ==============================================================
+        # LEFT PANEL  (0–450 px)
+        # ==============================================================
+        - obj:
+            id: left_panel
+            x: 0
+            y: 32
+            width: 450
+            height: 448
+            bg_opa: TRANSPARENT
+            border_width: 0
+            pad_all: 0
+
+            children:
+
+              # --------------------------------------------------------
+              # OUTDOOR TEMPERATURE  (top-left quadrant)
+              # --------------------------------------------------------
+              - obj:
+                  id: outdoor_temp_container
+                  x: 8
+                  y: 8
+                  width: 210
+                  height: 210
+                  bg_opa: TRANSPARENT
+                  border_width: 0
+                  pad_all: 0
+
+                  children:
+                    - arc:
+                        id: arc_outdoor_temp
+                        align: CENTER
+                        width: 192
+                        height: 192
+                        min_value: -20
+                        max_value: 50
+                        value: 16
+                        start_angle: 135
+                        end_angle: 45
+                        adjustable: false
+                        arc_color: 0x1A2B40
+                        arc_width: 10
+                        indicator:
+                          arc_color: 0xFFD700
+                          arc_width: 10
+                        knob:
+                          bg_opa: TRANSPARENT
+                          border_width: 0
+                          width: 0
+                          height: 0
+
+                    - label:
+                        id: lbl_temp_max
+                        text: "↑ 17.5°"
+                        align: TOP_MID
+                        y: 18
+                        text_color: 0xFFD700
+                        text_font: font_xs
+
+                    - label:
+                        id: lbl_outdoor_temp
+                        text: "16.0"
+                        align: CENTER
+                        y: -4
+                        text_color: 0xFFFFFF
+                        text_font: font_xxl
+
+                    - label:
+                        id: lbl_temp_min
+                        text: "↓ 5.8°"
+                        align: BOTTOM_MID
+                        y: -20
+                        text_color: 0xFFD700
+                        text_font: font_xs
+
+              # --------------------------------------------------------
+              # WIND COMPASS  (top-right quadrant)
+              # --------------------------------------------------------
+              - obj:
+                  id: wind_container
+                  x: 228
+                  y: 8
+                  width: 215
+                  height: 210
+                  bg_opa: TRANSPARENT
+                  border_width: 0
+                  pad_all: 0
+
+                  children:
+                    - arc:
+                        id: arc_wind_compass
+                        align: CENTER
+                        width: 192
+                        height: 192
+                        min_value: 0
+                        max_value: 360
+                        value: 52
+                        start_angle: 0
+                        end_angle: 360
+                        adjustable: false
+                        arc_color: 0x152535
+                        arc_width: 2
+                        indicator:
+                          arc_color: 0x7ABBDD
+                          arc_width: 4
+                        knob:
+                          bg_opa: TRANSPARENT
+                          border_width: 0
+                          width: 0
+                          height: 0
+
+                    - label:
+                        id: lbl_wind_dir
+                        text: "NE   52°"
+                        align: TOP_MID
+                        y: 18
+                        text_color: 0xAABBCC
+                        text_font: font_sm
+
+                    - label:
+                        id: lbl_wind_speed
+                        text: "1.7"
+                        align: CENTER
+                        y: -10
+                        text_color: 0xFFFFFF
+                        text_font: font_xxl
+
+                    - label:
+                        text: "m/s"
+                        align: CENTER
+                        y: 28
+                        text_color: 0xAABBCC
+                        text_font: font_sm
+
+                    - label:
+                        id: lbl_wind_gust
+                        text: "Gust   3.1"
+                        align: CENTER
+                        y: 46
+                        text_color: 0xAABBCC
+                        text_font: font_sm
+
+              # --------------------------------------------------------
+              # DIVIDER
+              # --------------------------------------------------------
+              - obj:
+                  x: 5
+                  y: 222
+                  width: 438
+                  height: 1
+                  bg_color: 0x1E3050
+                  border_width: 0
+                  radius: 0
+
+              # --------------------------------------------------------
+              # STATS ROW  (FeelsLike / DewPoint / Humidity / Avg / Gust)
+              # --------------------------------------------------------
+              - obj:
+                  id: stats_row
+                  x: 0
+                  y: 226
+                  width: 450
+                  height: 58
+                  bg_opa: TRANSPARENT
+                  border_width: 0
+                  pad_left: 4
+                  pad_right: 4
+                  pad_top: 2
+                  pad_bottom: 2
+                  layout:
+                    type: FLEX
+                    flex_flow: ROW
+                    flex_align_main: SPACE_EVENLY
+                    flex_align_cross: CENTER
+
+                  children:
+                    - obj:
+                        bg_opa: TRANSPARENT
+                        border_width: 0
+                        height: SIZE_CONTENT
+                        layout:
+                          type: FLEX
+                          flex_flow: COLUMN
+                          flex_align_main: CENTER
+                          flex_align_cross: CENTER
+                        children:
+                          - label:
+                              text: "FeelsLike"
+                              text_color: 0x7788AA
+                              text_font: font_xs
+                          - label:
+                              id: lbl_feels_like
+                              text: "16.0°"
+                              text_color: 0xFFFFFF
+                              text_font: font_lg
+
+                    - obj:
+                        bg_opa: TRANSPARENT
+                        border_width: 0
+                        height: SIZE_CONTENT
+                        layout:
+                          type: FLEX
+                          flex_flow: COLUMN
+                          flex_align_main: CENTER
+                          flex_align_cross: CENTER
+                        children:
+                          - label:
+                              text: "DewPoint"
+                              text_color: 0x7788AA
+                              text_font: font_xs
+                          - label:
+                              id: lbl_dewpoint
+                              text: "9.4°"
+                              text_color: 0xFFFFFF
+                              text_font: font_lg
+
+                    - obj:
+                        bg_opa: TRANSPARENT
+                        border_width: 0
+                        height: SIZE_CONTENT
+                        layout:
+                          type: FLEX
+                          flex_flow: COLUMN
+                          flex_align_main: CENTER
+                          flex_align_cross: CENTER
+                        children:
+                          - label:
+                              text: "Humidity"
+                              text_color: 0x7788AA
+                              text_font: font_xs
+                          - label:
+                              id: lbl_out_humidity
+                              text: "65 %"
+                              text_color: 0xFFFFFF
+                              text_font: font_lg
+
+                    - obj:
+                        bg_opa: TRANSPARENT
+                        border_width: 0
+                        height: SIZE_CONTENT
+                        layout:
+                          type: FLEX
+                          flex_flow: COLUMN
+                          flex_align_main: CENTER
+                          flex_align_cross: CENTER
+                        children:
+                          - label:
+                              text: "10Min.Avg"
+                              text_color: 0x7788AA
+                              text_font: font_xs
+                          - label:
+                              id: lbl_wind_avg
+                              text: "ESE 2.5"
+                              text_color: 0xFFFFFF
+                              text_font: font_lg
+
+                    - obj:
+                        bg_opa: TRANSPARENT
+                        border_width: 0
+                        height: SIZE_CONTENT
+                        layout:
+                          type: FLEX
+                          flex_flow: COLUMN
+                          flex_align_main: CENTER
+                          flex_align_cross: CENTER
+                        children:
+                          - label:
+                              text: "Max Daily Gust"
+                              text_color: 0x7788AA
+                              text_font: font_xs
+                          - label:
+                              id: lbl_max_gust
+                              text: "6.2"
+                              text_color: 0xFFFFFF
+                              text_font: font_lg
+
+              # --------------------------------------------------------
+              # DIVIDER
+              # --------------------------------------------------------
+              - obj:
+                  x: 5
+                  y: 287
+                  width: 438
+                  height: 1
+                  bg_color: 0x1E3050
+                  border_width: 0
+                  radius: 0
+
+              # --------------------------------------------------------
+              # SUN ARC SECTION  (bottom of left panel)
+              # --------------------------------------------------------
+              - obj:
+                  id: sun_section
+                  x: 0
+                  y: 291
+                  width: 450
+                  height: 189
+                  bg_opa: TRANSPARENT
+                  border_width: 0
+                  pad_all: 0
+
+                  children:
+                    # Dome arc: start_angle 180 → end_angle 0 sweeps through top
+                    - arc:
+                        id: arc_sun_position
+                        x: 15
+                        y: 8
+                        width: 330
+                        height: 165
+                        min_value: 0
+                        max_value: 100
+                        value: 65
+                        start_angle: 180
+                        end_angle: 0
+                        adjustable: false
+                        arc_color: 0x1A2B40
+                        arc_width: 2
+                        indicator:
+                          arc_color: 0xFFDD44
+                          arc_width: 2
+                        knob:
+                          bg_opa: TRANSPARENT
+                          border_width: 0
+                          width: 8
+                          height: 8
+
+                    - label:
+                        id: lbl_sunrise
+                        text: "04:27"
+                        x: 10
+                        y: 148
+                        text_color: 0xFFDD44
+                        text_font: font_xs
+
+                    - label:
+                        id: lbl_sunset
+                        text: "21:55"
+                        x: 350
+                        y: 148
+                        text_color: 0xFFDD44
+                        text_font: font_xs
+
+                    - label:
+                        id: lbl_solar_rad
+                        text: "92.18 w/m²"
+                        x: 10
+                        y: 163
+                        text_color: 0xFFFFFF
+                        text_font: font_md
+
+                    - label:
+                        id: lbl_uv
+                        text: "0   UV Index"
+                        x: 240
+                        y: 163
+                        text_color: 0xFFFFFF
+                        text_font: font_md
+
+        # ==============================================================
+        # RIGHT PANEL  (451–800 px)
+        # ==============================================================
+        - obj:
+            id: right_panel
+            x: 451
+            y: 32
+            width: 349
+            height: 448
+            bg_opa: TRANSPARENT
+            border_width: 0
+            pad_all: 0
+
+            children:
+
+              # --------------------------------------------------------
+              # INDOOR SECTION
+              # --------------------------------------------------------
+              - obj:
+                  id: indoor_section
+                  x: 0
+                  y: 0
+                  width: 349
+                  height: 182
+                  bg_opa: TRANSPARENT
+                  border_width: 0
+                  pad_all: 0
+
+                  children:
+                    - label:
+                        text: "Indoor"
+                        align: TOP_MID
+                        y: 3
+                        text_color: 0x7788AA
+                        text_font: font_sm
+
+                    # Indoor Temperature arc
+                    - obj:
+                        id: indoor_temp_container
+                        x: 4
+                        y: 16
+                        width: 168
+                        height: 162
+                        bg_opa: TRANSPARENT
+                        border_width: 0
+                        pad_all: 0
+
+                        children:
+                          - arc:
+                              id: arc_indoor_temp
+                              align: CENTER
+                              width: 148
+                              height: 148
+                              min_value: 0
+                              max_value: 40
+                              value: 26
+                              start_angle: 135
+                              end_angle: 45
+                              adjustable: false
+                              arc_color: 0x1A2B40
+                              arc_width: 8
+                              indicator:
+                                arc_color: 0xFF7744
+                                arc_width: 8
+                              knob:
+                                bg_opa: TRANSPARENT
+                                border_width: 0
+                                width: 0
+                                height: 0
+                          - label:
+                              id: lbl_indoor_temp
+                              text: "26.4"
+                              align: CENTER
+                              y: -5
+                              text_color: 0xFFFFFF
+                              text_font: font_xl
+                          - label:
+                              text: "Temperature"
+                              align: BOTTOM_MID
+                              y: -10
+                              text_color: 0x7788AA
+                              text_font: font_xs
+
+                    # Indoor Humidity arc
+                    - obj:
+                        id: indoor_humidity_container
+                        x: 178
+                        y: 16
+                        width: 168
+                        height: 162
+                        bg_opa: TRANSPARENT
+                        border_width: 0
+                        pad_all: 0
+
+                        children:
+                          - arc:
+                              id: arc_indoor_humidity
+                              align: CENTER
+                              width: 148
+                              height: 148
+                              min_value: 0
+                              max_value: 100
+                              value: 35
+                              start_angle: 135
+                              end_angle: 45
+                              adjustable: false
+                              arc_color: 0x1A2B40
+                              arc_width: 8
+                              indicator:
+                                arc_color: 0x4488FF
+                                arc_width: 8
+                              knob:
+                                bg_opa: TRANSPARENT
+                                border_width: 0
+                                width: 0
+                                height: 0
+                          - label:
+                              id: lbl_indoor_humidity
+                              text: "35 %"
+                              align: CENTER
+                              y: -5
+                              text_color: 0xFFFFFF
+                              text_font: font_xl
+                          - label:
+                              text: "Humidity"
+                              align: BOTTOM_MID
+                              y: -10
+                              text_color: 0x7788AA
+                              text_font: font_xs
+
+              # --------------------------------------------------------
+              # DIVIDER
+              # --------------------------------------------------------
+              - obj:
+                  x: 0
+                  y: 184
+                  width: 349
+                  height: 1
+                  bg_color: 0x1E3050
+                  border_width: 0
+                  radius: 0
+
+              # --------------------------------------------------------
+              # RAIN SECTION
+              # --------------------------------------------------------
+              - obj:
+                  id: rain_section
+                  x: 0
+                  y: 187
+                  width: 349
+                  height: 160
+                  bg_opa: TRANSPARENT
+                  border_width: 0
+                  pad_left: 8
+                  pad_right: 8
+                  pad_top: 6
+                  pad_bottom: 4
+
+                  children:
+                    # Rate header (top-right area)
+                    - label:
+                        text: "Rate"
+                        x: 55
+                        y: 0
+                        text_color: 0x7788AA
+                        text_font: font_xs
+                    - label:
+                        id: lbl_rain_rate
+                        text: "0.0 mm/h"
+                        x: 88
+                        y: 0
+                        text_color: 0xFFFFFF
+                        text_font: font_xs
+
+                    # Large daily rain value (left column)
+                    - label:
+                        id: lbl_daily_rain
+                        text: "0.0"
+                        x: 8
+                        y: 26
+                        text_color: 0xFFFFFF
+                        text_font: font_xl
+                    - label:
+                        text: "mm"
+                        x: 78
+                        y: 46
+                        text_color: 0xFFFFFF
+                        text_font: font_md
+                    - label:
+                        text: "Daily Rain"
+                        x: 4
+                        y: 82
+                        text_color: 0x7788AA
+                        text_font: font_xs
+                    - label:
+                        text: "Piezo"
+                        x: 4
+                        y: 96
+                        text_color: 0x7788AA
+                        text_font: font_xs
+
+                    # Rain detail column (right side)
+                    - label:
+                        text: "Event"
+                        x: 148
+                        y: 16
+                        text_color: 0x7788AA
+                        text_font: font_xs
+                    - label:
+                        id: lbl_rain_event
+                        text: "0.0 mm"
+                        x: 248
+                        y: 16
+                        text_color: 0xFFFFFF
+                        text_font: font_xs
+
+                    - label:
+                        text: "Hourly"
+                        x: 148
+                        y: 36
+                        text_color: 0x7788AA
+                        text_font: font_xs
+                    - label:
+                        id: lbl_rain_hourly
+                        text: "0.0 mm"
+                        x: 248
+                        y: 36
+                        text_color: 0xFFFFFF
+                        text_font: font_xs
+
+                    - label:
+                        text: "Weekly"
+                        x: 148
+                        y: 56
+                        text_color: 0x7788AA
+                        text_font: font_xs
+                    - label:
+                        id: lbl_rain_weekly
+                        text: "12.3 mm"
+                        x: 248
+                        y: 56
+                        text_color: 0xFFFFFF
+                        text_font: font_xs
+
+                    - label:
+                        text: "Monthly"
+                        x: 148
+                        y: 76
+                        text_color: 0x7788AA
+                        text_font: font_xs
+                    - label:
+                        id: lbl_rain_monthly
+                        text: "19.9 mm"
+                        x: 248
+                        y: 76
+                        text_color: 0xFFFFFF
+                        text_font: font_xs
+
+                    - label:
+                        text: "Yearly"
+                        x: 148
+                        y: 96
+                        text_color: 0x7788AA
+                        text_font: font_xs
+                    - label:
+                        id: lbl_rain_yearly
+                        text: "98.3 mm"
+                        x: 248
+                        y: 96
+                        text_color: 0xFFFFFF
+                        text_font: font_xs
+
+              # --------------------------------------------------------
+              # DIVIDER
+              # --------------------------------------------------------
+              - obj:
+                  x: 0
+                  y: 349
+                  width: 349
+                  height: 1
+                  bg_color: 0x1E3050
+                  border_width: 0
+                  radius: 0
+
+              # --------------------------------------------------------
+              # BAROMETER SECTION
+              # --------------------------------------------------------
+              - obj:
+                  id: baro_section
+                  x: 0
+                  y: 352
+                  width: 349
+                  height: 128
+                  bg_opa: TRANSPARENT
+                  border_width: 0
+                  pad_left: 8
+                  pad_right: 8
+                  pad_top: 6
+                  pad_bottom: 4
+
+                  children:
+                    - label:
+                        text: "Barometer Reading"
+                        x: 0
+                        y: 0
+                        text_color: 0x7788AA
+                        text_font: font_xs
+
+                    - label:
+                        text: "REL"
+                        x: 0
+                        y: 22
+                        text_color: 0x7788AA
+                        text_font: font_sm
+
+                    - label:
+                        id: lbl_pressure
+                        text: "1012.1"
+                        x: 32
+                        y: 16
+                        text_color: 0xFFFFFF
+                        text_font: font_xl
+
+                    - label:
+                        text: "hPa"
+                        x: 172
+                        y: 28
+                        text_color: 0xFFFFFF
+                        text_font: font_md
+
+                    - label:
+                        id: lbl_pressure_trend
+                        text: "↘  0.5 hPa"
+                        x: 215
+                        y: 28
+                        text_color: 0xFFFFFF
+                        text_font: font_sm

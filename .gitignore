@@ -6,3 +6,7 @@ build/
 sdkconfig
 sdkconfig.old
 
+# ESPHome build artifacts
+.esphome/
+secrets.yaml
+
