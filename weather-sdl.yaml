@@ -25,8 +25,9 @@ logger:
 display:
   - platform: sdl
     id: lvgl_display
-    width: 800
-    height: 480
+    dimensions:
+      width: 800
+      height: 480
     update_interval: 16ms
 
 # ---------------------------------------------------------------------------
@@ -37,26 +38,46 @@ font:
     id: font_xs
     size: 11
     bpp: 4
+    glyphs: " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz°"
   - file: "gfonts://Roboto"
     id: font_sm
     size: 13
     bpp: 4
+    glyphs: " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz°"
   - file: "gfonts://Roboto"
     id: font_md
     size: 16
     bpp: 4
+    glyphs: " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz°"
   - file: "gfonts://Roboto"
     id: font_lg
     size: 20
     bpp: 4
+    glyphs: " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz°"
   - file: "gfonts://Roboto"
     id: font_xl
     size: 32
     bpp: 4
+    glyphs: " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz°"
   - file: "gfonts://Roboto"
     id: font_xxl
     size: 48
     bpp: 4
+    glyphs: " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz°"
+
+  # MDI icon font — codepoints from materialdesignicons 5.x/6.x webfont
+  # arrow-up F005D · arrow-down F0045 · thermometer F050F · water F0564
+  # weather-sunny F0599 · weather-rainy F0597 · weather-windy F059D
+  - file: "fonts/materialdesignicons-webfont.ttf"
+    id: mdi_sm
+    size: 16
+    bpp: 4
+    glyphs: "\U000F005D\U000F0045\U000F050F\U000F0564\U000F0599\U000F0597\U000F059D"
+  - file: "fonts/materialdesignicons-webfont.ttf"
+    id: mdi_md
+    size: 24
+    bpp: 4
+    glyphs: "\U000F005D\U000F0045\U000F050F\U000F0564\U000F0599\U000F0597\U000F059D"
 
 # ---------------------------------------------------------------------------
 # LVGL
@@ -90,7 +111,7 @@ lvgl:
             radius: 0
             pad_all: 0
 
-            children:
+            widgets:
               - label:
                   id: lbl_date
                   text: "Fri, 12 Jun 2026"
@@ -126,11 +147,11 @@ lvgl:
             y: 32
             width: 450
             height: 448
-            bg_opa: TRANSPARENT
+            bg_opa: TRANSP
             border_width: 0
             pad_all: 0
 
-            children:
+            widgets:
 
               # --------------------------------------------------------
               # OUTDOOR TEMPERATURE  (top-left quadrant)
@@ -141,11 +162,11 @@ lvgl:
                   y: 8
                   width: 210
                   height: 210
-                  bg_opa: TRANSPARENT
+                  bg_opa: TRANSP
                   border_width: 0
                   pad_all: 0
 
-                  children:
+                  widgets:
                     - arc:
                         id: arc_outdoor_temp
                         align: CENTER
@@ -163,18 +184,34 @@ lvgl:
                           arc_color: 0xFFD700
                           arc_width: 10
                         knob:
-                          bg_opa: TRANSPARENT
+                          bg_opa: TRANSP
                           border_width: 0
                           width: 0
                           height: 0
 
-                    - label:
-                        id: lbl_temp_max
-                        text: "↑ 17.5°"
-                        align: TOP_MID
-                        y: 18
-                        text_color: 0xFFD700
-                        text_font: font_xs
+                    # Max temp row — MDI arrow-up + value, centered above main number
+                    - obj:
+                        align: CENTER
+                        y: -42
+                        width: SIZE_CONTENT
+                        height: SIZE_CONTENT
+                        bg_opa: TRANSP
+                        border_width: 0
+                        pad_all: 0
+                        layout:
+                          type: FLEX
+                          flex_flow: ROW
+                          flex_align_cross: CENTER
+                        widgets:
+                          - label:
+                              text: "\U000F005D"
+                              text_font: mdi_sm
+                              text_color: 0xDDDDDD
+                          - label:
+                              id: lbl_temp_max
+                              text: " 17.5°"
+                              text_font: font_md
+                              text_color: 0xDDDDDD
 
                     - label:
                         id: lbl_outdoor_temp
@@ -184,13 +221,29 @@ lvgl:
                         text_color: 0xFFFFFF
                         text_font: font_xxl
 
-                    - label:
-                        id: lbl_temp_min
-                        text: "↓ 5.8°"
-                        align: BOTTOM_MID
-                        y: -20
-                        text_color: 0xFFD700
-                        text_font: font_xs
+                    # Min temp row — MDI arrow-down + value, centered below main number
+                    - obj:
+                        align: CENTER
+                        y: 38
+                        width: SIZE_CONTENT
+                        height: SIZE_CONTENT
+                        bg_opa: TRANSP
+                        border_width: 0
+                        pad_all: 0
+                        layout:
+                          type: FLEX
+                          flex_flow: ROW
+                          flex_align_cross: CENTER
+                        widgets:
+                          - label:
+                              text: "\U000F0045"
+                              text_font: mdi_sm
+                              text_color: 0xDDDDDD
+                          - label:
+                              id: lbl_temp_min
+                              text: " 5.8°"
+                              text_font: font_md
+                              text_color: 0xDDDDDD
 
               # --------------------------------------------------------
               # WIND COMPASS  (top-right quadrant)
@@ -201,61 +254,70 @@ lvgl:
                   y: 8
                   width: 215
                   height: 210
-                  bg_opa: TRANSPARENT
+                  bg_opa: TRANSP
                   border_width: 0
                   pad_all: 0
 
-                  children:
-                    - arc:
+                  widgets:
+                    # Full-circle tick-mark compass ring + direction needle
+                    # rotation:270 puts value 0 (North) at top; needle at value 52 → NE
+                    - meter:
                         id: arc_wind_compass
                         align: CENTER
                         width: 192
                         height: 192
-                        min_value: 0
-                        max_value: 360
-                        value: 52
-                        start_angle: 0
-                        end_angle: 360
-                        adjustable: false
-                        arc_color: 0x152535
-                        arc_width: 2
-                        indicator:
-                          arc_color: 0x7ABBDD
-                          arc_width: 4
-                        knob:
-                          bg_opa: TRANSPARENT
-                          border_width: 0
-                          width: 0
-                          height: 0
+                        bg_opa: TRANSP
+                        border_width: 0
+                        scales:
+                          - range_from: 0
+                            range_to: 360
+                            angle_range: 360
+                            rotation: 270
+                            ticks:
+                              count: 72
+                              width: 1
+                              length: 8
+                              color: 0x2E4A62
+                            indicators:
+                              - line:
+                                  id: wind_needle
+                                  value: 52
+                                  width: 3
+                                  color: 0x7ABBDD
+                                  r_mod: -18
 
+                    # Direction + degrees (top center)
                     - label:
                         id: lbl_wind_dir
                         text: "NE   52°"
                         align: TOP_MID
-                        y: 18
+                        y: 22
                         text_color: 0xAABBCC
                         text_font: font_sm
 
+                    # Wind speed (large, center)
                     - label:
                         id: lbl_wind_speed
                         text: "1.7"
                         align: CENTER
-                        y: -10
+                        y: -12
                         text_color: 0xFFFFFF
                         text_font: font_xxl
 
-                    - label:
-                        text: "m/s"
-                        align: CENTER
-                        y: 28
-                        text_color: 0xAABBCC
-                        text_font: font_sm
-
+                    # Gust reading
                     - label:
                         id: lbl_wind_gust
                         text: "Gust   3.1"
                         align: CENTER
-                        y: 46
+                        y: 26
+                        text_color: 0xAABBCC
+                        text_font: font_sm
+
+                    # Unit
+                    - label:
+                        text: "m/s"
+                        align: CENTER
+                        y: 44
                         text_color: 0xAABBCC
                         text_font: font_sm
 
@@ -279,22 +341,22 @@ lvgl:
                   x: 0
                   y: 226
                   width: 450
-                  height: 58
-                  bg_opa: TRANSPARENT
+                  height: 68
+                  bg_opa: TRANSP
                   border_width: 0
-                  pad_left: 4
-                  pad_right: 4
-                  pad_top: 2
-                  pad_bottom: 2
+                  pad_left: 10
+                  pad_right: 6
+                  pad_top: 4
+                  pad_bottom: 4
                   layout:
                     type: FLEX
                     flex_flow: ROW
                     flex_align_main: SPACE_EVENLY
                     flex_align_cross: CENTER
 
-                  children:
+                  widgets:
                     - obj:
-                        bg_opa: TRANSPARENT
+                        bg_opa: TRANSP
                         border_width: 0
                         height: SIZE_CONTENT
                         layout:
@@ -302,7 +364,7 @@ lvgl:
                           flex_flow: COLUMN
                           flex_align_main: CENTER
                           flex_align_cross: CENTER
-                        children:
+                        widgets:
                           - label:
                               text: "FeelsLike"
                               text_color: 0x7788AA
@@ -314,7 +376,7 @@ lvgl:
                               text_font: font_lg
 
                     - obj:
-                        bg_opa: TRANSPARENT
+                        bg_opa: TRANSP
                         border_width: 0
                         height: SIZE_CONTENT
                         layout:
@@ -322,7 +384,7 @@ lvgl:
                           flex_flow: COLUMN
                           flex_align_main: CENTER
                           flex_align_cross: CENTER
-                        children:
+                        widgets:
                           - label:
                               text: "DewPoint"
                               text_color: 0x7788AA
@@ -334,7 +396,7 @@ lvgl:
                               text_font: font_lg
 
                     - obj:
-                        bg_opa: TRANSPARENT
+                        bg_opa: TRANSP
                         border_width: 0
                         height: SIZE_CONTENT
                         layout:
@@ -342,7 +404,7 @@ lvgl:
                           flex_flow: COLUMN
                           flex_align_main: CENTER
                           flex_align_cross: CENTER
-                        children:
+                        widgets:
                           - label:
                               text: "Humidity"
                               text_color: 0x7788AA
@@ -354,7 +416,7 @@ lvgl:
                               text_font: font_lg
 
                     - obj:
-                        bg_opa: TRANSPARENT
+                        bg_opa: TRANSP
                         border_width: 0
                         height: SIZE_CONTENT
                         layout:
@@ -362,7 +424,7 @@ lvgl:
                           flex_flow: COLUMN
                           flex_align_main: CENTER
                           flex_align_cross: CENTER
-                        children:
+                        widgets:
                           - label:
                               text: "10Min.Avg"
                               text_color: 0x7788AA
@@ -374,7 +436,7 @@ lvgl:
                               text_font: font_lg
 
                     - obj:
-                        bg_opa: TRANSPARENT
+                        bg_opa: TRANSP
                         border_width: 0
                         height: SIZE_CONTENT
                         layout:
@@ -382,7 +444,7 @@ lvgl:
                           flex_flow: COLUMN
                           flex_align_main: CENTER
                           flex_align_cross: CENTER
-                        children:
+                        widgets:
                           - label:
                               text: "Max Daily Gust"
                               text_color: 0x7788AA
@@ -398,7 +460,7 @@ lvgl:
               # --------------------------------------------------------
               - obj:
                   x: 5
-                  y: 287
+                  y: 297
                   width: 438
                   height: 1
                   bg_color: 0x1E3050
@@ -411,14 +473,14 @@ lvgl:
               - obj:
                   id: sun_section
                   x: 0
-                  y: 291
+                  y: 301
                   width: 450
                   height: 189
-                  bg_opa: TRANSPARENT
+                  bg_opa: TRANSP
                   border_width: 0
                   pad_all: 0
 
-                  children:
+                  widgets:
                     # Dome arc: start_angle 180 → end_angle 0 sweeps through top
                     - arc:
                         id: arc_sun_position
@@ -438,7 +500,7 @@ lvgl:
                           arc_color: 0xFFDD44
                           arc_width: 2
                         knob:
-                          bg_opa: TRANSPARENT
+                          bg_opa: TRANSP
                           border_width: 0
                           width: 8
                           height: 8
@@ -484,11 +546,11 @@ lvgl:
             y: 32
             width: 349
             height: 448
-            bg_opa: TRANSPARENT
+            bg_opa: TRANSP
             border_width: 0
             pad_all: 0
 
-            children:
+            widgets:
 
               # --------------------------------------------------------
               # INDOOR SECTION
@@ -499,11 +561,11 @@ lvgl:
                   y: 0
                   width: 349
                   height: 182
-                  bg_opa: TRANSPARENT
+                  bg_opa: TRANSP
                   border_width: 0
                   pad_all: 0
 
-                  children:
+                  widgets:
                     - label:
                         text: "Indoor"
                         align: TOP_MID
@@ -518,11 +580,11 @@ lvgl:
                         y: 16
                         width: 168
                         height: 162
-                        bg_opa: TRANSPARENT
+                        bg_opa: TRANSP
                         border_width: 0
                         pad_all: 0
 
-                        children:
+                        widgets:
                           - arc:
                               id: arc_indoor_temp
                               align: CENTER
@@ -540,7 +602,7 @@ lvgl:
                                 arc_color: 0xFF7744
                                 arc_width: 8
                               knob:
-                                bg_opa: TRANSPARENT
+                                bg_opa: TRANSP
                                 border_width: 0
                                 width: 0
                                 height: 0
@@ -565,11 +627,11 @@ lvgl:
                         y: 16
                         width: 168
                         height: 162
-                        bg_opa: TRANSPARENT
+                        bg_opa: TRANSP
                         border_width: 0
                         pad_all: 0
 
-                        children:
+                        widgets:
                           - arc:
                               id: arc_indoor_humidity
                               align: CENTER
@@ -587,7 +649,7 @@ lvgl:
                                 arc_color: 0x4488FF
                                 arc_width: 8
                               knob:
-                                bg_opa: TRANSPARENT
+                                bg_opa: TRANSP
                                 border_width: 0
                                 width: 0
                                 height: 0
@@ -626,14 +688,14 @@ lvgl:
                   y: 187
                   width: 349
                   height: 160
-                  bg_opa: TRANSPARENT
+                  bg_opa: TRANSP
                   border_width: 0
                   pad_left: 8
                   pad_right: 8
                   pad_top: 6
                   pad_bottom: 4
 
-                  children:
+                  widgets:
                     # Rate header (top-right area)
                     - label:
                         text: "Rate"
@@ -768,14 +830,14 @@ lvgl:
                   y: 352
                   width: 349
                   height: 128
-                  bg_opa: TRANSPARENT
+                  bg_opa: TRANSP
                   border_width: 0
                   pad_left: 8
                   pad_right: 8
                   pad_top: 6
                   pad_bottom: 4
 
-                  children:
+                  widgets:
                     - label:
                         text: "Barometer Reading"
                         x: 0
@@ -807,7 +869,7 @@ lvgl:
 
                     - label:
                         id: lbl_pressure_trend
-                        text: "↘  0.5 hPa"
+                        text: "0.5 hPa"
                         x: 215
                         y: 28
                         text_color: 0xFFFFFF
