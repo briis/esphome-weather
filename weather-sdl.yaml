@@ -13,11 +13,44 @@
 esphome:
   name: weather-display-sdl
   friendly_name: Weather Display SDL
+  on_boot:
+    then:
+      - lambda: 'srand(time(NULL));'
 
 host:
 
 logger:
   level: INFO
+
+# ---------------------------------------------------------------------------
+# Wind direction updater — moves the dot and cardinal label every 30 s
+# ---------------------------------------------------------------------------
+interval:
+  - interval: 30s
+    then:
+      - lambda: |-
+          // Random direction 0–359°
+          int dir = rand() % 360;
+
+          // Map to 16-point cardinal
+          const char* dirs[] = {
+            "N","NNE","NE","ENE","E","ESE","SE","SSE",
+            "S","SSW","SW","WSW","W","WNW","NW","NNW"
+          };
+          int idx = ((int)(dir / 22.5f + 0.5f)) % 16;
+
+          // Meter rotation=270 puts North at top; add dir to get screen angle
+          float angle_rad = fmod(270.0f + dir, 360.0f) * M_PI / 180.0f;
+
+          // Container center (107,105); tick mid radius=92 (outer 96 - half of length 8); dot half=7
+          int x = (int)(107.0f + 92.0f * cosf(angle_rad)) - 7;
+          int y = (int)(105.0f + 92.0f * sinf(angle_rad)) - 7;
+          lv_obj_set_pos(id(wind_dot), x, y);
+
+          // Update cardinal + degrees label
+          char buf[16];
+          snprintf(buf, sizeof(buf), "%s   %d°", dirs[idx], dir);
+          lv_label_set_text(id(lbl_wind_dir), buf);
 
 # ---------------------------------------------------------------------------
 # SDL display — software render for layout iteration
@@ -38,32 +71,40 @@ font:
     id: font_xs
     size: 11
     bpp: 4
-    glyphs: " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz°"
+    glyphs: " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz°æøåÆØÅ"
+  - file:
+      type: gfonts
+      family: Roboto
+      weight: 700
+    id: font_xs_bold
+    size: 11
+    bpp: 4
+    glyphs: " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz°æøåÆØÅ"
   - file: "gfonts://Roboto"
     id: font_sm
     size: 13
     bpp: 4
-    glyphs: " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz°"
+    glyphs: " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz°æøåÆØÅ"
   - file: "gfonts://Roboto"
     id: font_md
     size: 16
     bpp: 4
-    glyphs: " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz°"
+    glyphs: " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz°æøåÆØÅ"
   - file: "gfonts://Roboto"
     id: font_lg
     size: 20
     bpp: 4
-    glyphs: " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz°"
+    glyphs: " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz°æøåÆØÅ"
   - file: "gfonts://Roboto"
     id: font_xl
     size: 32
     bpp: 4
-    glyphs: " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz°"
+    glyphs: " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz°æøåÆØÅ"
   - file: "gfonts://Roboto"
     id: font_xxl
     size: 48
     bpp: 4
-    glyphs: " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz°"
+    glyphs: " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz°æøåÆØÅ"
 
   # MDI icon font — codepoints from materialdesignicons 5.x/6.x webfont
   # arrow-up F005D · arrow-down F0045 · thermometer F050F · water F0564
@@ -127,17 +168,6 @@ lvgl:
                   text_font: font_md
 
         # ==============================================================
-        # VERTICAL DIVIDER  (between left and right panels)
-        # ==============================================================
-        - obj:
-            x: 450
-            y: 32
-            width: 1
-            height: 448
-            bg_color: 0x1E3050
-            border_width: 0
-            radius: 0
-
         # ==============================================================
         # LEFT PANEL  (0–450 px)
         # ==============================================================
@@ -150,6 +180,7 @@ lvgl:
             bg_opa: TRANSP
             border_width: 0
             pad_all: 0
+            scrollbar_mode: 'off'
 
             widgets:
 
@@ -259,8 +290,8 @@ lvgl:
                   pad_all: 0
 
                   widgets:
-                    # Full-circle tick-mark compass ring + direction needle
-                    # rotation:270 puts value 0 (North) at top; needle at value 52 → NE
+                    # Full-circle tick-mark compass ring
+                    # rotation:270 puts value 0 (North) at top
                     - meter:
                         id: arc_wind_compass
                         align: CENTER
@@ -268,6 +299,7 @@ lvgl:
                         height: 192
                         bg_opa: TRANSP
                         border_width: 0
+                        pad_all: 0
                         scales:
                           - range_from: 0
                             range_to: 360
@@ -278,22 +310,56 @@ lvgl:
                               width: 1
                               length: 8
                               color: 0x2E4A62
-                            indicators:
-                              - line:
-                                  id: wind_needle
-                                  value: 52
-                                  width: 3
-                                  color: 0x7ABBDD
-                                  r_mod: -18
 
-                    # Direction + degrees (top center)
+                    # Wind direction dot — perfect circle centered on the tick ring.
+                    # pad_all:0 → tick outer edge r=96, tick length 8 → tick mid r=92.
+                    # Container center (107,105); value 52 (NE) → angle 322°
+                    # → offset (+72,−57) → top-left (173, 41). radius=7 = half of 14 → circle.
+                    # For live use: update x/y via lv_obj_set_pos() from a wind-direction lambda.
+                    - obj:
+                        id: wind_dot
+                        x: 173
+                        y: 41
+                        width: 14
+                        height: 14
+                        radius: 7
+                        bg_color: 0x7ABBDD
+                        border_width: 0
+
+                    # Cardinal points — just inside the tick ring (radius 80 = tick inner 88 − 8)
+                    - label:
+                        text: "N"
+                        align: CENTER
+                        y: -75
+                        text_color: 0x7788AA
+                        text_font: font_xs_bold
+                    - label:
+                        text: "Ø"
+                        align: CENTER
+                        x: 75
+                        text_color: 0x7788AA
+                        text_font: font_xs_bold
+                    - label:
+                        text: "S"
+                        align: CENTER
+                        y: 75
+                        text_color: 0x7788AA
+                        text_font: font_xs_bold
+                    - label:
+                        text: "V"
+                        align: CENTER
+                        x: -75
+                        text_color: 0x7788AA
+                        text_font: font_xs_bold
+
+                    # Direction + degrees (inside ring, above speed)
                     - label:
                         id: lbl_wind_dir
                         text: "NE   52°"
-                        align: TOP_MID
-                        y: 22
+                        align: CENTER
+                        y: -52
                         text_color: 0xAABBCC
-                        text_font: font_sm
+                        text_font: font_md
 
                     # Wind speed (large, center)
                     - label:
@@ -309,29 +375,17 @@ lvgl:
                         id: lbl_wind_gust
                         text: "Gust   3.1"
                         align: CENTER
-                        y: 26
+                        y: 30
                         text_color: 0xAABBCC
-                        text_font: font_sm
+                        text_font: font_md
 
                     # Unit
                     - label:
                         text: "m/s"
                         align: CENTER
-                        y: 44
+                        y: 52
                         text_color: 0xAABBCC
                         text_font: font_sm
-
-              # --------------------------------------------------------
-              # DIVIDER
-              # --------------------------------------------------------
-              - obj:
-                  x: 5
-                  y: 222
-                  width: 438
-                  height: 1
-                  bg_color: 0x1E3050
-                  border_width: 0
-                  radius: 0
 
               # --------------------------------------------------------
               # STATS ROW  (FeelsLike / DewPoint / Humidity / Avg / Gust)
@@ -456,18 +510,6 @@ lvgl:
                               text_font: font_lg
 
               # --------------------------------------------------------
-              # DIVIDER
-              # --------------------------------------------------------
-              - obj:
-                  x: 5
-                  y: 297
-                  width: 438
-                  height: 1
-                  bg_color: 0x1E3050
-                  border_width: 0
-                  radius: 0
-
-              # --------------------------------------------------------
               # SUN ARC SECTION  (bottom of left panel)
               # --------------------------------------------------------
               - obj:
@@ -549,6 +591,7 @@ lvgl:
             bg_opa: TRANSP
             border_width: 0
             pad_all: 0
+            scrollbar_mode: 'off'
 
             widgets:
 
@@ -666,18 +709,6 @@ lvgl:
                               y: -10
                               text_color: 0x7788AA
                               text_font: font_xs
-
-              # --------------------------------------------------------
-              # DIVIDER
-              # --------------------------------------------------------
-              - obj:
-                  x: 0
-                  y: 184
-                  width: 349
-                  height: 1
-                  bg_color: 0x1E3050
-                  border_width: 0
-                  radius: 0
 
               # --------------------------------------------------------
               # RAIN SECTION
@@ -808,18 +839,6 @@ lvgl:
                         y: 96
                         text_color: 0xFFFFFF
                         text_font: font_xs
-
-              # --------------------------------------------------------
-              # DIVIDER
-              # --------------------------------------------------------
-              - obj:
-                  x: 0
-                  y: 349
-                  width: 349
-                  height: 1
-                  bg_color: 0x1E3050
-                  border_width: 0
-                  radius: 0
 
               # --------------------------------------------------------
               # BAROMETER SECTION
