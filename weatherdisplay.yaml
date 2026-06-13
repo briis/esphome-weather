@@ -71,7 +71,7 @@ ota:
 captive_portal:
 
 logger:
-  level: INFO
+  level: ERROR
 
 # ---------------------------------------------------------------------------
 # Time — syncs system clock from HA; on_time_sync gives immediate display
