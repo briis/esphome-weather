@@ -68,7 +68,9 @@ Each named card (row 0–1) has a FLEX COLUMN layout with `flex_align_cross: CEN
 | Background | `0x000000` |
 | Card background | `0x1C2130` |
 | Card separator line | `0x2A3348` |
-| WiFi icon (active) | `0x4CAF50` |
+| WiFi strong / good | `0x4CAF50` (green) |
+| WiFi weak | `0xFFA726` (amber) |
+| WiFi low / off | `0xF44336` (red) |
 | Text primary | `0xFFFFFF` |
 | Text dim / labels | `0x7788AA` |
 
@@ -85,17 +87,31 @@ Each named card (row 0–1) has a FLEX COLUMN layout with `flex_align_cross: CEN
 | `mdi_sm` | MDI | 18 | Small icons |
 | `mdi_md` | MDI | 24 | Status bar WiFi icon |
 
-MDI codepoints in use: `F092F` (wifi), `F005D` (arrow-up), `F0045` (arrow-down),
-`F050F` (thermometer), `F0564` (water), `F0599` (weather-sunny),
-`F0597` (weather-rainy), `F059D` (weather-windy)
+MDI codepoints in use:
+
+| Codepoint | Icon | Use |
+| --- | --- | --- |
+| `F092B` | wifi-off | No signal / disconnected |
+| `F091F` | wifi-strength-1 | Low (< −80 dBm) |
+| `F0922` | wifi-strength-2 | Weak (−80 to −67 dBm) |
+| `F0925` | wifi-strength-3 | Good (−67 to −55 dBm) |
+| `F0928` | wifi-strength-4 | Strong (> −55 dBm) |
+| `F092F` | wifi | Generic fallback |
+| `F005D` | arrow-up | Max value indicator |
+| `F0045` | arrow-down | Min value indicator |
+| `F050F` | thermometer | Temperature |
+| `F0564` | water | Humidity / rain |
+| `F0599` | weather-sunny | Sun / UV |
+| `F0597` | weather-rainy | Rain |
+| `F059D` | weather-windy | Wind |
 
 ## Widget IDs
 
 ### Status bar
 
-- `lbl_wifi` — WiFi icon, green when connected
-- `lbl_title` — "Vejret i Holmeenegen"
-- `lbl_time` — current time HH:MM
+- `lbl_wifi` — WiFi strength icon (MDI) + colour driven by RSSI. Initial state: wifi-off red. SDL simulates random strength every 30 s; hardware uses `wifi_signal` sensor (60 s) + `on_connect`/`on_disconnect` for immediate feedback.
+- `lbl_title` — "Vejret i Holmeenegen" (static)
+- `lbl_time` — HH:MM, updated every 60 s via `interval:` in common (uses `::time(nullptr)`). SDL sets correct time on `on_boot`; hardware gets accurate time after `homeassistant` time component syncs (`on_time_sync`).
 
 ### Grid cards (row 0)
 
@@ -138,10 +154,16 @@ Board: Waveshare ESP32-S3-Touch-LCD-7 · 16 MB flash · 8 MB octal PSRAM
 
 This means pushing an update to `weatherdisplay-common.yaml` on `main` propagates to the device on next compile/OTA without reflashing the hardware target.
 
+## Known gotchas
+
+- **`::time(nullptr)` required in lambdas** — the `homeassistant` time component introduces the `esphome::time` namespace, making a bare `time()` call ambiguous. Always use `::time(nullptr)` to reference the C stdlib function.
+- **`lv_obj_set_style_text_color` selector** — use `0` (not `LV_PART_MAIN`) for the selector argument in lambdas to avoid header-include issues.
+
 ## Phase 2 plan
 
 - [x] ESP32-S3 hardware config — verified with real board config
 - [x] Flash to hardware — display and touch confirmed working
-- [ ] WiFi + HA API integration (meteobridgesql integration)
-- [ ] Populate card content areas with real sensor data
-- [ ] Replace `lbl_time` dummy text with ESPHome time component
+- [x] Live clock (`lbl_time`) — updates every 60 s, correct on both SDL and hardware
+- [x] WiFi signal icon (`lbl_wifi`) — RSSI-based icon + colour, simulated on SDL
+- [ ] Populate card content areas with real HA sensor data (meteobridgesql)
+- [ ] Add HA API sensor mappings to `weatherdisplay-common.yaml`
