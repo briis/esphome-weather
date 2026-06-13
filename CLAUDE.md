@@ -58,21 +58,23 @@ Rows 0–1 are roughly twice the height of row 2 (placeholder strip).
 Each named card (row 0–1) has a FLEX COLUMN layout with `flex_align_cross: CENTER`:
 
 1. Title label (`font_sm`, white, `pad_bottom: 2`)
-2. 1 px separator obj (230 px wide, `0x2A3348`, centered)
+2. 1 px separator obj (230 px wide, `${clr_separator}`, centered)
 3. Content area (to be added per card in later phases)
 
 ## Color palette
 
-| Role | Hex |
-| --- | --- |
-| Background | `0x000000` |
-| Card background | `0x1C2130` |
-| Card separator line | `0x2A3348` |
-| WiFi strong / good | `0x4CAF50` (green) |
-| WiFi weak | `0xFFA726` (amber) |
-| WiFi low / off | `0xF44336` (red) |
-| Text primary | `0xFFFFFF` |
-| Text dim / labels | `0x7788AA` |
+Colors are defined as `substitutions:` at the top of `weatherdisplay-common.yaml`. Change the hex value there to retheme globally; individual target files can override any key in their own `substitutions:` block.
+
+| Substitution ID | Hex | Role |
+| --- | --- | --- |
+| `clr_bg` | `0x000000` | Background |
+| `clr_card` | `0x1C2130` | Card background |
+| `clr_separator` | `0x2A3348` | Card separator line + status bar border |
+| `clr_text` | `0xFFFFFF` | Text primary |
+| `clr_text_dim` | `0x7788AA` | Text dim / labels |
+| `clr_wifi_good` | `0x4CAF50` | WiFi strong / good (green) |
+| `clr_wifi_weak` | `0xFFA726` | WiFi weak (amber) |
+| `clr_wifi_bad` | `0xF44336` | WiFi low / off (red) |
 
 ## Fonts
 
