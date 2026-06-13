@@ -19,6 +19,17 @@ substitutions:
   clr_wifi_weak: "0xFFA726"   # amber  — WiFi weak (−80 to −67 dBm)
   clr_wifi_bad:  "0xF44336"   # red    — WiFi low / disconnected (< −80 dBm)
 
+  # Temperature circle — color threshold based on current temperature
+  clr_temp_cold: "0x2196F3"   # blue   — below 5°C
+  clr_temp_cool: "0xFFC107"   # amber  — 5 to 14°C
+  clr_temp_warm: "0xFF9800"   # orange — 15 to 19°C
+  clr_temp_hot:  "0xF44336"   # red    — 20°C and above
+
+  # Temperature — entity ID + attribute names on that same entity
+  ha_temp_current: "sensor.holmeengen_sensor_temperature"
+  ha_temp_high:    "max_temperature_today"   # attribute of ha_temp_current
+  ha_temp_low:     "min_temperature_today"   # attribute of ha_temp_current
+
 # ---------------------------------------------------------------------------
 # Fonts
 # ---------------------------------------------------------------------------
@@ -179,6 +190,7 @@ lvgl:
                   pad_right: 10
                   pad_top: 8
                   pad_bottom: 8
+                  scrollbar_mode: "OFF"
                   layout:
                     type: FLEX
                     flex_flow: COLUMN
@@ -195,6 +207,86 @@ lvgl:
                         border_width: 0
                         bg_color: ${clr_separator}
                         pad_all: 0
+                    - obj:
+                        id: temp_content
+                        width: SIZE_CONTENT
+                        height: SIZE_CONTENT
+                        bg_opa: TRANSP
+                        border_width: 0
+                        pad_all: 0
+                        margin_top: 6
+                        layout:
+                          type: FLEX
+                          flex_flow: ROW
+                          flex_align_main: CENTER
+                          flex_align_cross: CENTER
+                        widgets:
+                          - obj:
+                              id: temp_high_panel
+                              width: SIZE_CONTENT
+                              height: SIZE_CONTENT
+                              bg_opa: TRANSP
+                              border_width: 0
+                              pad_top: 0
+                              pad_bottom: 0
+                              pad_left: 0
+                              pad_right: 10
+                              layout:
+                                type: FLEX
+                                flex_flow: COLUMN
+                                flex_align_main: CENTER
+                                flex_align_cross: CENTER
+                              widgets:
+                                - label:
+                                    text: "\U000F005D"
+                                    text_font: mdi_sm
+                                    text_color: ${clr_temp_hot}
+                                - label:
+                                    id: lbl_temp_high
+                                    text: "--°"
+                                    text_color: ${clr_text}
+                                    text_font: font_md
+                          - obj:
+                              id: circle_temp
+                              width: 100
+                              height: 100
+                              radius: 50
+                              bg_opa: TRANSP
+                              border_width: 6
+                              border_color: ${clr_temp_cold}
+                              pad_all: 0
+                              widgets:
+                                - label:
+                                    id: lbl_temp_current
+                                    align: CENTER
+                                    text: "--°"
+                                    text_color: ${clr_text}
+                                    text_font: font_lg
+                          - obj:
+                              id: temp_low_panel
+                              width: SIZE_CONTENT
+                              height: SIZE_CONTENT
+                              bg_opa: TRANSP
+                              border_width: 0
+                              pad_top: 0
+                              pad_bottom: 0
+                              pad_left: 10
+                              pad_right: 0
+                              layout:
+                                type: FLEX
+                                flex_flow: COLUMN
+                                flex_align_main: CENTER
+                                flex_align_cross: CENTER
+                              widgets:
+                                - label:
+                                    text: "\U000F0045"
+                                    text_font: mdi_sm
+                                    text_color: ${clr_temp_cold}
+                                - label:
+                                    id: lbl_temp_low
+                                    text: "--°"
+                                    text_color: ${clr_text}
+                                    text_font: font_md
 
               - obj:
                   id: card_wind

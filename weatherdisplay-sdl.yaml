@@ -35,6 +35,21 @@ esphome:
           int lvl = rand() % 5;
           lv_label_set_text(id(lbl_wifi), icons[lvl]);
           lv_obj_set_style_text_color(id(lbl_wifi), lv_color_hex(colors[lvl]), 0);
+      - lambda: |-
+          // Mock temperature data for SDL visual testing
+          auto fmt = [](char* buf, int n, float v) {
+            snprintf(buf, n, "%.1f°", v);
+            for (char* p = buf; *p; p++) if (*p == '.') { *p = ','; break; }
+          };
+          char buf[12];
+          float temp = 12.5f;
+          fmt(buf, sizeof(buf), temp);
+          lv_label_set_text(id(lbl_temp_current), buf);
+          lv_obj_set_style_border_color(id(circle_temp), lv_color_hex(${clr_temp_cool}), 0);
+          fmt(buf, sizeof(buf), 18.3f);
+          lv_label_set_text(id(lbl_temp_high), buf);
+          fmt(buf, sizeof(buf), 5.2f);
+          lv_label_set_text(id(lbl_temp_low), buf);
 
 host:
 

@@ -218,6 +218,53 @@ sensor:
             lv_label_set_text(id(lbl_wifi), icon);
             lv_obj_set_style_text_color(id(lbl_wifi), color, 0);
 
+  # ---------------------------------------------------------------------------
+  # Temperature — current, daily high and low
+  # ---------------------------------------------------------------------------
+  - platform: homeassistant
+    id: sensor_temp_current
+    entity_id: ${ha_temp_current}
+    on_value:
+      then:
+        - lambda: |-
+            auto fmt = [](char* buf, int n, float v) {
+              snprintf(buf, n, "%.1f°", v);
+              for (char* p = buf; *p; p++) if (*p == '.') { *p = ','; break; }
+            };
+            char buf[12];
+            fmt(buf, sizeof(buf), x);
+            lv_label_set_text(id(lbl_temp_current), buf);
+            lv_color_t c;
+            if (x < 5.0f)       c = lv_color_hex(${clr_temp_cold});
+            else if (x < 15.0f) c = lv_color_hex(${clr_temp_cool});
+            else if (x < 20.0f) c = lv_color_hex(${clr_temp_warm});
+            else                 c = lv_color_hex(${clr_temp_hot});
+            lv_obj_set_style_border_color(id(circle_temp), c, 0);
+
+  - platform: homeassistant
+    id: sensor_temp_high
+    entity_id: ${ha_temp_current}
+    attribute: ${ha_temp_high}
+    on_value:
+      then:
+        - lambda: |-
+            char buf[12];
+            snprintf(buf, sizeof(buf), "%.1f°", x);
+            for (char* p = buf; *p; p++) if (*p == '.') { *p = ','; break; }
+            lv_label_set_text(id(lbl_temp_high), buf);
+
+  - platform: homeassistant
+    id: sensor_temp_low
+    entity_id: ${ha_temp_current}
+    attribute: ${ha_temp_low}
+    on_value:
+      then:
+        - lambda: |-
+            char buf[12];
+            snprintf(buf, sizeof(buf), "%.1f°", x);
+            for (char* p = buf; *p; p++) if (*p == '.') { *p = ','; break; }
+            lv_label_set_text(id(lbl_temp_low), buf);
+
 packages:
   remote_package_files:
     url: https://git.digitalhomes.dk/briis/esphome-weather
