@@ -66,7 +66,7 @@ interval:
       - lvgl.label.update:
           id: lbl_time
           text: !lambda |-
-            time_t now = time(nullptr);
+            time_t now = ::time(nullptr);
             struct tm *t = localtime(&now);
             char buf[6];
             strftime(buf, sizeof(buf), "%H:%M", t);

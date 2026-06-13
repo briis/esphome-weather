@@ -19,7 +19,7 @@ esphome:
       - lvgl.label.update:
           id: lbl_time
           text: !lambda |-
-            time_t now = time(nullptr);
+            time_t now = ::time(nullptr);
             struct tm *t = localtime(&now);
             char buf[6];
             strftime(buf, sizeof(buf), "%H:%M", t);
@@ -31,7 +31,7 @@ esphome:
           static uint32_t colors[] = {
             0xF44336, 0xF44336, 0xFFA726, 0x4CAF50, 0x4CAF50
           };
-          srand(time(nullptr));
+          srand(::time(nullptr));
           int lvl = rand() % 5;
           lv_label_set_text(id(lbl_wifi), icons[lvl]);
           lv_obj_set_style_text_color(id(lbl_wifi), lv_color_hex(colors[lvl]), 0);
