@@ -58,6 +58,8 @@ ota:
       then:
         switch.turn_off: backlight
 
+captive_portal:
+
 logger:
   level: INFO
 
