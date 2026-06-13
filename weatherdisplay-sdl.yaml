@@ -29,7 +29,7 @@ esphome:
             "\U000F092B", "\U000F091F", "\U000F0922", "\U000F0925", "\U000F0928"
           };
           static uint32_t colors[] = {
-            0xF44336, 0xF44336, 0xFFA726, 0x4CAF50, 0x4CAF50
+            ${clr_wifi_bad}, ${clr_wifi_bad}, ${clr_wifi_weak}, ${clr_wifi_good}, ${clr_wifi_good}
           };
           srand(::time(nullptr));
           int lvl = rand() % 5;
@@ -57,7 +57,7 @@ interval:
             "\U000F092B", "\U000F091F", "\U000F0922", "\U000F0925", "\U000F0928"
           };
           static uint32_t colors[] = {
-            0xF44336, 0xF44336, 0xFFA726, 0x4CAF50, 0x4CAF50
+            ${clr_wifi_bad}, ${clr_wifi_bad}, ${clr_wifi_weak}, ${clr_wifi_good}, ${clr_wifi_good}
           };
           int lvl = rand() % 5;
           lv_label_set_text(id(lbl_wifi), icons[lvl]);

@@ -7,6 +7,19 @@
 # ============================================================
 
 # ---------------------------------------------------------------------------
+# Color palette — edit hex values here to change the display theme
+# ---------------------------------------------------------------------------
+substitutions:
+  clr_bg:        "0x000000"   # screen / lvgl background
+  clr_card:      "0x1C2130"   # card background
+  clr_separator: "0x2A3348"   # card separator line + status bar border
+  clr_text:      "0xFFFFFF"   # primary text
+  clr_text_dim:  "0x7788AA"   # dim labels (sensor sub-labels etc.)
+  clr_wifi_good: "0x4CAF50"   # green  — WiFi strong / good (≥ −67 dBm)
+  clr_wifi_weak: "0xFFA726"   # amber  — WiFi weak (−80 to −67 dBm)
+  clr_wifi_bad:  "0xF44336"   # red    — WiFi low / disconnected (< −80 dBm)
+
+# ---------------------------------------------------------------------------
 # Fonts
 # ---------------------------------------------------------------------------
 font:
@@ -79,12 +92,12 @@ lvgl:
   displays:
     - lvgl_display
   color_depth: 16
-  bg_color: 0x000000
+  bg_color: ${clr_bg}
   default_font: font_sm
 
   pages:
     - id: main_page
-      bg_color: 0x000000
+      bg_color: ${clr_bg}
 
       widgets:
 
@@ -98,9 +111,9 @@ lvgl:
             y: 0
             width: 800
             height: 44
-            bg_color: 0x000000
+            bg_color: ${clr_bg}
             border_side: BOTTOM
-            border_color: 0x2A3348
+            border_color: ${clr_separator}
             border_width: 1
             radius: 0
             pad_all: 0
@@ -112,19 +125,19 @@ lvgl:
                   text_font: mdi_md
                   align: LEFT_MID
                   x: 10
-                  text_color: 0xF44336
+                  text_color: ${clr_wifi_bad}
               - label:
                   id: lbl_title
                   text: "Vejret i Holmeenegen"
                   align: CENTER
-                  text_color: 0xFFFFFF
+                  text_color: ${clr_text}
                   text_font: font_lg
               - label:
                   id: lbl_time
                   text: "07:44"
                   align: RIGHT_MID
                   x: -10
-                  text_color: 0xFFFFFF
+                  text_color: ${clr_text}
                   text_font: font_lg
 
         # ==============================================================
@@ -159,7 +172,7 @@ lvgl:
                   grid_cell_row_pos: 0
                   grid_cell_x_align: STRETCH
                   grid_cell_y_align: STRETCH
-                  bg_color: 0x1C2130
+                  bg_color: ${clr_card}
                   border_width: 0
                   radius: 10
                   pad_left: 10
@@ -173,14 +186,14 @@ lvgl:
                   widgets:
                     - label:
                         text: "Temperatur"
-                        text_color: 0xFFFFFF
+                        text_color: ${clr_text}
                         text_font: font_sm
                         pad_bottom: 2
                     - obj:
                         width: 230
                         height: 1
                         border_width: 0
-                        bg_color: 0x2A3348
+                        bg_color: ${clr_separator}
                         pad_all: 0
 
               - obj:
@@ -189,7 +202,7 @@ lvgl:
                   grid_cell_row_pos: 0
                   grid_cell_x_align: STRETCH
                   grid_cell_y_align: STRETCH
-                  bg_color: 0x1C2130
+                  bg_color: ${clr_card}
                   border_width: 0
                   radius: 10
                   pad_left: 10
@@ -203,14 +216,14 @@ lvgl:
                   widgets:
                     - label:
                         text: "Vind"
-                        text_color: 0xFFFFFF
+                        text_color: ${clr_text}
                         text_font: font_sm
                         pad_bottom: 2
                     - obj:
                         width: 230
                         height: 1
                         border_width: 0
-                        bg_color: 0x2A3348
+                        bg_color: ${clr_separator}
                         pad_all: 0
 
               - obj:
@@ -219,7 +232,7 @@ lvgl:
                   grid_cell_row_pos: 0
                   grid_cell_x_align: STRETCH
                   grid_cell_y_align: STRETCH
-                  bg_color: 0x1C2130
+                  bg_color: ${clr_card}
                   border_width: 0
                   radius: 10
                   pad_left: 10
@@ -233,14 +246,14 @@ lvgl:
                   widgets:
                     - label:
                         text: "Vejrudsigt"
-                        text_color: 0xFFFFFF
+                        text_color: ${clr_text}
                         text_font: font_sm
                         pad_bottom: 2
                     - obj:
                         width: 230
                         height: 1
                         border_width: 0
-                        bg_color: 0x2A3348
+                        bg_color: ${clr_separator}
                         pad_all: 0
 
               # ──────────────────────── Row 1 ────────────────────────
@@ -251,7 +264,7 @@ lvgl:
                   grid_cell_row_pos: 1
                   grid_cell_x_align: STRETCH
                   grid_cell_y_align: STRETCH
-                  bg_color: 0x1C2130
+                  bg_color: ${clr_card}
                   border_width: 0
                   radius: 10
                   pad_left: 10
@@ -265,14 +278,14 @@ lvgl:
                   widgets:
                     - label:
                         text: "Regn"
-                        text_color: 0xFFFFFF
+                        text_color: ${clr_text}
                         text_font: font_sm
                         pad_bottom: 2
                     - obj:
                         width: 230
                         height: 1
                         border_width: 0
-                        bg_color: 0x2A3348
+                        bg_color: ${clr_separator}
                         pad_all: 0
 
               - obj:
@@ -281,7 +294,7 @@ lvgl:
                   grid_cell_row_pos: 1
                   grid_cell_x_align: STRETCH
                   grid_cell_y_align: STRETCH
-                  bg_color: 0x1C2130
+                  bg_color: ${clr_card}
                   border_width: 0
                   radius: 10
                   pad_left: 10
@@ -295,14 +308,14 @@ lvgl:
                   widgets:
                     - label:
                         text: "Barometer"
-                        text_color: 0xFFFFFF
+                        text_color: ${clr_text}
                         text_font: font_sm
                         pad_bottom: 2
                     - obj:
                         width: 230
                         height: 1
                         border_width: 0
-                        bg_color: 0x2A3348
+                        bg_color: ${clr_separator}
                         pad_all: 0
 
               - obj:
@@ -311,7 +324,7 @@ lvgl:
                   grid_cell_row_pos: 1
                   grid_cell_x_align: STRETCH
                   grid_cell_y_align: STRETCH
-                  bg_color: 0x1C2130
+                  bg_color: ${clr_card}
                   border_width: 0
                   radius: 10
                   pad_left: 10
@@ -325,14 +338,14 @@ lvgl:
                   widgets:
                     - label:
                         text: "Sol & UV"
-                        text_color: 0xFFFFFF
+                        text_color: ${clr_text}
                         text_font: font_sm
                         pad_bottom: 2
                     - obj:
                         width: 230
                         height: 1
                         border_width: 0
-                        bg_color: 0x2A3348
+                        bg_color: ${clr_separator}
                         pad_all: 0
 
               # ──────────────────────── Row 2 (placeholder) ──────────
@@ -343,7 +356,7 @@ lvgl:
                   grid_cell_row_pos: 2
                   grid_cell_x_align: STRETCH
                   grid_cell_y_align: STRETCH
-                  bg_color: 0x1C2130
+                  bg_color: ${clr_card}
                   border_width: 0
                   radius: 10
                   pad_all: 8
@@ -354,7 +367,7 @@ lvgl:
                   grid_cell_row_pos: 2
                   grid_cell_x_align: STRETCH
                   grid_cell_y_align: STRETCH
-                  bg_color: 0x1C2130
+                  bg_color: ${clr_card}
                   border_width: 0
                   radius: 10
                   pad_all: 8
@@ -365,7 +378,7 @@ lvgl:
                   grid_cell_row_pos: 2
                   grid_cell_x_align: STRETCH
                   grid_cell_y_align: STRETCH
-                  bg_color: 0x1C2130
+                  bg_color: ${clr_card}
                   border_width: 0
                   radius: 10
                   pad_all: 8

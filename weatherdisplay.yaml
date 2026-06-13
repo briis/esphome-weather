@@ -50,12 +50,12 @@ wifi:
     then:
       - lambda: |-
           lv_label_set_text(id(lbl_wifi), "\U000F0928");
-          lv_obj_set_style_text_color(id(lbl_wifi), lv_color_hex(0x4CAF50), 0);
+          lv_obj_set_style_text_color(id(lbl_wifi), lv_color_hex(${clr_wifi_good}), 0);
   on_disconnect:
     then:
       - lambda: |-
           lv_label_set_text(id(lbl_wifi), "\U000F092B");
-          lv_obj_set_style_text_color(id(lbl_wifi), lv_color_hex(0xF44336), 0);
+          lv_obj_set_style_text_color(id(lbl_wifi), lv_color_hex(${clr_wifi_bad}), 0);
 
 api:
   encryption:
@@ -207,13 +207,13 @@ sensor:
             const char* icon;
             lv_color_t color;
             if (x >= -55) {
-              icon = "\U000F0928"; color = lv_color_hex(0x4CAF50);  // strong — green
+              icon = "\U000F0928"; color = lv_color_hex(${clr_wifi_good});  // strong — green
             } else if (x >= -67) {
-              icon = "\U000F0925"; color = lv_color_hex(0x4CAF50);  // good — green
+              icon = "\U000F0925"; color = lv_color_hex(${clr_wifi_good});  // good — green
             } else if (x >= -80) {
-              icon = "\U000F0922"; color = lv_color_hex(0xFFA726);  // weak — amber
+              icon = "\U000F0922"; color = lv_color_hex(${clr_wifi_weak});  // weak — amber
             } else {
-              icon = "\U000F091F"; color = lv_color_hex(0xF44336);  // low — red
+              icon = "\U000F091F"; color = lv_color_hex(${clr_wifi_bad});  // low — red
             }
             lv_label_set_text(id(lbl_wifi), icon);
             lv_obj_set_style_text_color(id(lbl_wifi), color, 0);
