@@ -6,10 +6,22 @@
 # Flash:
 #   esphome run weatherdisplay.yaml
 # ============================================================
+substitutions:
+  name: "Weather Display"
+  device: "weatherdisplay"
+  version: "0.1.0"
+  created_by: "Bjarne Riis"
 
 esphome:
-  name: weatherdisplay
-  friendly_name: Weather Display
+  name: "${device}"
+  friendly_name: "${name}"
+  project:
+    name: "briis.${device}"
+    version: "${version}"
+  platformio_options:
+    build_flags: "-DBOARD_HAS_PSRAM"
+    board_build.esp-idf.memory_type: qio_opi
+    board_build.flash_mode: dio
 
 # ---------------------------------------------------------------------------
 # ESP32-S3 — esp-idf required for mipi_rgb display support
@@ -42,6 +54,9 @@ api:
 ota:
   - platform: esphome
     password: !secret ota_password
+    on_begin:
+      then:
+        switch.turn_off: backlight
 
 logger:
   level: INFO
@@ -140,10 +155,23 @@ touchscreen:
 
 switch:
   - platform: gpio
-    pin: GPIO2
     id: backlight
-    name: "Backlight"
+    name: "Baggrundslys"
+    pin:
+      ch422g: io_ex
+      number: 2
+      allow_other_uses: true
+      mode:
+        output: true
+      inverted: false
     restore_mode: ALWAYS_ON
 
 packages:
-  common: !include weatherdisplay-common.yaml
+  remote_package_files:
+    url: https://git.digitalhomes.dk/briis/esphome-weather
+    files: 
+      - weatherdisplay-common.yaml
+    ref: main
+    username: briis
+    password: !secret forgejo_token
+    refresh: 10s
