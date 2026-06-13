@@ -30,6 +30,12 @@ substitutions:
   ha_temp_high:    "max_temperature_today"
   ha_temp_low:     "min_temperature_today"
 
+  # Wind sensor entity IDs — override in weatherdisplay.yaml
+  ha_wind_speed:       "sensor.unknown_wind_speed"
+  ha_wind_bearing:     "sensor.unknown_wind_bearing"
+  ha_wind_gust:        "sensor.unknown_wind_gust"
+  ha_wind_bearing_avg: "sensor.unknown_wind_bearing_avg"
+
 # ---------------------------------------------------------------------------
 # Fonts
 # ---------------------------------------------------------------------------
@@ -301,6 +307,7 @@ lvgl:
                   pad_right: 10
                   pad_top: 8
                   pad_bottom: 8
+                  scrollbar_mode: "OFF"
                   layout:
                     type: FLEX
                     flex_flow: COLUMN
@@ -317,6 +324,103 @@ lvgl:
                         border_width: 0
                         bg_color: ${clr_separator}
                         pad_all: 0
+                    - obj:
+                        id: wind_gauge
+                        width: 114
+                        height: 114
+                        bg_opa: TRANSP
+                        border_width: 0
+                        pad_all: 0
+                        margin_top: 0
+                        widgets:
+                          # Tick ring — slightly smaller so it sits inside the blue border
+                          - meter:
+                              id: wind_meter
+                              width: 100
+                              height: 100
+                              align: CENTER
+                              bg_opa: TRANSP
+                              border_width: 0
+                              pad_all: 0
+                              scales:
+                                  range_from: 0
+                                  range_to: 360
+                                  angle_range: 360
+                                  rotation: 270
+                                  ticks:
+                                    count: 72
+                                    width: 1
+                                    length: 5
+                                    color: ${clr_separator}
+                          # Blue outer ring — drawn after meter so it sits on top
+                          - obj:
+                              width: 114
+                              height: 114
+                              align: CENTER
+                              radius: 57
+                              bg_opa: TRANSP
+                              border_width: 3
+                              border_color: "0x2196F3"
+                              pad_all: 0
+                          # Current bearing — thick arc segment on the ring (drawn on top of blue ring)
+                          - arc:
+                              id: arc_wind_current
+                              width: 114
+                              height: 114
+                              align: CENTER
+                              bg_opa: TRANSP
+                              border_width: 0
+                              pad_all: 0
+                              min_value: 0
+                              max_value: 100
+                              value: 100
+                              start_angle: 314
+                              end_angle: 330
+                              arc_color: ${clr_text}
+                              arc_width: 7
+                          # Average bearing — thinner arc segment on the ring
+                          - arc:
+                              id: arc_wind_avg
+                              width: 114
+                              height: 114
+                              align: CENTER
+                              bg_opa: TRANSP
+                              border_width: 0
+                              pad_all: 0
+                              min_value: 0
+                              max_value: 100
+                              value: 100
+                              start_angle: 307
+                              end_angle: 323
+                              arc_color: ${clr_text_dim}
+                              arc_width: 4
+                          - label:
+                              id: lbl_wind_info
+                              text: "N 0°"
+                              align: CENTER
+                              y: -33
+                              text_color: ${clr_text_dim}
+                              text_font: font_sm
+                          - label:
+                              id: lbl_wind_speed
+                              text: "--"
+                              align: CENTER
+                              y: -8
+                              text_color: ${clr_text}
+                              text_font: font_xl
+                          - label:
+                              id: lbl_wind_gust
+                              text: "Stød --"
+                              align: CENTER
+                              y: 24
+                              text_color: ${clr_text_dim}
+                              text_font: font_sm
+                          - label:
+                              text: "m/s"
+                              align: CENTER
+                              y: 42
+                              text_color: ${clr_text_dim}
+                              text_font: font_xs
 
               - obj:
                   id: card_forecast

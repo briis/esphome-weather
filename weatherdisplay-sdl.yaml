@@ -50,6 +50,24 @@ esphome:
           lv_label_set_text(id(lbl_temp_high), buf);
           fmt(buf, sizeof(buf), 5.2f);
           lv_label_set_text(id(lbl_temp_low), buf);
+      - lvgl.arc.update:
+          id: arc_wind_current
+          start_angle: 314
+          end_angle: 330
+          value: 100
+      - lvgl.arc.update:
+          id: arc_wind_avg
+          start_angle: 307
+          end_angle: 323
+          value: 100
+      - lambda: |-
+          lv_obj_set_style_arc_opa(id(arc_wind_current), LV_OPA_TRANSP, LV_PART_MAIN);
+          lv_obj_set_style_arc_opa(id(arc_wind_avg), LV_OPA_TRANSP, LV_PART_MAIN);
+          lv_obj_set_style_opa(id(arc_wind_current), LV_OPA_TRANSP, LV_PART_KNOB);
+          lv_obj_set_style_opa(id(arc_wind_avg), LV_OPA_TRANSP, LV_PART_KNOB);
+          lv_label_set_text(id(lbl_wind_info), "NØ 52°");
+          lv_label_set_text(id(lbl_wind_speed), "3,2");
+          lv_label_set_text(id(lbl_wind_gust), "Stød 5,1");
 
 host:
 

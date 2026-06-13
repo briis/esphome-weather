@@ -16,12 +16,26 @@ substitutions:
   ha_temp_high:    "max_temperature_today"
   ha_temp_low:     "min_temperature_today"
 
+  # Wind — overrides defaults in weatherdisplay-common.yaml
+  ha_wind_speed:       "sensor.holmeengen_sensor_wind_speed"
+  ha_wind_bearing:     "sensor.holmeengen_sensor_wind_bearing"
+  ha_wind_gust:        "sensor.holmeengen_sensor_wind_gust"
+  ha_wind_bearing_avg: "sensor.holmeengen_sensor_wind_bearing_avg_10_min"
+
 esphome:
   name: "${device}"
   friendly_name: "${name}"
   project:
     name: "briis.${device}"
     version: "${version}"
+  on_boot:
+    priority: -200.0
+    then:
+      - lambda: |-
+          lv_obj_set_style_arc_opa(id(arc_wind_current), LV_OPA_TRANSP, LV_PART_MAIN);
+          lv_obj_set_style_arc_opa(id(arc_wind_avg), LV_OPA_TRANSP, LV_PART_MAIN);
+          lv_obj_set_style_opa(id(arc_wind_current), LV_OPA_TRANSP, LV_PART_KNOB);
+          lv_obj_set_style_opa(id(arc_wind_avg), LV_OPA_TRANSP, LV_PART_KNOB);
   platformio_options:
     build_flags: "-DBOARD_HAS_PSRAM"
     board_build.esp-idf.memory_type: qio_opi
@@ -268,6 +282,61 @@ sensor:
             snprintf(buf, sizeof(buf), "%.1f°", x);
             for (char* p = buf; *p; p++) if (*p == '.') { *p = ','; break; }
             lv_label_set_text(id(lbl_temp_low), buf);
+
+  # ---------------------------------------------------------------------------
+  # Wind — current bearing, speed (average), gust, average bearing
+  # ---------------------------------------------------------------------------
+  - platform: homeassistant
+    id: sensor_wind_bearing
+    entity_id: ${ha_wind_bearing}
+    on_value:
+      then:
+        - lvgl.arc.update:
+            id: arc_wind_current
+            start_angle: !lambda return ((int)x + 262) % 360;
+            end_angle: !lambda return ((int)x + 278) % 360;
+            value: 100
+        - lambda: |-
+            auto cardinal = [](float b) -> const char* {
+              static const char* d[] = {"N","NØ","Ø","SØ","S","SV","V","NV"};
+              return d[((int)(b + 22.5f) / 45) % 8];
+            };
+            char buf[12];
+            snprintf(buf, sizeof(buf), "%s %d°", cardinal(x), (int)x);
+            lv_label_set_text(id(lbl_wind_info), buf);
+
+  - platform: homeassistant
+    id: sensor_wind_speed
+    entity_id: ${ha_wind_speed}
+    on_value:
+      then:
+        - lambda: |-
+            char buf[8];
+            snprintf(buf, sizeof(buf), "%.1f", x);
+            for (char* p = buf; *p; p++) if (*p == '.') { *p = ','; break; }
+            lv_label_set_text(id(lbl_wind_speed), buf);
+
+  - platform: homeassistant
+    id: sensor_wind_gust
+    entity_id: ${ha_wind_gust}
+    on_value:
+      then:
+        - lambda: |-
+            char buf[16];
+            snprintf(buf, sizeof(buf), "Stød %.1f", x);
+            for (char* p = buf; *p; p++) if (*p == '.') { *p = ','; break; }
+            lv_label_set_text(id(lbl_wind_gust), buf);
+
+  - platform: homeassistant
+    id: sensor_wind_bearing_avg
+    entity_id: ${ha_wind_bearing_avg}
+    on_value:
+      then:
+        - lvgl.arc.update:
+            id: arc_wind_avg
+            start_angle: !lambda return ((int)x + 262) % 360;
+            end_angle: !lambda return ((int)x + 278) % 360;
+            value: 100
 
 packages:
   remote_package_files:
