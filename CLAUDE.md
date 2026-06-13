@@ -1,116 +1,122 @@
 # ESPHome Weather Display — Project Reference
 
 ## What this is
-800×480 LVGL v9 weather dashboard on ESP32-S3 using ESPHome. Styled after an Ecowitt-style station display (dark blue theme, circular arcs, wind compass, sun arc, rain stats, barometer).
+
+800×480 LVGL v9 weather dashboard on ESP32-S3 using ESPHome. Danish UI ("Vejret i Holmeenegen").
+Design: 3×3 dark card grid on pure black background — the 6 px gaps between cards act as visual borders (no explicit borders on cards).
 
 ## Current phase
-**Phase 1 — SDL simulator only.** All layout work happens in `weather-sdl.yaml` with dummy data on the `host` platform. No hardware target yet.
+
+**Phase 1 — SDL simulator only.** Layout work happens in `weatherdisplay-sdl.yaml` on the `host` platform with dummy data. No hardware target yet.
 
 ## Files
-- `weather-sdl.yaml` — the only source file; SDL simulator + full LVGL layout
-- `fonts/materialdesignicons-webfont.ttf` — MDI icon font (codepoints listed below)
+
+| File | Purpose |
+| --- | --- |
+| `weatherdisplay-common.yaml` | Shared: fonts + full LVGL layout. Included by both targets. |
+| `weatherdisplay-sdl.yaml` | SDL simulator target (`host` platform). Layout iteration. |
+| `weatherdisplay.yaml` | ESP32-S3 hardware target. Waveshare 7" 800×480. |
+| `weather-sdl.yaml` | Old file, superseded (Ecowitt arc layout, kept for reference). |
+| `fonts/materialdesignicons-webfont.ttf` | MDI icon font. |
 
 ## How to run
+
+SDL simulator (layout iteration):
+
+```sh
+esphome run weatherdisplay-sdl.yaml
 ```
-esphome run weather-sdl.yaml
-```
+
 Prerequisites: `brew install sdl2` + `pip install esphome`
 
+Flash to hardware:
+
+```sh
+esphome run weatherdisplay.yaml
+```
+
 ## Layout structure
+
+```text
+┌──────────────────────────────────────────────────────────────────┐
+│  STATUS BAR  800×44  (wifi icon left · title center · time right)│
+├───────────────────┬───────────────────┬──────────────────────────┤
+│  card_temperature │    card_wind      │     card_forecast        │
+│  (Temperatur)     │    (Vind)         │     (Vejrudsigt)         │
+├───────────────────┼───────────────────┼──────────────────────────┤
+│  card_rain        │  card_barometer   │     card_sun_uv          │
+│  (Regn)           │  (Barometer)      │     (Sol & UV)           │
+├───────────────────┼───────────────────┼──────────────────────────┤
+│  card_extra_1     │  card_extra_2     │     card_extra_3         │
+│  (placeholder)    │  (placeholder)    │     (placeholder)        │
+└───────────────────┴───────────────────┴──────────────────────────┘
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│  STATUS BAR  800×32  (lbl_date center, lbl_time right)          │
-├───────────────────────────────────────┬─────────────────────────┤
-│  LEFT PANEL  450×448                  │  RIGHT PANEL  349×448   │
-│  ┌──────────────┬──────────────┐      │  indoor_section 349×182 │
-│  │outdoor_temp  │wind_container│      │  (arc_indoor_temp       │
-│  │_container    │ 215×210      │      │   arc_indoor_humidity)  │
-│  │ 210×210      │              │      ├─────────────────────────┤
-│  └──────────────┴──────────────┘      │  rain_section 349×160   │
-│  stats_row  450×68                    ├─────────────────────────┤
-│  sun_section 450×189                  │  baro_section 349×128   │
-└───────────────────────────────────────┴─────────────────────────┘
-```
-Vertical divider at x=450. Left panel starts at y=32 (below status bar).
+
+Grid container: x=6, y=50, w=788, h=424. Columns: FR(1)×3. Rows: FR(2), FR(2), FR(1). Gap: 6 px.
+Rows 0–1 are roughly twice the height of row 2 (placeholder strip).
+
+Each named card (row 0–1) has a FLEX COLUMN layout with `flex_align_cross: CENTER`:
+
+1. Title label (`font_sm`, white, `pad_bottom: 2`)
+2. 1 px separator obj (230 px wide, `0x2A3348`, centered)
+3. Content area (to be added per card in later phases)
 
 ## Color palette
+
 | Role | Hex |
-|---|---|
-| Background | `0x0A1628` |
-| Status bar bg | `0x0D1F35` |
-| Arc track (empty) | `0x1A2B40` |
-| Outdoor temp arc | `0xFFD700` |
-| Indoor temp arc | `0xFF7744` |
-| Indoor humidity arc | `0x4488FF` |
-| Wind dot | `0x7ABBDD` |
-| Sun arc indicator | `0xFFDD44` |
+| --- | --- |
+| Background | `0x000000` |
+| Card background | `0x1C2130` |
+| Card separator line | `0x2A3348` |
+| WiFi icon (active) | `0x4CAF50` |
 | Text primary | `0xFFFFFF` |
-| Text dim/labels | `0x7788AA` |
-| Text secondary | `0xAABBCC` |
-| Text min/max | `0xDDDDDD` |
+| Text dim / labels | `0x7788AA` |
 
 ## Fonts
+
 | ID | Family | Size | Use |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `font_xs` | Roboto | 11 | Tiny labels |
-| `font_xs_bold` | Roboto 700 | 11 | Cardinal letters on compass |
-| `font_sm` | Roboto | 13 | Default, small labels |
-| `font_md` | Roboto | 16 | Status bar, sub-values |
-| `font_lg` | Roboto | 20 | Stats row values |
-| `font_xl` | Roboto | 32 | Indoor values, pressure |
-| `font_xxl` | Roboto | 48 | Outdoor temp, wind speed |
-| `mdi_sm` | MDI | 16 | Arrow icons |
-| `mdi_md` | MDI | 24 | Larger icons |
+| `font_sm` | Roboto | 14 | Default |
+| `font_md` | Roboto | 18 | Mid-size values |
+| `font_lg` | Roboto | 22 | Status bar (title + time) |
+| `font_xl` | Roboto | 32 | Large values |
+| `font_xxl` | Roboto | 48 | Hero values |
+| `mdi_sm` | MDI | 18 | Small icons |
+| `mdi_md` | MDI | 24 | Status bar WiFi icon |
 
-MDI codepoints in use: `F005D` (arrow-up), `F0045` (arrow-down), `F050F` (thermometer), `F0564` (water), `F0599` (weather-sunny), `F0597` (weather-rainy), `F059D` (weather-windy)
+MDI codepoints in use: `F092F` (wifi), `F005D` (arrow-up), `F0045` (arrow-down),
+`F050F` (thermometer), `F0564` (water), `F0599` (weather-sunny),
+`F0597` (weather-rainy), `F059D` (weather-windy)
 
-## Widget IDs (all named widgets)
+## Widget IDs
+
 ### Status bar
-- `lbl_date`, `lbl_time`
 
-### Left panel — outdoor temp
-- `arc_outdoor_temp` (−20 to 50, gold)
-- `lbl_outdoor_temp` (font_xxl)
-- `lbl_temp_max`, `lbl_temp_min`
+- `lbl_wifi` — WiFi icon, green when connected
+- `lbl_title` — "Vejret i Holmeenegen"
+- `lbl_time` — current time HH:MM
 
-### Left panel — wind compass
-- `arc_wind_compass` (meter, full 360°, rotation=270 → N at top)
-- `wind_dot` (14×14 circle, positioned via lambda every 30 s)
-- `lbl_wind_dir` (e.g. "NE   52°")
-- `lbl_wind_speed` (font_xxl, center)
-- `lbl_wind_gust`
+### Grid cards (row 0)
 
-### Left panel — stats row
-- `lbl_feels_like`, `lbl_dewpoint`, `lbl_out_humidity`
-- `lbl_wind_avg` (10-min avg direction + speed)
-- `lbl_max_gust`
+- `card_temperature` — outdoor temperature
+- `card_wind` — wind speed/direction
+- `card_forecast` — weather forecast
 
-### Left panel — sun section
-- `arc_sun_position` (0–100 dome arc, value=% of day elapsed)
-- `lbl_sunrise`, `lbl_sunset`, `lbl_solar_rad`, `lbl_uv`
+### Grid cards (row 1)
 
-### Right panel — indoor
-- `arc_indoor_temp` (0–40, orange), `lbl_indoor_temp`
-- `arc_indoor_humidity` (0–100, blue), `lbl_indoor_humidity`
+- `card_rain` — rain stats
+- `card_barometer` — pressure
+- `card_sun_uv` — solar radiation + UV index
 
-### Right panel — rain
-- `lbl_rain_rate`, `lbl_daily_rain`
-- `lbl_rain_event`, `lbl_rain_hourly`, `lbl_rain_weekly`, `lbl_rain_monthly`, `lbl_rain_yearly`
+### Grid cards (row 2 — placeholder)
 
-### Right panel — barometer
-- `lbl_pressure`, `lbl_pressure_trend`
+- `card_extra_1`, `card_extra_2`, `card_extra_3`
 
-## Wind dot positioning math
-Compass container center: (107, 105). Tick ring outer radius=96, tick length=8, so tick mid radius=92. Dot is 14×14 (radius=7).
-```
-angle_rad = fmod(270 + dir_deg, 360) * PI / 180
-x = 107 + 92 * cos(angle_rad) - 7
-y = 105 + 92 * sin(angle_rad) - 7
-```
-Updated every 30 s via `interval` lambda.
+## Phase 2 plan
 
-## Phase 2 plan (not started)
-- Add ESP32-S3 hardware config + display driver for 800×480
-- WiFi + HA API integration
-- Map HA sensors (meteobridgesql integration) to the widget IDs above
-- Replace dummy data / interval lambda with real `sensor:` + `on_value` lambdas
+- [x] ESP32-S3 hardware config (`weatherdisplay.yaml`) — GPIO pins need verification against Waveshare schematic
+- [ ] Verify display GPIO pin assignments and test on hardware
+- [ ] WiFi + HA API integration (meteobridgesql integration)
+- [ ] Populate card content areas with real sensor data
+- [ ] Replace `lbl_time` dummy text with time component

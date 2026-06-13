@@ -1,0 +1,354 @@
+# ============================================================
+# Weather Display — Shared Layout
+# Included by both weatherdisplay-sdl.yaml and weatherdisplay.yaml
+#
+# Contains: fonts, LVGL page layout
+# Assumes: a display with id: lvgl_display exists in the host file
+# ============================================================
+
+# ---------------------------------------------------------------------------
+# Fonts
+# ---------------------------------------------------------------------------
+font:
+  - file: "gfonts://Roboto"
+    id: font_xs
+    size: 11
+    bpp: 4
+    glyphs: " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz°æøåÆØÅ"
+  - file: "gfonts://Roboto"
+    id: font_sm
+    size: 14
+    bpp: 4
+    glyphs: " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz°æøåÆØÅ"
+  - file: "gfonts://Roboto"
+    id: font_md
+    size: 18
+    bpp: 4
+    glyphs: " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz°æøåÆØÅ"
+  - file: "gfonts://Roboto"
+    id: font_lg
+    size: 22
+    bpp: 4
+    glyphs: " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz°æøåÆØÅ"
+  - file: "gfonts://Roboto"
+    id: font_xl
+    size: 32
+    bpp: 4
+    glyphs: " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz°æøåÆØÅ"
+  - file: "gfonts://Roboto"
+    id: font_xxl
+    size: 48
+    bpp: 4
+    glyphs: " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz°æøåÆØÅ"
+
+  # MDI icon font
+  # F092F wifi · F005D arrow-up · F0045 arrow-down · F050F thermometer
+  # F0564 water · F0599 weather-sunny · F0597 weather-rainy · F059D weather-windy
+  - file: "fonts/materialdesignicons-webfont.ttf"
+    id: mdi_sm
+    size: 18
+    bpp: 4
+    glyphs: "\U000F092F\U000F005D\U000F0045\U000F050F\U000F0564\U000F0599\U000F0597\U000F059D"
+  - file: "fonts/materialdesignicons-webfont.ttf"
+    id: mdi_md
+    size: 24
+    bpp: 4
+    glyphs: "\U000F092F\U000F005D\U000F0045\U000F050F\U000F0564\U000F0599\U000F0597\U000F059D"
+
+# ---------------------------------------------------------------------------
+# LVGL — page layout (display id resolved from host file)
+# ---------------------------------------------------------------------------
+lvgl:
+  displays:
+    - lvgl_display
+  color_depth: 16
+  bg_color: 0x000000
+  default_font: font_sm
+
+  pages:
+    - id: main_page
+      bg_color: 0x000000
+
+      widgets:
+
+        # ==============================================================
+        # STATUS BAR  (full width, 44 px)
+        # WiFi icon · title · time
+        # ==============================================================
+        - obj:
+            id: status_bar
+            x: 0
+            y: 0
+            width: 800
+            height: 44
+            bg_color: 0x000000
+            border_side: BOTTOM
+            border_color: 0x2A3348
+            border_width: 1
+            radius: 0
+            pad_all: 0
+
+            widgets:
+              - label:
+                  id: lbl_wifi
+                  text: "\U000F092F"
+                  text_font: mdi_md
+                  align: LEFT_MID
+                  x: 10
+                  text_color: 0x4CAF50
+              - label:
+                  id: lbl_title
+                  text: "Vejret i Holmeenegen"
+                  align: CENTER
+                  text_color: 0xFFFFFF
+                  text_font: font_lg
+              - label:
+                  id: lbl_time
+                  text: "07:44"
+                  align: RIGHT_MID
+                  x: -10
+                  text_color: 0xFFFFFF
+                  text_font: font_lg
+
+        # ==============================================================
+        # GRID CONTAINER  3×3
+        # 6 px gap between cards; black background shows through as border
+        # Card layout: x=6  y=50  w=788  h=424
+        # Rows: FR(2) · FR(2) · FR(1) — top two rows ~2× height of bottom
+        # ==============================================================
+        - obj:
+            id: grid_container
+            x: 6
+            y: 50
+            width: 788
+            height: 424
+            bg_opa: TRANSP
+            border_width: 0
+            pad_all: 0
+            layout:
+              type: GRID
+              grid_columns: [FR(1), FR(1), FR(1)]
+              grid_rows: [FR(2), FR(2), FR(1)]
+              pad_column: 6
+              pad_row: 6
+
+            widgets:
+
+              # ──────────────────────── Row 0 ────────────────────────
+
+              - obj:
+                  id: card_temperature
+                  grid_cell_column_pos: 0
+                  grid_cell_row_pos: 0
+                  grid_cell_x_align: STRETCH
+                  grid_cell_y_align: STRETCH
+                  bg_color: 0x1C2130
+                  border_width: 0
+                  radius: 10
+                  pad_left: 10
+                  pad_right: 10
+                  pad_top: 8
+                  pad_bottom: 8
+                  layout:
+                    type: FLEX
+                    flex_flow: COLUMN
+                    flex_align_cross: CENTER
+                  widgets:
+                    - label:
+                        text: "Temperatur"
+                        text_color: 0xFFFFFF
+                        text_font: font_sm
+                        pad_bottom: 2
+                    - obj:
+                        width: 230
+                        height: 1
+                        border_width: 0
+                        bg_color: 0x2A3348
+                        pad_all: 0
+
+              - obj:
+                  id: card_wind
+                  grid_cell_column_pos: 1
+                  grid_cell_row_pos: 0
+                  grid_cell_x_align: STRETCH
+                  grid_cell_y_align: STRETCH
+                  bg_color: 0x1C2130
+                  border_width: 0
+                  radius: 10
+                  pad_left: 10
+                  pad_right: 10
+                  pad_top: 8
+                  pad_bottom: 8
+                  layout:
+                    type: FLEX
+                    flex_flow: COLUMN
+                    flex_align_cross: CENTER
+                  widgets:
+                    - label:
+                        text: "Vind"
+                        text_color: 0xFFFFFF
+                        text_font: font_sm
+                        pad_bottom: 2
+                    - obj:
+                        width: 230
+                        height: 1
+                        border_width: 0
+                        bg_color: 0x2A3348
+                        pad_all: 0
+
+              - obj:
+                  id: card_forecast
+                  grid_cell_column_pos: 2
+                  grid_cell_row_pos: 0
+                  grid_cell_x_align: STRETCH
+                  grid_cell_y_align: STRETCH
+                  bg_color: 0x1C2130
+                  border_width: 0
+                  radius: 10
+                  pad_left: 10
+                  pad_right: 10
+                  pad_top: 8
+                  pad_bottom: 8
+                  layout:
+                    type: FLEX
+                    flex_flow: COLUMN
+                    flex_align_cross: CENTER
+                  widgets:
+                    - label:
+                        text: "Vejrudsigt"
+                        text_color: 0xFFFFFF
+                        text_font: font_sm
+                        pad_bottom: 2
+                    - obj:
+                        width: 230
+                        height: 1
+                        border_width: 0
+                        bg_color: 0x2A3348
+                        pad_all: 0
+
+              # ──────────────────────── Row 1 ────────────────────────
+
+              - obj:
+                  id: card_rain
+                  grid_cell_column_pos: 0
+                  grid_cell_row_pos: 1
+                  grid_cell_x_align: STRETCH
+                  grid_cell_y_align: STRETCH
+                  bg_color: 0x1C2130
+                  border_width: 0
+                  radius: 10
+                  pad_left: 10
+                  pad_right: 10
+                  pad_top: 8
+                  pad_bottom: 8
+                  layout:
+                    type: FLEX
+                    flex_flow: COLUMN
+                    flex_align_cross: CENTER
+                  widgets:
+                    - label:
+                        text: "Regn"
+                        text_color: 0xFFFFFF
+                        text_font: font_sm
+                        pad_bottom: 2
+                    - obj:
+                        width: 230
+                        height: 1
+                        border_width: 0
+                        bg_color: 0x2A3348
+                        pad_all: 0
+
+              - obj:
+                  id: card_barometer
+                  grid_cell_column_pos: 1
+                  grid_cell_row_pos: 1
+                  grid_cell_x_align: STRETCH
+                  grid_cell_y_align: STRETCH
+                  bg_color: 0x1C2130
+                  border_width: 0
+                  radius: 10
+                  pad_left: 10
+                  pad_right: 10
+                  pad_top: 8
+                  pad_bottom: 8
+                  layout:
+                    type: FLEX
+                    flex_flow: COLUMN
+                    flex_align_cross: CENTER
+                  widgets:
+                    - label:
+                        text: "Barometer"
+                        text_color: 0xFFFFFF
+                        text_font: font_sm
+                        pad_bottom: 2
+                    - obj:
+                        width: 230
+                        height: 1
+                        border_width: 0
+                        bg_color: 0x2A3348
+                        pad_all: 0
+
+              - obj:
+                  id: card_sun_uv
+                  grid_cell_column_pos: 2
+                  grid_cell_row_pos: 1
+                  grid_cell_x_align: STRETCH
+                  grid_cell_y_align: STRETCH
+                  bg_color: 0x1C2130
+                  border_width: 0
+                  radius: 10
+                  pad_left: 10
+                  pad_right: 10
+                  pad_top: 8
+                  pad_bottom: 8
+                  layout:
+                    type: FLEX
+                    flex_flow: COLUMN
+                    flex_align_cross: CENTER
+                  widgets:
+                    - label:
+                        text: "Sol & UV"
+                        text_color: 0xFFFFFF
+                        text_font: font_sm
+                        pad_bottom: 2
+                    - obj:
+                        width: 230
+                        height: 1
+                        border_width: 0
+                        bg_color: 0x2A3348
+                        pad_all: 0
+
+              # ──────────────────────── Row 2 (placeholder) ──────────
+
+              - obj:
+                  id: card_extra_1
+                  grid_cell_column_pos: 0
+                  grid_cell_row_pos: 2
+                  grid_cell_x_align: STRETCH
+                  grid_cell_y_align: STRETCH
+                  bg_color: 0x1C2130
+                  border_width: 0
+                  radius: 10
+                  pad_all: 8
+
+              - obj:
+                  id: card_extra_2
+                  grid_cell_column_pos: 1
+                  grid_cell_row_pos: 2
+                  grid_cell_x_align: STRETCH
+                  grid_cell_y_align: STRETCH
+                  bg_color: 0x1C2130
+                  border_width: 0
+                  radius: 10
+                  pad_all: 8
+
+              - obj:
+                  id: card_extra_3
+                  grid_cell_column_pos: 2
+                  grid_cell_row_pos: 2
+                  grid_cell_x_align: STRETCH
+                  grid_cell_y_align: STRETCH
+                  bg_color: 0x1C2130
+                  border_width: 0
+                  radius: 10
+                  pad_all: 8

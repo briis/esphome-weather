@@ -1,0 +1,31 @@
+# ============================================================
+# Weather Display — SDL Simulator target
+# 800×480 LVGL v9 — host platform for layout iteration
+#
+# Prerequisites (macOS):
+#   brew install sdl2
+#   pip install esphome
+#
+# Run:
+#   esphome run weatherdisplay-sdl.yaml
+# ============================================================
+
+esphome:
+  name: weatherdisplay-sdl
+  friendly_name: Weather Display SDL
+
+host:
+
+logger:
+  level: INFO
+
+display:
+  - platform: sdl
+    id: lvgl_display
+    dimensions:
+      width: 800
+      height: 480
+    update_interval: 16ms
+
+packages:
+  common: !include weatherdisplay-common.yaml
