@@ -48,12 +48,29 @@ font:
     id: mdi_sm
     size: 18
     bpp: 4
-    glyphs: "\U000F092F\U000F005D\U000F0045\U000F050F\U000F0564\U000F0599\U000F0597\U000F059D"
+    glyphs: "\U000F091F\U000F0922\U000F0925\U000F0928\U000F092B\U000F092F\U000F005D\U000F0045\U000F050F\U000F0564\U000F0599\U000F0597\U000F059D"
   - file: "fonts/materialdesignicons-webfont.ttf"
     id: mdi_md
     size: 24
     bpp: 4
-    glyphs: "\U000F092F\U000F005D\U000F0045\U000F050F\U000F0564\U000F0599\U000F0597\U000F059D"
+    glyphs: "\U000F091F\U000F0922\U000F0925\U000F0928\U000F092B\U000F092F\U000F005D\U000F0045\U000F050F\U000F0564\U000F0599\U000F0597\U000F059D"
+
+# ---------------------------------------------------------------------------
+# Time — updates lbl_time every minute using C stdlib time()
+# SDL: uses macOS system clock directly (always correct)
+# Hardware: accurate after homeassistant time component syncs the system clock
+# ---------------------------------------------------------------------------
+interval:
+  - interval: 60s
+    then:
+      - lvgl.label.update:
+          id: lbl_time
+          text: !lambda |-
+            time_t now = time(nullptr);
+            struct tm *t = localtime(&now);
+            char buf[6];
+            strftime(buf, sizeof(buf), "%H:%M", t);
+            return std::string(buf);
 
 # ---------------------------------------------------------------------------
 # LVGL — page layout (display id resolved from host file)
@@ -91,11 +108,11 @@ lvgl:
             widgets:
               - label:
                   id: lbl_wifi
-                  text: "\U000F092F"
+                  text: "\U000F092B"
                   text_font: mdi_md
                   align: LEFT_MID
                   x: 10
-                  text_color: 0x4CAF50
+                  text_color: 0xF44336
               - label:
                   id: lbl_title
                   text: "Vejret i Holmeenegen"

@@ -13,6 +13,28 @@
 esphome:
   name: weatherdisplay-sdl
   friendly_name: Weather Display SDL
+  on_boot:
+    priority: -100.0
+    then:
+      - lvgl.label.update:
+          id: lbl_time
+          text: !lambda |-
+            time_t now = time(nullptr);
+            struct tm *t = localtime(&now);
+            char buf[6];
+            strftime(buf, sizeof(buf), "%H:%M", t);
+            return std::string(buf);
+      - lambda: |-
+          static const char* icons[] = {
+            "\U000F092B", "\U000F091F", "\U000F0922", "\U000F0925", "\U000F0928"
+          };
+          static uint32_t colors[] = {
+            0xF44336, 0xF44336, 0xFFA726, 0x4CAF50, 0x4CAF50
+          };
+          srand(time(nullptr));
+          int lvl = rand() % 5;
+          lv_label_set_text(id(lbl_wifi), icons[lvl]);
+          lv_obj_set_style_text_color(id(lbl_wifi), lv_color_hex(colors[lvl]), 0);
 
 host:
 
@@ -26,6 +48,20 @@ display:
       width: 800
       height: 480
     update_interval: 16ms
+
+interval:
+  - interval: 30s
+    then:
+      - lambda: |-
+          static const char* icons[] = {
+            "\U000F092B", "\U000F091F", "\U000F0922", "\U000F0925", "\U000F0928"
+          };
+          static uint32_t colors[] = {
+            0xF44336, 0xF44336, 0xFFA726, 0x4CAF50, 0x4CAF50
+          };
+          int lvl = rand() % 5;
+          lv_label_set_text(id(lbl_wifi), icons[lvl]);
+          lv_obj_set_style_text_color(id(lbl_wifi), lv_color_hex(colors[lvl]), 0);
 
 packages:
   common: !include weatherdisplay-common.yaml

@@ -46,6 +46,16 @@ wifi:
   password: !secret wifi_password
   ap:
     ssid: "WeatherDisplay Fallback"
+  on_connect:
+    then:
+      - lambda: |-
+          lv_label_set_text(id(lbl_wifi), "\U000F0928");
+          lv_obj_set_style_text_color(id(lbl_wifi), lv_color_hex(0x4CAF50), 0);
+  on_disconnect:
+    then:
+      - lambda: |-
+          lv_label_set_text(id(lbl_wifi), "\U000F092B");
+          lv_obj_set_style_text_color(id(lbl_wifi), lv_color_hex(0xF44336), 0);
 
 api:
   encryption:
@@ -62,6 +72,24 @@ captive_portal:
 
 logger:
   level: INFO
+
+# ---------------------------------------------------------------------------
+# Time — syncs system clock from HA; on_time_sync gives immediate display
+# The interval in weatherdisplay-common.yaml then keeps lbl_time updated
+# ---------------------------------------------------------------------------
+time:
+  - platform: homeassistant
+    id: ha_time
+    on_time_sync:
+      then:
+        - lvgl.label.update:
+            id: lbl_time
+            text: !lambda |-
+              auto now = id(ha_time).now();
+              if (!now.is_valid()) return std::string("--:--");
+              char buf[6];
+              sprintf(buf, "%02d:%02d", now.hour, now.minute);
+              return std::string(buf);
 
 # ---------------------------------------------------------------------------
 # Hardware — I/O expander, display, touch, backlight
@@ -167,6 +195,28 @@ switch:
         output: true
       inverted: false
     restore_mode: ALWAYS_ON
+
+sensor:
+  - platform: wifi_signal
+    id: wifi_rssi
+    name: "WiFi Signal"
+    update_interval: 60s
+    on_value:
+      then:
+        - lambda: |-
+            const char* icon;
+            lv_color_t color;
+            if (x >= -55) {
+              icon = "\U000F0928"; color = lv_color_hex(0x4CAF50);  // strong — green
+            } else if (x >= -67) {
+              icon = "\U000F0925"; color = lv_color_hex(0x4CAF50);  // good — green
+            } else if (x >= -80) {
+              icon = "\U000F0922"; color = lv_color_hex(0xFFA726);  // weak — amber
+            } else {
+              icon = "\U000F091F"; color = lv_color_hex(0xF44336);  // low — red
+            }
+            lv_label_set_text(id(lbl_wifi), icon);
+            lv_obj_set_style_text_color(id(lbl_wifi), color, 0);
 
 packages:
   remote_package_files:
