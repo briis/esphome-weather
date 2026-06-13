@@ -7,7 +7,7 @@ Design: 3×3 dark card grid on pure black background — the 6 px gaps between c
 
 ## Current phase
 
-**Phase 1 — Layout iteration.** SDL simulator (`weatherdisplay-sdl.yaml`) for visual work. Hardware file (`weatherdisplay.yaml`) is ready with verified config for the Waveshare ESP32-S3-Touch-LCD-7. Next: flash to hardware and wire up real sensor data.
+**Phase 2 — Hardware confirmed.** Grid layout verified working on Waveshare ESP32-S3-Touch-LCD-7. SDL simulator used for visual iteration; hardware target flashed via USB and confirmed. Next: populate card content with real HA sensor data.
 
 ## Files
 
@@ -141,7 +141,7 @@ This means pushing an update to `weatherdisplay-common.yaml` on `main` propagate
 ## Phase 2 plan
 
 - [x] ESP32-S3 hardware config — verified with real board config
-- [ ] Flash to hardware and confirm display + touch work
+- [x] Flash to hardware — display and touch confirmed working
 - [ ] WiFi + HA API integration (meteobridgesql integration)
 - [ ] Populate card content areas with real sensor data
 - [ ] Replace `lbl_time` dummy text with ESPHome time component
