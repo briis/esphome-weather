@@ -125,8 +125,18 @@ Board: Waveshare ESP32-S3-Touch-LCD-7 · 16 MB flash · 8 MB octal PSRAM
 | DE / HSYNC / VSYNC | GPIO5 / GPIO46 / GPIO3 |
 | I/O expander | `ch422g` (id: `io_ex`) — display reset/enable, touch reset |
 | Touch | GT911 on I2C (SDA GPIO8, SCL GPIO9), interrupt GPIO4 |
-| Backlight | GPIO2 switch (`id: backlight`), `restore_mode: ALWAYS_ON` |
+| Backlight | `ch422g` io_ex pin 2, `allow_other_uses: true` (shared with display enable) |
 | On touch | Resumes LVGL if paused; turns backlight on if off |
+| OTA | Turns backlight off on begin (`on_begin: switch.turn_off: backlight`) |
+| Captive portal | Enabled (`captive_portal:`) |
+
+### Package strategy
+
+`weatherdisplay.yaml` (hardware) pulls `weatherdisplay-common.yaml` from the **remote Forgejo repo** at `https://git.digitalhomes.dk/briis/esphome-weather` (ref: `main`, refresh: 10 s, auth via `!secret forgejo_token`).
+
+`weatherdisplay-sdl.yaml` (SDL simulator) still uses a local `!include weatherdisplay-common.yaml`.
+
+This means pushing an update to `weatherdisplay-common.yaml` on `main` propagates to the device on next compile/OTA without reflashing the hardware target.
 
 ## Phase 2 plan
 
