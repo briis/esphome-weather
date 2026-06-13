@@ -7,7 +7,7 @@ Design: 3×3 dark card grid on pure black background — the 6 px gaps between c
 
 ## Current phase
 
-**Phase 1 — SDL simulator only.** Layout work happens in `weatherdisplay-sdl.yaml` on the `host` platform with dummy data. No hardware target yet.
+**Phase 1 — Layout iteration.** SDL simulator (`weatherdisplay-sdl.yaml`) for visual work. Hardware file (`weatherdisplay.yaml`) is ready with verified config for the Waveshare ESP32-S3-Touch-LCD-7. Next: flash to hardware and wire up real sensor data.
 
 ## Files
 
@@ -113,10 +113,25 @@ MDI codepoints in use: `F092F` (wifi), `F005D` (arrow-up), `F0045` (arrow-down),
 
 - `card_extra_1`, `card_extra_2`, `card_extra_3`
 
+## Hardware config (weatherdisplay.yaml)
+
+Board: Waveshare ESP32-S3-Touch-LCD-7 · 16 MB flash · 8 MB octal PSRAM
+
+| Component | Detail |
+| --- | --- |
+| Display platform | `mipi_rgb`, model `ESP32-S3-TOUCH-LCD-7-800X480` |
+| Display id | `lvgl_display` |
+| Pixel clock | GPIO7, 16 MHz, inverted |
+| DE / HSYNC / VSYNC | GPIO5 / GPIO46 / GPIO3 |
+| I/O expander | `ch422g` (id: `io_ex`) — display reset/enable, touch reset |
+| Touch | GT911 on I2C (SDA GPIO8, SCL GPIO9), interrupt GPIO4 |
+| Backlight | GPIO2 switch (`id: backlight`), `restore_mode: ALWAYS_ON` |
+| On touch | Resumes LVGL if paused; turns backlight on if off |
+
 ## Phase 2 plan
 
-- [x] ESP32-S3 hardware config (`weatherdisplay.yaml`) — GPIO pins need verification against Waveshare schematic
-- [ ] Verify display GPIO pin assignments and test on hardware
+- [x] ESP32-S3 hardware config — verified with real board config
+- [ ] Flash to hardware and confirm display + touch work
 - [ ] WiFi + HA API integration (meteobridgesql integration)
 - [ ] Populate card content areas with real sensor data
-- [ ] Replace `lbl_time` dummy text with time component
+- [ ] Replace `lbl_time` dummy text with ESPHome time component
