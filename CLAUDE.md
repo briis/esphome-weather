@@ -55,11 +55,11 @@ esphome run weatherdisplay.yaml
 Grid container: x=6, y=50, w=788, h=424. Columns: FR(1)×3. Rows: FR(2), FR(2), FR(1). Gap: 6 px.
 Rows 0–1 are roughly twice the height of row 2 (placeholder strip).
 
-Each named card (row 0–1) has a FLEX COLUMN layout with `flex_align_cross: CENTER`:
+Each named card (row 0–1) has a FLEX COLUMN layout with `flex_align_cross: CENTER` and `scrollbar_mode: "OFF"`:
 
 1. Title label (`font_sm`, white, `pad_bottom: 2`)
 2. 1 px separator obj (230 px wide, `${clr_separator}`, centered)
-3. Content area (to be added per card in later phases)
+3. Content area — card-specific, see Widget IDs section below
 
 ## Color palette
 
@@ -75,6 +75,10 @@ Colors are defined as `substitutions:` at the top of `weatherdisplay-common.yaml
 | `clr_wifi_good` | `0x4CAF50` | WiFi strong / good (green) |
 | `clr_wifi_weak` | `0xFFA726` | WiFi weak (amber) |
 | `clr_wifi_bad` | `0xF44336` | WiFi low / off (red) |
+| `clr_temp_cold` | `0x2196F3` | Temperature circle — blue (< 5 °C) |
+| `clr_temp_cool` | `0xFFC107` | Temperature circle — amber (5–14 °C) |
+| `clr_temp_warm` | `0xFF9800` | Temperature circle — orange (15–19 °C) |
+| `clr_temp_hot` | `0xF44336` | Temperature circle — red (≥ 20 °C) |
 
 ## Fonts
 
@@ -117,9 +121,27 @@ MDI codepoints in use:
 
 ### Grid cards (row 0)
 
-- `card_temperature` — outdoor temperature
-- `card_wind` — wind speed/direction
-- `card_forecast` — weather forecast
+#### `card_temperature` — outdoor temperature (populated)
+
+Content is a FLEX ROW (`temp_content`) containing three columns:
+
+- **Left** `temp_high_panel` — FLEX COLUMN: red ↑ arrow (`mdi_sm`) + `lbl_temp_high` (`font_md`)
+- **Centre** `circle_temp` — 100×100, `radius: 50`, transparent fill, 6 px coloured border. Border colour driven by current temperature threshold. Contains `lbl_temp_current` (`font_lg`, centered).
+- **Right** `temp_low_panel` — FLEX COLUMN: blue ↓ arrow (`mdi_sm`) + `lbl_temp_low` (`font_md`)
+
+HA sensors (defined in `weatherdisplay.yaml`, entity IDs set via substitutions overridden there):
+
+| Substitution | Default in common | Override in hardware | Purpose |
+| --- | --- | --- | --- |
+| `ha_temp_current` | `sensor.unknown_temperature` | `sensor.holmeengen_sensor_temperature` | Current temp + circle colour |
+| `ha_temp_high` | `max_temperature_today` | `max_temperature_today` | Daily high (attribute of current) |
+| `ha_temp_low` | `min_temperature_today` | `min_temperature_today` | Daily low (attribute of current) |
+
+SDL `on_boot` sets mock values: 12,5 ° current (amber circle), 18,3 ° high, 5,2 ° low.
+
+#### `card_wind` — wind speed/direction (placeholder)
+
+#### `card_forecast` — weather forecast (placeholder)
 
 ### Grid cards (row 1)
 
@@ -160,6 +182,10 @@ This means pushing an update to `weatherdisplay-common.yaml` on `main` propagate
 
 - **`::time(nullptr)` required in lambdas** — the `homeassistant` time component introduces the `esphome::time` namespace, making a bare `time()` call ambiguous. Always use `::time(nullptr)` to reference the C stdlib function.
 - **`lv_obj_set_style_text_color` selector** — use `0` (not `LV_PART_MAIN`) for the selector argument in lambdas to avoid header-include issues.
+- **`scrollbar_mode: "OFF"` needs quotes** — YAML parses bare `OFF` as boolean `false`. Always quote: `scrollbar_mode: "OFF"`.
+- **`pad_column` is not a valid `obj` property** — LVGL FLEX column gap must be achieved via `pad_left`/`pad_right` on child objects (transparent `bg_opa: TRANSP` panels make this invisible).
+- **HA sensor substitutions belong in the hardware target** — `ha_temp_*` substitutions are defined as placeholders in `weatherdisplay-common.yaml` but **overridden** in `weatherdisplay.yaml`. Main-file substitutions take precedence over package substitutions in ESPHome. Keep all real HA entity IDs in the hardware file so they are always compiled in regardless of Forgejo state.
+- **`weatherdisplay.yaml` must be kept in sync in two places** — local dev copy AND the HA ESPHome addon config folder. The common file only needs to be on Forgejo.
 
 ## Phase 2 plan
 
@@ -167,5 +193,10 @@ This means pushing an update to `weatherdisplay-common.yaml` on `main` propagate
 - [x] Flash to hardware — display and touch confirmed working
 - [x] Live clock (`lbl_time`) — updates every 60 s, correct on both SDL and hardware
 - [x] WiFi signal icon (`lbl_wifi`) — RSSI-based icon + colour, simulated on SDL
-- [ ] Populate card content areas with real HA sensor data (meteobridgesql)
-- [ ] Add HA API sensor mappings to `weatherdisplay-common.yaml`
+- [x] Named color substitutions — all hex values replaced with `${clr_*}` references in common file
+- [x] Temperature card (`card_temperature`) — circle outline + current temp + daily high/low, live HA sensors
+- [ ] Wind card (`card_wind`)
+- [ ] Forecast card (`card_forecast`)
+- [ ] Rain card (`card_rain`)
+- [ ] Barometer card (`card_barometer`)
+- [ ] Sun & UV card (`card_sun_uv`)
