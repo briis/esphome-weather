@@ -25,10 +25,10 @@ substitutions:
   clr_temp_warm: "0xFF9800"   # orange — 15 to 19°C
   clr_temp_hot:  "0xF44336"   # red    — 20°C and above
 
-  # Temperature — entity ID + attribute names on that same entity
-  ha_temp_current: "sensor.holmeengen_sensor_temperature"
-  ha_temp_high:    "max_temperature_today"   # attribute of ha_temp_current
-  ha_temp_low:     "min_temperature_today"   # attribute of ha_temp_current
+  # Temperature entity / attributes — override in the target file (weatherdisplay.yaml)
+  ha_temp_current: "sensor.unknown_temperature"
+  ha_temp_high:    "max_temperature_today"
+  ha_temp_low:     "min_temperature_today"
 
 # ---------------------------------------------------------------------------
 # Fonts

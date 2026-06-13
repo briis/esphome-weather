@@ -11,6 +11,10 @@ substitutions:
   device: "weatherdisplay"
   version: "0.1.0"
   created_by: "Bjarne Riis"
+  # Temperature — overrides defaults in weatherdisplay-common.yaml
+  ha_temp_current: "sensor.holmeengen_sensor_temperature"
+  ha_temp_high:    "max_temperature_today"
+  ha_temp_low:     "min_temperature_today"
 
 esphome:
   name: "${device}"
