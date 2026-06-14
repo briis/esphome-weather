@@ -149,6 +149,17 @@ lvgl:
       border_opa: TRANSP
       grid_cell_x_align: CENTER
       grid_cell_y_align: CENTER
+    - id: widget_4x5
+      width: 256 # Col: 64px
+      height: 195 # Row: 39px
+      x: 0
+      y: 0
+      radius: 5
+      bg_color: ${clr_card}
+      pad_all: 0
+      border_opa: TRANSP
+      grid_cell_x_align: CENTER
+      grid_cell_y_align: CENTER
   
   pages:
   - id: main_page
@@ -214,19 +225,59 @@ lvgl:
                       align: RIGHT_MID
                       text_color: ${clr_text}
                       text: "00:00"
-
             - obj:
-                styles: widget_4x4
+                styles: widget_4x5
                 bg_color: ${clr_card}
                 grid_cell_column_pos: 0
                 grid_cell_row_pos: 1
                 grid_cell_column_span: 4
-                grid_cell_row_span: 4
+                grid_cell_row_span: 5
+                widgets:
+                  - meter:
+                      id: temp_meter
+                      align: CENTER
+                      width: 180
+                      height: 180
+                      bg_opa: TRANSP
+                      border_width: 6
+                      border_color: ${clr_temp_cold}
+                      scales:
+                        range_from: 0
+                        range_to: 360
+                        angle_range: 360
+                        rotation: 270
+                  - obj: # Hide the Central Knob with a circle object
+                      width: 40
+                      height: 40
+                      align: CENTER
+                      bg_color: ${clr_card}
+                      border_width: 0
+                  - label:
+                      id: temp_label
+                      align: CENTER
+                      text_color: ${clr_text}
+                      text_font: font_xxl
+                      text: "14.5°"
 
             - obj:
-                styles: widget_4x4
+                styles: widget_4x5
                 bg_color: ${clr_card}
                 grid_cell_column_pos: 4
                 grid_cell_row_pos: 1
                 grid_cell_column_span: 4
-                grid_cell_row_span: 4
+                grid_cell_row_span: 5
+                widgets: 
+                  - label:
+                      align: TOP_MID
+                      text: "Vind"
+                      text_color: ${clr_text}
+                      text_font: font_sm
+                      pad_bottom: 2
+
+            - obj:
+                styles: widget_4x1
+                bg_color: ${clr_card}
+                grid_cell_column_pos: 0
+                grid_cell_row_pos: 6
+                grid_cell_column_span: 4
+                grid_cell_row_span: 1
