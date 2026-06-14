@@ -445,6 +445,12 @@ lvgl:
                         rotation: 270
                       widgets:
                         - label:
+                            align: TOP_MID
+                            y: 3
+                            text_color: ${clr_text}
+                            text_font: font_xs
+                            text: "UV"
+                        - label:
                             id: lbl_uv
                             align: CENTER
                             text_color: ${clr_text}
@@ -475,6 +481,12 @@ lvgl:
                         angle_range: 360
                         rotation: 270
                       widgets:
+                        - label:
+                            align: TOP_MID
+                            y: 3
+                            text_color: ${clr_text}
+                            text_font: font_xs
+                            text: "Indstråling"
                         - label:
                             id: lbl_solar
                             align: CENTER
