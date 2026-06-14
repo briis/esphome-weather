@@ -11,7 +11,11 @@ esphome:
   project:
     name: "briis.${device}"
     version: "${version}"
-
+  on_boot:
+    - priority: -100.0
+      then:
+        - script.execute: lvgl_update_clock
+        - script.execute: simulate_wifi
 host:
 
 logger:
@@ -24,6 +28,36 @@ display:
       width: 800
       height: 480
     update_interval: 16ms
+
+touchscreen:
+  - platform: sdl
+    id: touch_controller
+    display: lvgl_display
+
+time:
+  - platform: host
+    id: system_time
+    timezone: Europe/Copenhagen
+    on_time:
+      - seconds: 0
+        minutes: '*'
+        then:
+          - script.execute: lvgl_update_clock
+          - script.execute: simulate_wifi
+
+script:
+  - id: simulate_wifi
+    then:
+      - lambda: |-
+          static const char* icons[] = {
+            "\U000F092B", "\U000F091F", "\U000F0922", "\U000F0925", "\U000F0928"
+          };
+          static uint32_t colors[] = {
+            ${clr_wifi_bad}, ${clr_wifi_bad}, ${clr_wifi_weak}, ${clr_wifi_good}, ${clr_wifi_good}
+          };
+          int lvl = rand() % 5;
+          lv_label_set_text(id(wifi_label), icons[lvl]);
+          lv_obj_set_style_text_color(id(wifi_label), lv_color_hex(colors[lvl]), 0);
 
 packages:
   common: !include weather-common.yaml

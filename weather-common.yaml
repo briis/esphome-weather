@@ -10,6 +10,7 @@
 # Color palette — edit hex values here to change the display theme
 # ---------------------------------------------------------------------------
 substitutions:
+  header_title:  "Vejret i Holmeengen" # Center Title
   clr_bg:        "0x000000"   # screen / lvgl background
   clr_card:      "0x1C2130"   # card background
   clr_separator: "0x2A3348"   # card separator line + status bar border
@@ -86,11 +87,28 @@ font:
     glyphs: "\U000F091F\U000F0922\U000F0925\U000F0928\U000F092B\U000F092F\U000F005D\U000F0045\U000F050F\U000F0564\U000F0599\U000F0597\U000F059D"
 
 # ---------------------------------------------------------------------------
+# Scripts
+# ---------------------------------------------------------------------------
+script:
+  - id: lvgl_update_clock
+    then:
+      - lvgl.label.update:
+          id: time_label
+          text: !lambda |-
+            auto n = id(system_time).now();
+            if (!n.is_valid()) return std::string("--:--");
+            char b[6];
+            snprintf(b, sizeof(b), "%02d:%02d", n.hour, n.minute);
+            return std::string(b);
+
+# ---------------------------------------------------------------------------
 # LVGL — page layout (display id resolved from host file)
 # ---------------------------------------------------------------------------
 lvgl:
   displays:
     - lvgl_display
+  touchscreens:
+    - touch_controller    
   color_depth: 16
   rotation: ${display_rotation}
   buffer_size: 100%
@@ -164,8 +182,9 @@ lvgl:
                   - label:
                       id: wifi_label
                       align: LEFT_MID
-                      text_color: ${clr_text}
-                      text: "WiFi: -67 dBm"
+                      text_color: ${clr_wifi_bad}
+                      text_font: mdi_sm
+                      text: "\U000F092B"
             - obj:
                 styles: widget_4x1
                 bg_color: ${clr_bg}
@@ -180,7 +199,7 @@ lvgl:
                       align: CENTER
                       text_color: ${clr_text}
                       text_font: font_md
-                      text: "${name}"
+                      text: "${header_title}"
             - obj:
                 styles: widget_4x1
                 bg_color: ${clr_bg}
@@ -194,7 +213,7 @@ lvgl:
                       id: time_label
                       align: RIGHT_MID
                       text_color: ${clr_text}
-                      text: "09:10"
+                      text: "00:00"
 
             - obj:
                 styles: widget_4x4
@@ -203,6 +222,7 @@ lvgl:
                 grid_cell_row_pos: 1
                 grid_cell_column_span: 4
                 grid_cell_row_span: 4
+
             - obj:
                 styles: widget_4x4
                 bg_color: ${clr_card}
