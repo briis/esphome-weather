@@ -233,8 +233,24 @@ lvgl:
                 grid_cell_column_span: 4
                 grid_cell_row_span: 5
                 widgets:
+                  - label:
+                      align: TOP_MID
+                      x: -25
+                      y: 35
+                      text: "\U000F005D"
+                      text_font: mdi_sm
+                      text_color: ${clr_temp_hot}
+                  - label:
+                      align: TOP_MID
+                      x: 5
+                      y: 35
+                      id: lbl_temp_high
+                      text: "--°"
+                      text_color: ${clr_text}
+                      text_font: font_md
+
                   - meter:
-                      id: temp_meter
+                      id: circle_temp
                       align: CENTER
                       width: 180
                       height: 180
@@ -253,11 +269,26 @@ lvgl:
                       bg_color: ${clr_card}
                       border_width: 0
                   - label:
-                      id: temp_label
+                      id: lbl_temp_current
                       align: CENTER
                       text_color: ${clr_text}
                       text_font: font_xxl
                       text: "14.5°"
+                  - label:
+                      align: BOTTOM_MID
+                      x: -25
+                      y: -35
+                      text: "\U000F0045"
+                      text_font: mdi_sm
+                      text_color: ${clr_temp_cold}
+                  - label:
+                      align: BOTTOM_MID
+                      x: 5
+                      y: -35
+                      id: lbl_temp_low
+                      text: "--°"
+                      text_color: ${clr_text}
+                      text_font: font_md
 
             - obj:
                 styles: widget_4x5
