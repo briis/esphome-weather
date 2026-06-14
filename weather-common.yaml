@@ -14,6 +14,7 @@ substitutions:
   clr_bg:        "0x000000"   # screen / lvgl background
   clr_card:      "0x1C2130"   # card background
   clr_separator: "0x2A3348"   # card separator line + status bar border
+  clr_tick:      "0xE1E1E1"   # tick color for wind direction meter
   clr_text:      "0xFFFFFF"   # primary text
   clr_text_dim:  "0x7788AA"   # dim labels (sensor sub-labels etc.)
   clr_wifi_good: "0x4CAF50"   # green  — WiFi strong / good (≥ −67 dBm)
@@ -248,7 +249,6 @@ lvgl:
                       text: "--°"
                       text_color: ${clr_text}
                       text_font: font_md
-
                   - meter:
                       id: circle_temp
                       align: CENTER
@@ -298,17 +298,51 @@ lvgl:
                 grid_cell_column_span: 4
                 grid_cell_row_span: 5
                 widgets: 
-                  - label:
-                      align: TOP_MID
-                      text: "Vind"
-                      text_color: ${clr_text}
-                      text_font: font_sm
-                      pad_bottom: 2
+                  - meter:
+                      id: circle_wind_border
+                      align: CENTER
+                      width: 180
+                      height: 180
+                      bg_opa: TRANSP
+                      border_width: 4
+                      border_color: ${clr_temp_cold}
+                      pad_all: 0
+                      scales:
+                        range_from: 0
+                        range_to: 360
+                        angle_range: 360
+                        rotation: 270
+                        ticks:
+                          count: 17
+                          color: ${clr_tick}
+                          length: 6
+                          radial_offset: 0
+                          major:
+                            stride: 4
+                            length: 10
+                            width: 3
+                            color: ${clr_text}
+                            label_gap: 6
+                            radial_offset: 0
+
+                  - obj: # Hide the Central Knob with a circle object
+                      width: 40
+                      height: 40
+                      align: CENTER
+                      bg_color: ${clr_card}
+                      border_width: 0
 
             - obj:
                 styles: widget_4x1
                 bg_color: ${clr_card}
                 grid_cell_column_pos: 0
+                grid_cell_row_pos: 6
+                grid_cell_column_span: 4
+                grid_cell_row_span: 1
+            - obj:
+                styles: widget_4x1
+                bg_color: ${clr_card}
+                grid_cell_column_pos: 4
                 grid_cell_row_pos: 6
                 grid_cell_column_span: 4
                 grid_cell_row_span: 1
