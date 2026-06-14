@@ -3,28 +3,29 @@
 ## What this is
 
 800×480 LVGL v9 weather dashboard on ESP32-S3 using ESPHome. Danish UI ("Vejret i Holmeenegen").
-Design: 3×3 dark card grid on pure black background — the 6 px gaps between cards act as visual borders (no explicit borders on cards).
+Design: 3-column dark card grid on pure black background.
 
 ## Current phase
 
-**Phase 2 — Hardware confirmed.** Grid layout verified working on Waveshare ESP32-S3-Touch-LCD-7. SDL simulator used for visual iteration; hardware target flashed via USB and confirmed. Next: populate card content with real HA sensor data.
+**Phase 2 — Temperature and Wind cards populated.** Grid layout verified working on Waveshare ESP32-S3-Touch-LCD-7. SDL simulator used for visual iteration; hardware target flashed via USB and confirmed. Next: remaining cards (Forecast, Rain, Barometer, Sun & UV).
 
 ## Files
 
 | File | Purpose |
 | --- | --- |
-| `weatherdisplay-common.yaml` | Shared: fonts + full LVGL layout. Included by both targets. |
-| `weatherdisplay-sdl.yaml` | SDL simulator target (`host` platform). Layout iteration. |
-| `weatherdisplay.yaml` | ESP32-S3 hardware target. Waveshare 7" 800×480. |
-| `weather-sdl.yaml` | Old file, superseded (Ecowitt arc layout, kept for reference). |
+| `weather-common.yaml` | Shared: fonts, images, LVGL layout, `lvgl_update_clock` script. Included by both targets. |
+| `esphome-weather-sdl.yaml` | SDL simulator target (`host` platform). Layout iteration + mock data scripts. |
+| `esphome-weather.yaml` | ESP32-S3 hardware target. Waveshare 7" 800×480. HA sensors. |
 | `fonts/materialdesignicons-webfont.ttf` | MDI icon font. |
+| `images/wind_bearing_indicator.png` | Current wind bearing needle (24×24). |
+| `images/wind_bearing_avg_indicator.png` | Average bearing needle (18×18). |
 
 ## How to run
 
 SDL simulator (layout iteration):
 
 ```sh
-esphome run weatherdisplay-sdl.yaml
+esphome run esphome-weather-sdl.yaml
 ```
 
 Prerequisites: `brew install sdl2` + `pip install esphome`
@@ -32,44 +33,35 @@ Prerequisites: `brew install sdl2` + `pip install esphome`
 Flash to hardware:
 
 ```sh
-esphome run weatherdisplay.yaml
+esphome run esphome-weather.yaml
 ```
 
 ## Layout structure
 
+12×12 internal grid (each cell ~64×39 px). Widgets span 4 columns × 5 rows for main cards.
+
 ```text
 ┌──────────────────────────────────────────────────────────────────┐
-│  STATUS BAR  800×44  (wifi icon left · title center · time right)│
+│  STATUS BAR  (wifi icon left · title center · time right)        │
 ├───────────────────┬───────────────────┬──────────────────────────┤
-│  card_temperature │    card_wind      │     card_forecast        │
-│  (Temperatur)     │    (Vind)         │     (Vejrudsigt)         │
+│  Temperature      │    Wind           │     (placeholder)        │
+│  col 0–3, row 1–5 │    col 4–7, row 1–5│    col 8–11, row 1–5  │
 ├───────────────────┼───────────────────┼──────────────────────────┤
-│  card_rain        │  card_barometer   │     card_sun_uv          │
-│  (Regn)           │  (Barometer)      │     (Sol & UV)           │
-├───────────────────┼───────────────────┼──────────────────────────┤
-│  card_extra_1     │  card_extra_2     │     card_extra_3         │
 │  (placeholder)    │  (placeholder)    │     (placeholder)        │
+│  col 0–3, row 6   │  col 4–7, row 6   │    col 8–11, row 6      │
 └───────────────────┴───────────────────┴──────────────────────────┘
 ```
 
-Grid container: x=6, y=50, w=788, h=424. Columns: FR(1)×3. Rows: FR(2), FR(2), FR(1). Gap: 6 px.
-Rows 0–1 are roughly twice the height of row 2 (placeholder strip).
-
-Each named card (row 0–1) has a FLEX COLUMN layout with `flex_align_cross: CENTER` and `scrollbar_mode: "OFF"`:
-
-1. Title label (`font_sm`, white, `pad_bottom: 2`)
-2. 1 px separator obj (230 px wide, `${clr_separator}`, centered)
-3. Content area — card-specific, see Widget IDs section below
-
 ## Color palette
 
-Colors are defined as `substitutions:` at the top of `weatherdisplay-common.yaml`. Change the hex value there to retheme globally; individual target files can override any key in their own `substitutions:` block.
+Colors are defined as `substitutions:` at the top of `weather-common.yaml`. Change the hex value there to retheme globally; individual target files can override any key in their own `substitutions:` block.
 
 | Substitution ID | Hex | Role |
 | --- | --- | --- |
 | `clr_bg` | `0x000000` | Background |
 | `clr_card` | `0x1C2130` | Card background |
-| `clr_separator` | `0x2A3348` | Card separator line + status bar border |
+| `clr_separator` | `0x2A3348` | Card separator line |
+| `clr_tick` | `0xE1E1E1` | Wind meter tick colour |
 | `clr_text` | `0xFFFFFF` | Text primary |
 | `clr_text_dim` | `0x7788AA` | Text dim / labels |
 | `clr_wifi_good` | `0x4CAF50` | WiFi strong / good (green) |
@@ -85,9 +77,9 @@ Colors are defined as `substitutions:` at the top of `weatherdisplay-common.yaml
 | ID | Family | Size | Use |
 | --- | --- | --- | --- |
 | `font_xs` | Roboto | 11 | Tiny labels |
-| `font_sm` | Roboto | 14 | Default |
+| `font_sm` | Roboto | 14 | Default / card titles |
 | `font_md` | Roboto | 18 | Mid-size values |
-| `font_lg` | Roboto | 22 | Status bar (title + time) |
+| `font_lg` | Roboto | 22 | Status bar |
 | `font_xl` | Roboto | 32 | Large values |
 | `font_xxl` | Roboto | 48 | Hero values |
 | `mdi_sm` | MDI | 18 | Small icons |
@@ -115,45 +107,62 @@ MDI codepoints in use:
 
 ### Status bar
 
-- `lbl_wifi` — WiFi strength icon (MDI) + colour driven by RSSI. Initial state: wifi-off red. SDL simulates random strength every 30 s; hardware uses `wifi_signal` sensor (60 s) + `on_connect`/`on_disconnect` for immediate feedback.
-- `lbl_title` — "Vejret i Holmeenegen" (static)
-- `lbl_time` — HH:MM, updated every 60 s via `interval:` in common (uses `::time(nullptr)`). SDL sets correct time on `on_boot`; hardware gets accurate time after `homeassistant` time component syncs (`on_time_sync`).
+- `wifi_label` — WiFi strength icon (MDI) + colour driven by RSSI. Initial state: wifi-off red. SDL simulates random strength every minute; hardware uses `wifi_signal` sensor (60 s) + `on_connect`/`on_disconnect` for immediate feedback.
+- `display_heder` — "Vejret i Holmeengen" (static title)
+- `time_label` — HH:MM, updated via `lvgl_update_clock` script. SDL: triggered by `on_time` every minute. Hardware: immediate on `on_time_sync`, then every minute via `on_time`.
 
-### Grid cards (row 0)
+### Temperature card (col 0–3)
 
-#### `card_temperature` — outdoor temperature (populated)
+- `lbl_temp_high` — daily high (font_md, with ↑ arrow icon to left)
+- `circle_temp` — 180×180 meter, transparent fill, 6 px coloured border driven by temperature threshold
+- `lbl_temp_current` — current temperature (font_xxl, centered inside circle)
+- `lbl_temp_low` — daily low (font_md, with ↓ arrow icon to left)
 
-Content is a FLEX ROW (`temp_content`) containing three columns:
+HA sensors (entity IDs set via substitutions, overridden in `esphome-weather.yaml`):
 
-- **Left** `temp_high_panel` — FLEX COLUMN: red ↑ arrow (`mdi_sm`) + `lbl_temp_high` (`font_md`)
-- **Centre** `circle_temp` — 100×100, `radius: 50`, transparent fill, 6 px coloured border. Border colour driven by current temperature threshold. Contains `lbl_temp_current` (`font_lg`, centered).
-- **Right** `temp_low_panel` — FLEX COLUMN: blue ↓ arrow (`mdi_sm`) + `lbl_temp_low` (`font_md`)
+| Substitution | Default in common | Purpose |
+| --- | --- | --- |
+| `ha_temp_current` | `sensor.unknown_temperature` | Current temp + circle colour |
+| `ha_temp_high` | `max_temperature_today` | Daily high (attribute of current sensor) |
+| `ha_temp_low` | `min_temperature_today` | Daily low (attribute of current sensor) |
 
-HA sensors (defined in `weatherdisplay.yaml`, entity IDs set via substitutions overridden there):
+### Wind card (col 4–7)
 
-| Substitution | Default in common | Override in hardware | Purpose |
-| --- | --- | --- | --- |
-| `ha_temp_current` | `sensor.unknown_temperature` | `sensor.holmeengen_sensor_temperature` | Current temp + circle colour |
-| `ha_temp_high` | `max_temperature_today` | `max_temperature_today` | Daily high (attribute of current) |
-| `ha_temp_low` | `min_temperature_today` | `min_temperature_today` | Daily low (attribute of current) |
+- `circle_wind_border` — 180×180 meter, 4 px blue border, 360° scale with 17 tick marks
+- `bearing_indicator` — current bearing needle image (24×24 px, orbits outer edge). Rotation set via `lv_get_needle_angle_for_value` + `lv_obj_set_style_transform_rotation`.
+- `bearing_avg_indicator` — 10-min average bearing needle image (18×18 px, same orbit radius)
+- `lbl_wind_cardinal` — cardinal direction of current bearing (e.g. "NØ"), top-centre of meter
+- `lbl_wind_speed` — current wind speed m/s (font_xxl, centred)
+- `lbl_wind_gust` — gust speed m/s (font_md, bottom area)
 
-SDL `on_boot` sets mock values: 12,5 ° current (amber circle), 18,3 ° high, 5,2 ° low.
+HA sensors:
 
-#### `card_wind` — wind speed/direction (placeholder)
+| Substitution | Default in common | Purpose |
+| --- | --- | --- |
+| `ha_wind_bearing` | `sensor.unknown_wind_bearing` | Current bearing → needle + cardinal |
+| `ha_wind_speed` | `sensor.unknown_wind_speed` | Wind speed display |
+| `ha_wind_gust` | `sensor.unknown_wind_gust` | Gust speed display |
+| `ha_wind_bearing_avg` | `sensor.unknown_wind_bearing_avg` | 10-min avg bearing needle |
 
-#### `card_forecast` — weather forecast (placeholder)
+#### Bearing indicator pivot — schema workaround
 
-### Grid cards (row 1)
+ESPHome's LVGL schema rejects negative `pivot_x` values even though they are valid C++. The YAML uses `pivot_x: 0` as a placeholder; an `on_boot` lambda fixes all three values:
 
-- `card_rain` — rain stats
-- `card_barometer` — pressure
-- `card_sun_uv` — solar radiation + UV index
+```cpp
+// bearing_indicator (24×24 image, orbit radius 78 px)
+lv_obj_set_style_x(id(bearing_indicator), 78, LV_PART_MAIN);          // orbit radius
+lv_obj_set_style_transform_pivot_x(id(bearing_indicator), -66, LV_PART_MAIN);  // image_w/2 - R = 12 - 78
+lv_obj_set_style_transform_pivot_y(id(bearing_indicator), 12, LV_PART_MAIN);   // image_h/2
 
-### Grid cards (row 2 — placeholder)
+// bearing_avg_indicator (18×18 image, orbit radius 78 px)
+lv_obj_set_style_x(id(bearing_avg_indicator), 78, LV_PART_MAIN);
+lv_obj_set_style_transform_pivot_x(id(bearing_avg_indicator), -69, LV_PART_MAIN);  // 9 - 78
+lv_obj_set_style_transform_pivot_y(id(bearing_avg_indicator), 9, LV_PART_MAIN);
+```
 
-- `card_extra_1`, `card_extra_2`, `card_extra_3`
+Formula: `x_offset = R`, `pivot_x = image_width/2 - R`, `pivot_y = image_height/2`. This places the rotation pivot exactly at the scale centre so the needle orbits at radius R.
 
-## Hardware config (weatherdisplay.yaml)
+## Hardware config (`esphome-weather.yaml`)
 
 Board: Waveshare ESP32-S3-Touch-LCD-7 · 16 MB flash · 8 MB octal PSRAM
 
@@ -167,36 +176,39 @@ Board: Waveshare ESP32-S3-Touch-LCD-7 · 16 MB flash · 8 MB octal PSRAM
 | Touch | GT911 on I2C (SDA GPIO8, SCL GPIO9), interrupt GPIO4 |
 | Backlight | `ch422g` io_ex pin 2, `allow_other_uses: true` (shared with display enable) |
 | On touch | Resumes LVGL if paused; turns backlight on if off |
-| OTA | Turns backlight off on begin (`on_begin: switch.turn_off: backlight`) |
-| Captive portal | Enabled (`captive_portal:`) |
+| OTA | Turns backlight off on begin |
+| Captive portal | Enabled |
+| Time component id | `system_time` (matches id used in `lvgl_update_clock` script in common) |
 
 ### Package strategy
 
-`weatherdisplay.yaml` (hardware) pulls `weatherdisplay-common.yaml` from the **remote Forgejo repo** at `https://git.digitalhomes.dk/briis/esphome-weather` (ref: `main`, refresh: 10 s, auth via `!secret forgejo_token`).
+`esphome-weather.yaml` (hardware) pulls `weather-common.yaml` from the **remote Forgejo repo** at `https://git.digitalhomes.dk/briis/esphome-weather` (ref: `main`, refresh: 10 s, auth via `!secret forgejo_token`).
 
-`weatherdisplay-sdl.yaml` (SDL simulator) still uses a local `!include weatherdisplay-common.yaml`.
+`esphome-weather-sdl.yaml` (SDL simulator) uses a local `!include weather-common.yaml`.
 
-This means pushing an update to `weatherdisplay-common.yaml` on `main` propagates to the device on next compile/OTA without reflashing the hardware target.
+Pushing an update to `weather-common.yaml` on `main` propagates to the device on next compile/OTA without reflashing.
 
 ## Known gotchas
 
 - **`::time(nullptr)` required in lambdas** — the `homeassistant` time component introduces the `esphome::time` namespace, making a bare `time()` call ambiguous. Always use `::time(nullptr)` to reference the C stdlib function.
 - **`lv_obj_set_style_text_color` selector** — use `0` (not `LV_PART_MAIN`) for the selector argument in lambdas to avoid header-include issues.
-- **`scrollbar_mode: "OFF"` needs quotes** — YAML parses bare `OFF` as boolean `false`. Always quote: `scrollbar_mode: "OFF"`.
-- **`pad_column` is not a valid `obj` property** — LVGL FLEX column gap must be achieved via `pad_left`/`pad_right` on child objects (transparent `bg_opa: TRANSP` panels make this invisible).
-- **HA sensor substitutions belong in the hardware target** — `ha_temp_*` substitutions are defined as placeholders in `weatherdisplay-common.yaml` but **overridden** in `weatherdisplay.yaml`. Main-file substitutions take precedence over package substitutions in ESPHome. Keep all real HA entity IDs in the hardware file so they are always compiled in regardless of Forgejo state.
-- **`weatherdisplay.yaml` must be kept in sync in two places** — local dev copy AND the HA ESPHome addon config folder. The common file only needs to be on Forgejo.
+- **`scrollbar_mode: "OFF"` needs quotes** — YAML parses bare `OFF` as boolean `false`.
+- **ESPHome rejects negative `pivot_x`** — the YAML schema validator requires `pivot_x >= 0`. Use `0` as a placeholder and fix with `lv_obj_set_style_transform_pivot_x` in `on_boot`. Must also fix `x` offset and `pivot_y` — all three are linked (see Bearing indicator section above).
+- **`lv_image_set_pivot` is wrong for meter indicators** — use `lv_obj_set_style_transform_pivot_x/y` instead. The indicator object is an `lv_obj_t*`; `lv_image_set_pivot` targets the image zoom pivot, not the rotation transform pivot.
+- **HA sensor substitutions belong in the hardware target** — defined as placeholders in `weather-common.yaml` but overridden in `esphome-weather.yaml`. Main-file substitutions take precedence over package substitutions in ESPHome.
+- **`esphome-weather.yaml` must be kept in sync in two places** — local dev copy AND the HA ESPHome addon config folder. The common file only needs to be on Forgejo.
+- **Time component id must be `system_time`** — `weather-common.yaml`'s `lvgl_update_clock` script references `id(system_time)`. Both SDL (host time) and hardware (HA time) must use this id.
 
 ## Phase 2 plan
 
 - [x] ESP32-S3 hardware config — verified with real board config
 - [x] Flash to hardware — display and touch confirmed working
-- [x] Live clock (`lbl_time`) — updates every 60 s, correct on both SDL and hardware
-- [x] WiFi signal icon (`lbl_wifi`) — RSSI-based icon + colour, simulated on SDL
+- [x] Live clock (`time_label`) — updates every minute, correct on both SDL and hardware
+- [x] WiFi signal icon (`wifi_label`) — RSSI-based icon + colour, simulated on SDL
 - [x] Named color substitutions — all hex values replaced with `${clr_*}` references in common file
-- [x] Temperature card (`card_temperature`) — circle outline + current temp + daily high/low, live HA sensors
-- [ ] Wind card (`card_wind`)
-- [ ] Forecast card (`card_forecast`)
-- [ ] Rain card (`card_rain`)
-- [ ] Barometer card (`card_barometer`)
-- [ ] Sun & UV card (`card_sun_uv`)
+- [x] Temperature card — circle outline + current temp + daily high/low, live HA sensors
+- [x] Wind card — compass meter with current + avg bearing needles, speed, gust, cardinal direction
+- [ ] Forecast card
+- [ ] Rain card
+- [ ] Barometer card
+- [ ] Sun & UV card
