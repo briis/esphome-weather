@@ -7,7 +7,7 @@ Design: 3-column dark card grid on pure black background.
 
 ## Current phase
 
-**Phase 2 — Temperature and Wind cards populated.** Grid layout verified working on Waveshare ESP32-S3-Touch-LCD-7. SDL simulator used for visual iteration; hardware target flashed via USB and confirmed. Next: remaining cards (Forecast, Rain, Barometer, Sun & UV).
+**Phase 2 — Temperature, Wind, and Sun & UV cards populated.** Grid layout verified working on Waveshare ESP32-S3-Touch-LCD-7. SDL simulator used for visual iteration; hardware target flashed via USB and confirmed. Next: remaining cards (Forecast, Rain, Barometer).
 
 ## Files
 
@@ -44,7 +44,7 @@ esphome run esphome-weather.yaml
 ┌──────────────────────────────────────────────────────────────────┐
 │  STATUS BAR  (wifi icon left · title center · time right)        │
 ├───────────────────┬───────────────────┬──────────────────────────┤
-│  Temperature      │    Wind           │     (placeholder)        │
+│  Temperature      │    Wind           │     Sun & UV             │
 │  col 0–3, row 1–5 │    col 4–7, row 1–5│    col 8–11, row 1–5  │
 ├───────────────────┼───────────────────┼──────────────────────────┤
 │  (placeholder)    │  (placeholder)    │     (placeholder)        │
@@ -162,6 +162,32 @@ lv_obj_set_style_transform_pivot_y(id(bearing_avg_indicator), 9, LV_PART_MAIN);
 
 Formula: `x_offset = R`, `pivot_x = image_width/2 - R`, `pivot_y = image_height/2`. This places the rotation pivot exactly at the scale centre so the needle orbits at radius R.
 
+### Sun & UV card (col 8–11)
+
+- `circle_uv` — 180×180 meter, border colour driven by UV index (WHO scale)
+- `lbl_uv` — UV index integer value (font_xxl, centred inside circle)
+- `lbl_uv_unit` — static unit label
+- `circle_solar` — solar radiation meter
+- `lbl_solar` — solar radiation value W/m² (font_xxl)
+- `lbl_solar_unit` — static unit label
+
+UV border colour scale (WHO):
+
+| UV index | Level | Colour |
+| --- | --- | --- |
+| 0–2 | Low | green (`clr_wifi_good`) |
+| 3–5 | Moderate | yellow (`clr_temp_cool`) |
+| 6–7 | High | orange (`clr_temp_warm`) |
+| 8–10 | Very High | red (`clr_temp_hot`) |
+| 11+ | Extreme | violet `0x9C27B0` |
+
+HA sensors:
+
+| Substitution | Default in common | Purpose |
+| --- | --- | --- |
+| `ha_uv_index` | `sensor.unknown_uv_index` | UV index → label + circle colour |
+| `ha_solar_radiation` | `sensor.unknown_solar_radiation` | Solar radiation → label |
+
 ## Hardware config (`esphome-weather.yaml`)
 
 Board: Waveshare ESP32-S3-Touch-LCD-7 · 16 MB flash · 8 MB octal PSRAM
@@ -208,7 +234,7 @@ Pushing an update to `weather-common.yaml` on `main` propagates to the device on
 - [x] Named color substitutions — all hex values replaced with `${clr_*}` references in common file
 - [x] Temperature card — circle outline + current temp + daily high/low, live HA sensors
 - [x] Wind card — compass meter with current + avg bearing needles, speed, gust, cardinal direction
+- [x] Sun & UV card — UV meter with WHO-scale colour border + solar radiation display, live HA sensors
 - [ ] Forecast card
 - [ ] Rain card
 - [ ] Barometer card
-- [ ] Sun & UV card
