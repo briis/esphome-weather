@@ -84,12 +84,12 @@ font:
     id: mdi_sm
     size: 18
     bpp: 4
-    glyphs: "\U000F091F\U000F0922\U000F0925\U000F0928\U000F092B\U000F092F\U000F005D\U000F0045\U000F050F\U000F0564\U000F0599\U000F0597\U000F059D"
+    glyphs: "\U000F091F\U000F0922\U000F0925\U000F0928\U000F092B\U000F092F\U000F005D\U000F0045\U000F050F\U000F0564\U000F0599\U000F0597\U000F059D\U000F17FE\U000F0510"
   - file: "fonts/materialdesignicons-webfont.ttf"
     id: mdi_md
     size: 24
     bpp: 4
-    glyphs: "\U000F091F\U000F0922\U000F0925\U000F0928\U000F092B\U000F092F\U000F005D\U000F0045\U000F050F\U000F0564\U000F0599\U000F0597\U000F059D"
+    glyphs: "\U000F091F\U000F0922\U000F0925\U000F0928\U000F092B\U000F092F\U000F005D\U000F0045\U000F050F\U000F0564\U000F0599\U000F0597\U000F059D\U000F17FE\U000F0510"
 
 # ---------------------------------------------------------------------------
 # Images
@@ -158,9 +158,9 @@ lvgl:
       border_opa: TRANSP
       grid_cell_x_align: CENTER
       grid_cell_y_align: CENTER
-    - id: widget_4x4
+    - id: widget_4x3
       width: 256 # Col: 64px
-      height: 156 # Row: 39px
+      height: 117 # Row: 39px
       x: 0
       y: 0
       radius: 5
@@ -169,9 +169,9 @@ lvgl:
       border_opa: TRANSP
       grid_cell_x_align: CENTER
       grid_cell_y_align: CENTER
-    - id: widget_4x3
+    - id: widget_4x4
       width: 256 # Col: 64px
-      height: 117 # Row: 39px
+      height: 156 # Row: 39px
       x: 0
       y: 0
       radius: 5
@@ -265,6 +265,13 @@ lvgl:
                 grid_cell_row_span: 5
                 widgets:
                   - label:
+                      align: TOP_RIGHT
+                      x: -5
+                      y: 5
+                      text_font: mdi_sm
+                      text: "\U000F0510"
+                      text_color: ${clr_text}
+                  - label:
                       align: TOP_MID
                       x: -25
                       y: 35
@@ -325,6 +332,14 @@ lvgl:
                 grid_cell_column_span: 4
                 grid_cell_row_span: 5
                 widgets: 
+                  # Header labels
+                  - label:
+                      align: TOP_RIGHT
+                      x: -5
+                      y: 5
+                      text_font: mdi_sm
+                      text: "\U000F059D"
+                      text_color: ${clr_text}
                   - meter:
                       id: circle_wind_border
                       align: CENTER
@@ -395,15 +410,22 @@ lvgl:
                       text_font: font_sm
             # UV and Solar Radiation widgets
             - obj:
-                styles: widget_4x3
+                styles: widget_4x4
                 bg_color: ${clr_card}
                 grid_cell_column_pos: 8
                 grid_cell_row_pos: 1
                 grid_cell_column_span: 4
-                grid_cell_row_span: 3
-                pad_left: 5
-                pad_right: 5
+                grid_cell_row_span: 4
+                pad_left: 10
+                pad_right: 10
                 widgets:
+                  # Header labels
+                  - label:
+                      align: TOP_RIGHT
+                      y: 5
+                      text_font: mdi_sm
+                      text: "\U000F17FE"
+                      text_color: ${clr_text}
                   # UV Index
                   - meter:
                       id: circle_uv
