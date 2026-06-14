@@ -68,6 +68,7 @@ esphome:
           lv_label_set_text(id(lbl_wind_info), "NØ 52°");
           lv_label_set_text(id(lbl_wind_speed), "3,2");
           lv_label_set_text(id(lbl_wind_gust), "Stød 5,1");
+          lv_image_set_pivot(id(bearing_indicator), -69, 8);
 
 host:
 

@@ -16,7 +16,16 @@ esphome:
       then:
         - script.execute: lvgl_update_clock
         - script.execute: simulate_wifi
-        - script.execute: simulate_temp
+        - script.execute: simulate_temp        
+        - lambda: |-
+            lv_obj_set_style_x(id(bearing_indicator), 78, LV_PART_MAIN);
+            lv_obj_set_style_transform_pivot_x(id(bearing_indicator), -66, LV_PART_MAIN);
+            lv_obj_set_style_transform_pivot_y(id(bearing_indicator), 12, LV_PART_MAIN);
+            lv_obj_set_style_x(id(bearing_avg_indicator), 78, LV_PART_MAIN);
+            lv_obj_set_style_transform_pivot_x(id(bearing_avg_indicator), -69, LV_PART_MAIN);
+            lv_obj_set_style_transform_pivot_y(id(bearing_avg_indicator), 9, LV_PART_MAIN);
+        - script.execute: simulate_wind
+
 host:
 
 logger:
@@ -46,7 +55,7 @@ time:
           - script.execute: lvgl_update_clock
           - script.execute: simulate_wifi
           - script.execute: simulate_temp
-
+          - script.execute: simulate_wind
 script:
   - id: simulate_wifi
     then:
@@ -84,6 +93,32 @@ script:
           lv_label_set_text(id(lbl_temp_high), buf);
           fmt(buf, sizeof(buf), 5.2f);
           lv_label_set_text(id(lbl_temp_low), buf);
+  - id: simulate_wind
+    then:
+      - lambda: |-
+          auto fmt = [](char* buf, int n, float v) {
+            snprintf(buf, n, "%.1f", v);
+            for (char* p = buf; *p; p++) if (*p == '.') { *p = ','; break; }
+          };      
+          char buf[12];
+          float speed = 0.0f + (rand() % 320) / 10.0f;
+          fmt(buf, sizeof(buf), speed);
+          lv_label_set_text(id(lbl_wind_speed), buf);
+
+          float gust = 0.0f + (rand() % 320) / 10.0f;
+          fmt(buf, sizeof(buf), gust);
+          lv_label_set_text(id(lbl_wind_gust), buf);
+
+          auto cardinal = [](float b) -> const char* {
+            static const char* d[] = {"N","NØ","Ø","SØ","S","SV","V","NV"};
+            return d[((int)(b + 22.5f) / 45) % 8];
+          };
+          int bearing = 0 + (rand() % 360);
+          snprintf(buf, sizeof(buf), "%s", cardinal(bearing));
+          lv_label_set_text(id(lbl_wind_cardinal), buf);
+          lv_obj_set_style_transform_rotation(id(bearing_indicator), lv_get_needle_angle_for_value(id(bearing_indicator), bearing) * 10, LV_PART_MAIN);
+          int bearing_avg = 0 + (rand() % 360);
+          lv_obj_set_style_transform_rotation(id(bearing_avg_indicator), lv_get_needle_angle_for_value(id(bearing_avg_indicator), bearing_avg) * 10, LV_PART_MAIN);
 
 packages:
   common: !include weather-common.yaml

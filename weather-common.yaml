@@ -71,7 +71,7 @@ font:
     id: font_xxl
     size: 48
     bpp: 4
-    glyphs: " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz°æøåÆØÅ"
+    glyphs: " !_\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz°æøåÆØÅ"
 
   # MDI icon font
   # F092F wifi · F005D arrow-up · F0045 arrow-down · F050F thermometer
@@ -86,6 +86,21 @@ font:
     size: 24
     bpp: 4
     glyphs: "\U000F091F\U000F0922\U000F0925\U000F0928\U000F092B\U000F092F\U000F005D\U000F0045\U000F050F\U000F0564\U000F0599\U000F0597\U000F059D"
+
+# ---------------------------------------------------------------------------
+# Images
+# ---------------------------------------------------------------------------
+image:
+  - file: "images/wind_bearing_indicator.png"
+    id: bearing_img
+    type: rgb565
+    resize: 24x24
+    transparency: alpha_channel
+  - file: "images/wind_bearing_avg_indicator.png"
+    id: bearing_avg_img
+    type: rgb565
+    resize: 18x18
+    transparency: alpha_channel
 
 # ---------------------------------------------------------------------------
 # Scripts
@@ -312,6 +327,19 @@ lvgl:
                         range_to: 360
                         angle_range: 360
                         rotation: 270
+                        indicators:
+                          - image:
+                              id: bearing_indicator
+                              src: bearing_img
+                              pivot_x: 0 
+                              pivot_y: 12
+                              value: 0
+                          - image:
+                              id: bearing_avg_indicator
+                              src: bearing_avg_img
+                              pivot_x: 0 
+                              pivot_y: 9
+                              value: 0
                         ticks:
                           count: 17
                           color: ${clr_tick}
@@ -324,13 +352,38 @@ lvgl:
                             color: ${clr_text}
                             label_gap: 6
                             radial_offset: 0
-
                   - obj: # Hide the Central Knob with a circle object
                       width: 40
                       height: 40
                       align: CENTER
                       bg_color: ${clr_card}
                       border_width: 0
+                  - label:
+                      align: TOP_MID
+                      y: 35
+                      id: lbl_wind_cardinal
+                      text: "---"
+                      text_color: ${clr_text}
+                      text_font: font_md
+                  - label:
+                      id: lbl_wind_speed
+                      align: CENTER
+                      text_color: ${clr_text}
+                      text_font: font_xxl
+                      text: "__,_"
+                  - label:
+                      align: BOTTOM_MID
+                      y: -48
+                      id: lbl_wind_gust
+                      text: "--,-"
+                      text_color: ${clr_text_dim}
+                      text_font: font_md
+                  - label:
+                      align: BOTTOM_MID
+                      y: -30
+                      text: "m/s"
+                      text_color: ${clr_text}
+                      text_font: font_sm
 
             - obj:
                 styles: widget_4x1
