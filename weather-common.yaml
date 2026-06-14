@@ -38,6 +38,10 @@ substitutions:
   ha_wind_gust:        "sensor.unknown_wind_gust"
   ha_wind_bearing_avg: "sensor.unknown_wind_bearing_avg"
 
+  # UV & Solar Radiation — override in esphome-weather.yaml
+  ha_uv_index:         "sensor.unknown_uv_index"
+  ha_solar_radiation:  "sensor.unknown_solar_radiation"
+
 # ---------------------------------------------------------------------------
 # Fonts
 # ---------------------------------------------------------------------------
@@ -46,12 +50,12 @@ font:
     id: font_xs
     size: 11
     bpp: 4
-    glyphs: " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz°æøåÆØÅ"
+    glyphs: " !\"#$%&'()*+,-./0123456789²:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz°æøåÆØÅ"
   - file: "gfonts://Roboto"
     id: font_sm
     size: 14
     bpp: 4
-    glyphs: " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz°æøåÆØÅ"
+    glyphs: " !\"#$%&'()*+,-./0123456789²:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz°æøåÆØÅ"
   - file: "gfonts://Roboto"
     id: font_md
     size: 18
@@ -157,6 +161,17 @@ lvgl:
     - id: widget_4x4
       width: 256 # Col: 64px
       height: 156 # Row: 39px
+      x: 0
+      y: 0
+      radius: 5
+      bg_color: ${clr_card}
+      pad_all: 0
+      border_opa: TRANSP
+      grid_cell_x_align: CENTER
+      grid_cell_y_align: CENTER
+    - id: widget_4x3
+      width: 256 # Col: 64px
+      height: 117 # Row: 39px
       x: 0
       y: 0
       radius: 5
@@ -272,17 +287,14 @@ lvgl:
                       bg_opa: TRANSP
                       border_width: 6
                       border_color: ${clr_temp_cold}
+                      indicator:
+                        bg_opa: TRANSP
+                        border_width: 0                      
                       scales:
                         range_from: 0
                         range_to: 360
                         angle_range: 360
                         rotation: 270
-                  - obj: # Hide the Central Knob with a circle object
-                      width: 40
-                      height: 40
-                      align: CENTER
-                      bg_color: ${clr_card}
-                      border_width: 0
                   - label:
                       id: lbl_temp_current
                       align: CENTER
@@ -319,9 +331,12 @@ lvgl:
                       width: 180
                       height: 180
                       bg_opa: TRANSP
-                      border_width: 4
+                      border_width: 3
                       border_color: ${clr_temp_cold}
                       pad_all: 0
+                      indicator:
+                        bg_opa: TRANSP
+                        border_width: 0                      
                       scales:
                         range_from: 0
                         range_to: 360
@@ -352,12 +367,6 @@ lvgl:
                             color: ${clr_text}
                             label_gap: 6
                             radial_offset: 0
-                  - obj: # Hide the Central Knob with a circle object
-                      width: 40
-                      height: 40
-                      align: CENTER
-                      bg_color: ${clr_card}
-                      border_width: 0
                   - label:
                       align: TOP_MID
                       y: 35
@@ -384,6 +393,80 @@ lvgl:
                       text: "m/s"
                       text_color: ${clr_text}
                       text_font: font_sm
+            # UV and Solar Radiation widgets
+            - obj:
+                styles: widget_4x3
+                bg_color: ${clr_card}
+                grid_cell_column_pos: 8
+                grid_cell_row_pos: 1
+                grid_cell_column_span: 4
+                grid_cell_row_span: 3
+                pad_left: 5
+                pad_right: 5
+                widgets:
+                  # UV Index
+                  - meter:
+                      id: circle_uv
+                      align: LEFT_MID
+                      width: 105
+                      height: 105
+                      bg_opa: TRANSP
+                      border_width: 6
+                      border_color: ${clr_temp_cold}
+                      indicator:
+                        bg_opa: TRANSP
+                        border_width: 0                      
+                      scales:
+                        range_from: 0
+                        range_to: 360
+                        angle_range: 360
+                        rotation: 270
+                      widgets:
+                        - label:
+                            id: lbl_uv
+                            align: CENTER
+                            text_color: ${clr_text}
+                            text_font: font_xl
+                            text: "--.-"
+                        - label:
+                            id: lbl_uv_unit
+                            align: BOTTOM_MID
+                            y: -5
+                            text_color: ${clr_text_dim}
+                            text_font: font_xs
+                            text: "UV Index"
+                  # Solar Radiation
+                  - meter:
+                      id: circle_solar
+                      align: RIGHT_MID
+                      width: 105
+                      height: 105
+                      bg_opa: TRANSP
+                      border_width: 6
+                      border_color: ${clr_temp_cool}
+                      indicator:
+                        bg_opa: TRANSP
+                        border_width: 0                      
+                      scales:
+                        range_from: 0
+                        range_to: 360
+                        angle_range: 360
+                        rotation: 270
+                      widgets:
+                        - label:
+                            id: lbl_solar
+                            align: CENTER
+                            text_color: ${clr_text}
+                            text_font: font_xl
+                            text: "--.-"
+                        - label:
+                            id: lbl_solar_unit
+                            align: BOTTOM_MID
+                            y: -5
+                            text_color: ${clr_text_dim}
+                            text_font: font_xs
+                            text: "W/m²"
+
 
             - obj:
                 styles: widget_4x1

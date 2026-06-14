@@ -24,6 +24,10 @@ substitutions:
   ha_wind_gust:        "sensor.holmeengen_sensor_wind_gust"
   ha_wind_bearing_avg: "sensor.holmeengen_sensor_wind_bearing_avg_10_min"
 
+  # UV & Solar Radiation — overrides defaults in weather-common.yaml
+  ha_uv_index:         "sensor.holmeengen_sensor_uv_index"
+  ha_solar_radiation:  "sensor.holmeengen_sensor_solar_radiation"
+
 esphome:
   name: "${device}"
   friendly_name: "${name}"
@@ -334,6 +338,37 @@ sensor:
       then:
         - lambda: |-
             lv_obj_set_style_transform_rotation(id(bearing_avg_indicator), lv_get_needle_angle_for_value(id(bearing_avg_indicator), (int)x) * 10, LV_PART_MAIN);
+
+  # ---------------------------------------------------------------------------
+  # UV & Solar Radiation
+  # ---------------------------------------------------------------------------
+  - platform: homeassistant
+    id: sensor_uv_index
+    entity_id: ${ha_uv_index}
+    on_value:
+      then:
+        - lambda: |-
+            auto uv_color = [](int uv) -> lv_color_t {
+              if (uv <= 2)  return lv_color_hex(${clr_wifi_good});   // 0–2  low       green
+              if (uv <= 5)  return lv_color_hex(${clr_temp_cool});   // 3–5  moderate  yellow
+              if (uv <= 7)  return lv_color_hex(${clr_temp_warm});   // 6–7  high      orange
+              if (uv <= 10) return lv_color_hex(${clr_temp_hot});    // 8–10 very high red
+              return lv_color_hex(0x9C27B0);                         // 11+  extreme   violet
+            };
+            char buf[8];
+            snprintf(buf, sizeof(buf), "%.0f", x);
+            lv_label_set_text(id(lbl_uv), buf);
+            lv_obj_set_style_border_color(id(circle_uv), uv_color((int)x), 0);
+
+  - platform: homeassistant
+    id: sensor_solar_radiation
+    entity_id: ${ha_solar_radiation}
+    on_value:
+      then:
+        - lambda: |-
+            char buf[8];
+            snprintf(buf, sizeof(buf), "%.0f", x);
+            lv_label_set_text(id(lbl_solar), buf);
 
 packages:
   remote_package_files:
