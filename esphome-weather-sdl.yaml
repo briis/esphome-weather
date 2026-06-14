@@ -3,16 +3,7 @@ substitutions:
   device: "esphome-weather-sdl"
   version: "0.1.0"
   created_by: "Bjarne Riis"
-  # Temperature — overrides defaults in weatherdisplay-common.yaml
-  ha_temp_current: "sensor.holmeengen_sensor_temperature"
-  ha_temp_high:    "max_temperature_today"
-  ha_temp_low:     "min_temperature_today"
-
-  # Wind — overrides defaults in weatherdisplay-common.yaml
-  ha_wind_speed:       "sensor.holmeengen_sensor_wind_speed"
-  ha_wind_bearing:     "sensor.holmeengen_sensor_wind_bearing"
-  ha_wind_gust:        "sensor.holmeengen_sensor_wind_gust"
-  ha_wind_bearing_avg: "sensor.holmeengen_sensor_wind_bearing_avg_10_min"
+  display_rotation: "0" # 0, 90, 180, 270
 
 esphome:
   name: "${device}"

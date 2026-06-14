@@ -1,0 +1,212 @@
+# ============================================================
+# Weather Display — Shared Layout
+# Included by both weatherdisplay-sdl.yaml and weatherdisplay.yaml
+#
+# Contains: fonts, LVGL page layout
+# Assumes: a display with id: lvgl_display exists in the host file
+# ============================================================
+
+# ---------------------------------------------------------------------------
+# Color palette — edit hex values here to change the display theme
+# ---------------------------------------------------------------------------
+substitutions:
+  clr_bg:        "0x000000"   # screen / lvgl background
+  clr_card:      "0x1C2130"   # card background
+  clr_separator: "0x2A3348"   # card separator line + status bar border
+  clr_text:      "0xFFFFFF"   # primary text
+  clr_text_dim:  "0x7788AA"   # dim labels (sensor sub-labels etc.)
+  clr_wifi_good: "0x4CAF50"   # green  — WiFi strong / good (≥ −67 dBm)
+  clr_wifi_weak: "0xFFA726"   # amber  — WiFi weak (−80 to −67 dBm)
+  clr_wifi_bad:  "0xF44336"   # red    — WiFi low / disconnected (< −80 dBm)
+
+  # Temperature circle — color threshold based on current temperature
+  clr_temp_cold: "0x2196F3"   # blue   — below 5°C
+  clr_temp_cool: "0xFFC107"   # amber  — 5 to 14°C
+  clr_temp_warm: "0xFF9800"   # orange — 15 to 19°C
+  clr_temp_hot:  "0xF44336"   # red    — 20°C and above
+
+  # Temperature entity / attributes — override in the target file (weatherdisplay.yaml)
+  ha_temp_current: "sensor.unknown_temperature"
+  ha_temp_high:    "max_temperature_today"
+  ha_temp_low:     "min_temperature_today"
+
+  # Wind sensor entity IDs — override in weatherdisplay.yaml
+  ha_wind_speed:       "sensor.unknown_wind_speed"
+  ha_wind_bearing:     "sensor.unknown_wind_bearing"
+  ha_wind_gust:        "sensor.unknown_wind_gust"
+  ha_wind_bearing_avg: "sensor.unknown_wind_bearing_avg"
+
+# ---------------------------------------------------------------------------
+# Fonts
+# ---------------------------------------------------------------------------
+font:
+  - file: "gfonts://Roboto"
+    id: font_xs
+    size: 11
+    bpp: 4
+    glyphs: " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz°æøåÆØÅ"
+  - file: "gfonts://Roboto"
+    id: font_sm
+    size: 14
+    bpp: 4
+    glyphs: " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz°æøåÆØÅ"
+  - file: "gfonts://Roboto"
+    id: font_md
+    size: 18
+    bpp: 4
+    glyphs: " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz°æøåÆØÅ"
+  - file: "gfonts://Roboto"
+    id: font_lg
+    size: 22
+    bpp: 4
+    glyphs: " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz°æøåÆØÅ"
+  - file: "gfonts://Roboto"
+    id: font_xl
+    size: 32
+    bpp: 4
+    glyphs: " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz°æøåÆØÅ"
+  - file: "gfonts://Roboto"
+    id: font_xxl
+    size: 48
+    bpp: 4
+    glyphs: " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz°æøåÆØÅ"
+
+  # MDI icon font
+  # F092F wifi · F005D arrow-up · F0045 arrow-down · F050F thermometer
+  # F0564 water · F0599 weather-sunny · F0597 weather-rainy · F059D weather-windy
+  - file: "fonts/materialdesignicons-webfont.ttf"
+    id: mdi_sm
+    size: 18
+    bpp: 4
+    glyphs: "\U000F091F\U000F0922\U000F0925\U000F0928\U000F092B\U000F092F\U000F005D\U000F0045\U000F050F\U000F0564\U000F0599\U000F0597\U000F059D"
+  - file: "fonts/materialdesignicons-webfont.ttf"
+    id: mdi_md
+    size: 24
+    bpp: 4
+    glyphs: "\U000F091F\U000F0922\U000F0925\U000F0928\U000F092B\U000F092F\U000F005D\U000F0045\U000F050F\U000F0564\U000F0599\U000F0597\U000F059D"
+
+# ---------------------------------------------------------------------------
+# LVGL — page layout (display id resolved from host file)
+# ---------------------------------------------------------------------------
+lvgl:
+  displays:
+    - lvgl_display
+  color_depth: 16
+  rotation: ${display_rotation}
+  buffer_size: 100%
+  default_font: font_sm
+
+  ### STYLES ###
+  style_definitions:
+    - id: main_grid_layout
+      width: 100%
+      height: 100%
+      x: 0
+      y: 0
+      radius: 0      
+      bg_color: ${clr_bg}
+      pad_all: 0
+      pad_left: 5
+      pad_right: 5
+      border_opa: TRANSP
+    - id: widget_4x1
+      width: 256 # Col: 64px
+      height: 39 # Row: 39px
+      x: 0
+      y: 0
+      radius: 5
+      bg_color: ${clr_card}
+      pad_all: 0
+      border_opa: TRANSP
+      grid_cell_x_align: CENTER
+      grid_cell_y_align: CENTER
+    - id: widget_4x4
+      width: 256 # Col: 64px
+      height: 156 # Row: 39px
+      x: 0
+      y: 0
+      radius: 5
+      bg_color: ${clr_card}
+      pad_all: 0
+      border_opa: TRANSP
+      grid_cell_x_align: CENTER
+      grid_cell_y_align: CENTER
+  
+  pages:
+  - id: main_page
+    bg_color: ${clr_bg}
+    pad_all: 0
+    skip: false
+    widgets:
+      - obj:
+          align: CENTER
+          id: main_grid
+          styles: main_grid_layout
+          layout:
+            type: grid
+            grid_columns: [fr(1), fr(1), fr(1), fr(1), fr(1), fr(1), fr(1), fr(1), fr(1), fr(1), fr(1), fr(1)]
+            grid_rows: [fr(1), fr(1), fr(1), fr(1), fr(1), fr(1), fr(1), fr(1), fr(1), fr(1), fr(1), fr(1)]
+            grid_column_align: CENTER
+            grid_row_align: CENTER
+            pad_row: 5
+            pad_column: 5
+          widgets:
+            - obj:
+                styles: widget_4x1
+                bg_color: ${clr_bg}
+                grid_cell_column_pos: 0
+                grid_cell_row_pos: 0
+                grid_cell_column_span: 4
+                grid_cell_row_span: 1
+                grid_cell_x_align: START
+                radius: 0
+                widgets:
+                  - label:
+                      id: wifi_label
+                      align: LEFT_MID
+                      text_color: ${clr_text}
+                      text: "WiFi: -67 dBm"
+            - obj:
+                styles: widget_4x1
+                bg_color: ${clr_bg}
+                grid_cell_column_pos: 4
+                grid_cell_row_pos: 0
+                grid_cell_column_span: 4
+                grid_cell_row_span: 1
+                radius: 0
+                widgets:
+                  - label:
+                      id: display_heder
+                      align: CENTER
+                      text_color: ${clr_text}
+                      text_font: font_md
+                      text: "${name}"
+            - obj:
+                styles: widget_4x1
+                bg_color: ${clr_bg}
+                grid_cell_column_pos: 8
+                grid_cell_row_pos: 0
+                grid_cell_column_span: 4
+                grid_cell_row_span: 1
+                radius: 0
+                widgets:
+                  - label:
+                      id: time_label
+                      align: RIGHT_MID
+                      text_color: ${clr_text}
+                      text: "09:10"
+
+            - obj:
+                styles: widget_4x4
+                bg_color: ${clr_card}
+                grid_cell_column_pos: 0
+                grid_cell_row_pos: 1
+                grid_cell_column_span: 4
+                grid_cell_row_span: 4
+            - obj:
+                styles: widget_4x4
+                bg_color: ${clr_card}
+                grid_cell_column_pos: 4
+                grid_cell_row_pos: 1
+                grid_cell_column_span: 4
+                grid_cell_row_span: 4
