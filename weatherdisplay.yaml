@@ -664,45 +664,6 @@ text_sensor:
       then:
         - lambda: |-
             lv_label_set_text(id(lbl_fcst_description), x.c_str());
-    id: sensor_aqi_index
-    entity_id: ${ha_aqi_index}
-    on_value:
-      then:
-        - lambda: |-
-            auto aqi_color = [](int aqi) -> lv_color_t {
-              if (aqi <= 50)  return lv_color_hex(${clr_wifi_good});   // 0–50   good              green
-              if (aqi <= 100) return lv_color_hex(${clr_temp_cool});   // 51–100 moderate          yellow
-              if (aqi <= 150) return lv_color_hex(${clr_temp_warm});   // 101–150 unhealthy (sens) orange
-              if (aqi <= 200) return lv_color_hex(${clr_temp_hot});    // 151–200 unhealthy        red
-              if (aqi <= 300) return lv_color_hex(0x9C27B0);           // 201–300 very unhealthy   violet
-              return lv_color_hex(0x7E0023);                           // 301+    hazardous         maroon
-            };
-            char buf[8];
-            snprintf(buf, sizeof(buf), "%.0f", x);
-            lv_label_set_text(id(lbl_aqi), buf);
-            lv_obj_set_style_border_color(id(circle_aqi), aqi_color((int)x), 0);
-
-  - platform: homeassistant
-    id: sensor_aqi_pm25
-    entity_id: ${ha_aqi_pm25}
-    on_value:
-      then:
-        - lambda: |-
-            char buf[16];
-            snprintf(buf, sizeof(buf), "%.1f μg/m³", x);
-            for (char* p = buf; *p; p++) if (*p == '.') { *p = ','; break; }
-            lv_label_set_text(id(lbl_pm25), buf);
-
-  - platform: homeassistant
-    id: sensor_aqi_pm10
-    entity_id: ${ha_aqi_pm10}
-    on_value:
-      then:
-        - lambda: |-
-            char buf[16];
-            snprintf(buf, sizeof(buf), "%.1f μg/m³", x);
-            for (char* p = buf; *p; p++) if (*p == '.') { *p = ','; break; }
-            lv_label_set_text(id(lbl_pm10), buf);
 
 packages:
   remote_package_files:
