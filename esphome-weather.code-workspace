@@ -3,5 +3,8 @@
 		{
 			"path": "."
 		}
-	]
+	],
+	"settings": {
+		"esphome.dashboardUri": "192.168.1.100:6052"
+	}
 }

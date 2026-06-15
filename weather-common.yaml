@@ -62,6 +62,15 @@ substitutions:
   ha_rain_rate:        "sensor.unknown_rain_rate"
   ha_rain_yesterday:   "sensor.unknown_rain_yesterday"
 
+  # Forecast — override in weatherdisplay.yaml
+  ha_fcast_condition:     "sensor.unknown_fcast_condition"
+  ha_fcast_condition_txt: "sensor.unknown_fcast_condition_txt"
+  ha_fcast_description:   "sensor.unknown_fcast_description"
+  ha_fcst_temp_high:      "sensor.unknown_fcst_temp_high"
+  ha_fcst_temp_low:       "sensor.unknown_fcst_temp_low"
+  ha_fcst_precip_prob:    "sensor.unknown_fcst_precip_prob"
+  ha_fcst_precipitation:  "sensor.unknown_fcst_precipitation"
+
 # ---------------------------------------------------------------------------
 # Fonts
 # ---------------------------------------------------------------------------
@@ -129,6 +138,61 @@ image:
     id: bearing_avg_img
     type: rgb565
     resize: 18x18
+    transparency: alpha_channel
+  - file: "images/weather/clear-day.png"
+    id: img_clear_day
+    type: rgb565
+    resize: 64x64
+    transparency: alpha_channel
+  - file: "images/weather/clear-night.png"
+    id: img_clear_night
+    type: rgb565
+    resize: 64x64
+    transparency: alpha_channel
+  - file: "images/weather/cloudy.png"
+    id: img_cloudy
+    type: rgb565
+    resize: 64x64
+    transparency: alpha_channel
+  - file: "images/weather/fog.png"
+    id: img_fog
+    type: rgb565
+    resize: 64x64
+    transparency: alpha_channel
+  - file: "images/weather/lightning.png"
+    id: img_lightning
+    type: rgb565
+    resize: 64x64
+    transparency: alpha_channel
+  - file: "images/weather/lightning-rainy.png"
+    id: img_lightning_rainy
+    type: rgb565
+    resize: 64x64
+    transparency: alpha_channel
+  - file: "images/weather/partlycloudy.png"
+    id: img_partlycloudy
+    type: rgb565
+    resize: 64x64
+    transparency: alpha_channel
+  - file: "images/weather/rainy.png"
+    id: img_rainy
+    type: rgb565
+    resize: 64x64
+    transparency: alpha_channel
+  - file: "images/weather/snowy.png"
+    id: img_snowy
+    type: rgb565
+    resize: 64x64
+    transparency: alpha_channel
+  - file: "images/weather/snowy-rainy.png"
+    id: img_snowy_rainy
+    type: rgb565
+    resize: 64x64
+    transparency: alpha_channel
+  - file: "images/weather/windy.png"
+    id: img_windy
+    type: rgb565
+    resize: 64x64
     transparency: alpha_channel
 
 # ---------------------------------------------------------------------------
@@ -827,8 +891,8 @@ lvgl:
                 grid_cell_row_pos: 8
                 grid_cell_column_span: 4
                 grid_cell_row_span: 4
-                widgets: 
-                  # Header labels
+                widgets:
+                  # Header icon
                   - label:
                       align: TOP_RIGHT
                       x: -5
@@ -836,6 +900,158 @@ lvgl:
                       text_font: mdi_sm
                       text: "\U000F0595"
                       text_color: ${clr_text}
+                  # Weather condition images — one per condition, hidden/shown by lambda
+                  - image:
+                      id: fimg_clear_day
+                      align: LEFT_MID
+                      x: 8
+                      y: -18
+                      src: img_clear_day
+                  - image:
+                      id: fimg_clear_night
+                      align: LEFT_MID
+                      x: 8
+                      y: -18
+                      src: img_clear_night
+                      hidden: true
+                  - image:
+                      id: fimg_cloudy
+                      align: LEFT_MID
+                      x: 8
+                      y: -18
+                      src: img_cloudy
+                      hidden: true
+                  - image:
+                      id: fimg_fog
+                      align: LEFT_MID
+                      x: 8
+                      y: -18
+                      src: img_fog
+                      hidden: true
+                  - image:
+                      id: fimg_lightning
+                      align: LEFT_MID
+                      x: 8
+                      y: -18
+                      src: img_lightning
+                      hidden: true
+                  - image:
+                      id: fimg_lightning_rainy
+                      align: LEFT_MID
+                      x: 8
+                      y: -18
+                      src: img_lightning_rainy
+                      hidden: true
+                  - image:
+                      id: fimg_partlycloudy
+                      align: LEFT_MID
+                      x: 8
+                      y: -18
+                      src: img_partlycloudy
+                      hidden: true
+                  - image:
+                      id: fimg_rainy
+                      align: LEFT_MID
+                      x: 8
+                      y: -18
+                      src: img_rainy
+                      hidden: true
+                  - image:
+                      id: fimg_snowy
+                      align: LEFT_MID
+                      x: 8
+                      y: -18
+                      src: img_snowy
+                      hidden: true
+                  - image:
+                      id: fimg_snowy_rainy
+                      align: LEFT_MID
+                      x: 8
+                      y: -18
+                      src: img_snowy_rainy
+                      hidden: true
+                  - image:
+                      id: fimg_windy
+                      align: LEFT_MID
+                      x: 8
+                      y: -18
+                      src: img_windy
+                      hidden: true
+                  # High temperature arrow
+                  - label:
+                      align: LEFT_MID
+                      x: 80
+                      y: -32
+                      text_font: mdi_sm
+                      text: "\U000F005D"
+                      text_color: ${clr_temp_hot}
+                  # High temperature value
+                  - label:
+                      id: lbl_fcst_high
+                      align: LEFT_MID
+                      x: 100
+                      y: -32
+                      text: "--.-°"
+                      text_font: font_md
+                      text_color: ${clr_text}
+                  # Low temperature arrow
+                  - label:
+                      align: LEFT_MID
+                      x: 80
+                      y: -5
+                      text_font: mdi_sm
+                      text: "\U000F0045"
+                      text_color: ${clr_temp_cold}
+                  # Low temperature value
+                  - label:
+                      id: lbl_fcst_low
+                      align: LEFT_MID
+                      x: 100
+                      y: -5
+                      text: "--.-°"
+                      text_font: font_md
+                      text_color: ${clr_text_dim}
+                  # Precipitation probability (far right, same y as high temp)
+                  - label:
+                      id: lbl_fcst_precip_prob
+                      align: RIGHT_MID
+                      x: -5
+                      y: -32
+                      text: "--%"
+                      text_font: font_md
+                      text_color: ${clr_temp_cold}
+                      text_align: RIGHT
+                  # Precipitation amount (far right, same y as low temp)
+                  - label:
+                      id: lbl_fcst_precipitation
+                      align: RIGHT_MID
+                      x: -5
+                      y: -5
+                      text: "- mm"
+                      text_font: font_md
+                      text_color: ${clr_text_dim}
+                      text_align: RIGHT
+                  # Condition text (short)
+                  - label:
+                      id: lbl_fcst_condition
+                      align: BOTTOM_MID
+                      y: -28
+                      text: "---"
+                      text_font: font_sm
+                      text_color: ${clr_text}
+                      long_mode: DOT
+                      width: 240
+                  # Forecast description
+                  - label:
+                      id: lbl_fcst_description
+                      align: BOTTOM_MID
+                      y: -8
+                      text: "---"
+                      text_font: font_xs
+                      text_color: ${clr_text_dim}
+                      long_mode: DOT
+                      width: 240
+
             # AQI Widget
             - obj:
                 styles: widget_4x4

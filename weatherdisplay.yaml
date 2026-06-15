@@ -46,6 +46,10 @@ substitutions:
   ha_fcast_condition:     "sensor.holmeengen_sensor_condition"
   ha_fcast_condition_txt: "sensor.holmeengen_sensor_condition_text"
   ha_fcast_description:   "sensor.holmeengen_sensor_description"
+  ha_fcst_temp_high:      "sensor.forecast_high_today"
+  ha_fcst_temp_low:       "sensor.forecast_low_today"
+  ha_fcst_precip_prob:    "sensor.forecast_precipitation_probability"
+  ha_fcst_precipitation:  "sensor.forecast_precipitation"
   
   # AQI — overrides defaults in weather-common.yaml
   ha_aqi_index:       "sensor.holmeengen_sensor_air_quality_index"
@@ -524,6 +528,98 @@ sensor:
             snprintf(buf, sizeof(buf), "I går: %.1f", x);
             for (char* p = buf; *p; p++) if (*p == '.') { *p = ','; break; }
             lv_label_set_text(id(lbl_rain_yesterday), buf);
+
+  # ---------------------------------------------------------------------------
+  # Forecast — high and low temperatures
+  # ---------------------------------------------------------------------------
+  - platform: homeassistant
+    id: sensor_fcst_precip_prob
+    entity_id: ${ha_fcst_precip_prob}
+    on_value:
+      then:
+        - lambda: |-
+            char buf[8];
+            snprintf(buf, sizeof(buf), "%.0f%%", x);
+            lv_label_set_text(id(lbl_fcst_precip_prob), buf);
+
+  - platform: homeassistant
+    id: sensor_fcst_precipitation
+    entity_id: ${ha_fcst_precipitation}
+    on_value:
+      then:
+        - lambda: |-
+            char buf[12];
+            snprintf(buf, sizeof(buf), "%.1f mm", x);
+            for (char* p = buf; *p; p++) if (*p == '.') { *p = ','; break; }
+            lv_label_set_text(id(lbl_fcst_precipitation), buf);
+
+  - platform: homeassistant
+    id: sensor_fcst_temp_high
+    entity_id: ${ha_fcst_temp_high}
+    on_value:
+      then:
+        - lambda: |-
+            char buf[12];
+            snprintf(buf, sizeof(buf), "%.1f°", x);
+            for (char* p = buf; *p; p++) if (*p == '.') { *p = ','; break; }
+            lv_label_set_text(id(lbl_fcst_high), buf);
+
+  - platform: homeassistant
+    id: sensor_fcst_temp_low
+    entity_id: ${ha_fcst_temp_low}
+    on_value:
+      then:
+        - lambda: |-
+            char buf[12];
+            snprintf(buf, sizeof(buf), "%.1f°", x);
+            for (char* p = buf; *p; p++) if (*p == '.') { *p = ','; break; }
+            lv_label_set_text(id(lbl_fcst_low), buf);
+
+text_sensor:
+  # ---------------------------------------------------------------------------
+  # Forecast — condition code, short text, description
+  # ---------------------------------------------------------------------------
+  - platform: homeassistant
+    id: ts_fcast_condition
+    entity_id: ${ha_fcast_condition}
+    on_value:
+      then:
+        - lambda: |-
+            static lv_obj_t* all[] = {
+              id(fimg_clear_day), id(fimg_clear_night), id(fimg_cloudy),
+              id(fimg_fog), id(fimg_lightning), id(fimg_lightning_rainy),
+              id(fimg_partlycloudy), id(fimg_rainy), id(fimg_snowy),
+              id(fimg_snowy_rainy), id(fimg_windy)
+            };
+            for (auto* o : all) lv_obj_add_flag(o, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_t* show = id(fimg_clear_day);
+            if      (x == "clear-night")     show = id(fimg_clear_night);
+            else if (x == "cloudy")          show = id(fimg_cloudy);
+            else if (x == "fog")             show = id(fimg_fog);
+            else if (x == "lightning")       show = id(fimg_lightning);
+            else if (x == "lightning-rainy") show = id(fimg_lightning_rainy);
+            else if (x == "partlycloudy")    show = id(fimg_partlycloudy);
+            else if (x == "rainy")           show = id(fimg_rainy);
+            else if (x == "snowy")           show = id(fimg_snowy);
+            else if (x == "snowy-rainy")     show = id(fimg_snowy_rainy);
+            else if (x == "windy")           show = id(fimg_windy);
+            lv_obj_clear_flag(show, LV_OBJ_FLAG_HIDDEN);
+
+  - platform: homeassistant
+    id: ts_fcast_condition_txt
+    entity_id: ${ha_fcast_condition_txt}
+    on_value:
+      then:
+        - lambda: |-
+            lv_label_set_text(id(lbl_fcst_condition), x.c_str());
+
+  - platform: homeassistant
+    id: ts_fcast_description
+    entity_id: ${ha_fcast_description}
+    on_value:
+      then:
+        - lambda: |-
+            lv_label_set_text(id(lbl_fcst_description), x.c_str());
 
 packages:
   remote_package_files:

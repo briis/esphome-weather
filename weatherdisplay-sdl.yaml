@@ -28,6 +28,7 @@ esphome:
         - script.execute: simulate_uv_solar
         - script.execute: simulate_pressure
         - script.execute: simulate_rain
+        - script.execute: simulate_forecast
 
 host:
 
@@ -62,6 +63,7 @@ time:
           - script.execute: simulate_uv_solar
           - script.execute: simulate_pressure
           - script.execute: simulate_rain
+          - script.execute: simulate_forecast
 globals:
   - id: sim_pressure
     type: int
@@ -214,5 +216,68 @@ script:
           snprintf(buf, sizeof(buf), "I går: %.1f", yesterday);
           for (char* p = buf; *p; p++) if (*p == '.') { *p = ','; break; }
           lv_label_set_text(id(lbl_rain_yesterday), buf);
+  - id: simulate_forecast
+    then:
+      - lambda: |-
+          static const char* conditions[] = {
+            "clear-day", "clear-night", "cloudy", "fog", "lightning",
+            "lightning-rainy", "partlycloudy", "rainy", "snowy", "snowy-rainy", "windy"
+          };
+          static const char* labels[] = {
+            "Klart", "Klart (nat)", "Skyet", "Tåge", "Torden",
+            "Torden og regn", "Delvist skyet", "Regn", "Sne", "Slud", "Blæsende"
+          };
+          static const char* descriptions[] = {
+            "Klart vejr hele dagen", "Klart og stille nat", "Overskyet hele dagen",
+            "Tæt tåge om morgenen", "Risiko for tordenvejr", "Torden med kraftig regn",
+            "Perioder med sol og skyer", "Regnbyger i løbet af dagen",
+            "Snebyger ventes", "Blandet sne og regn", "Kraftig vind"
+          };
+          int idx = rand() % 11;
+          std::string cond = conditions[idx];
+
+          static lv_obj_t* all[] = {
+            id(fimg_clear_day), id(fimg_clear_night), id(fimg_cloudy),
+            id(fimg_fog), id(fimg_lightning), id(fimg_lightning_rainy),
+            id(fimg_partlycloudy), id(fimg_rainy), id(fimg_snowy),
+            id(fimg_snowy_rainy), id(fimg_windy)
+          };
+          for (auto* o : all) lv_obj_add_flag(o, LV_OBJ_FLAG_HIDDEN);
+          lv_obj_t* show = id(fimg_clear_day);
+          if      (cond == "clear-night")     show = id(fimg_clear_night);
+          else if (cond == "cloudy")          show = id(fimg_cloudy);
+          else if (cond == "fog")             show = id(fimg_fog);
+          else if (cond == "lightning")       show = id(fimg_lightning);
+          else if (cond == "lightning-rainy") show = id(fimg_lightning_rainy);
+          else if (cond == "partlycloudy")    show = id(fimg_partlycloudy);
+          else if (cond == "rainy")           show = id(fimg_rainy);
+          else if (cond == "snowy")           show = id(fimg_snowy);
+          else if (cond == "snowy-rainy")     show = id(fimg_snowy_rainy);
+          else if (cond == "windy")           show = id(fimg_windy);
+          lv_obj_clear_flag(show, LV_OBJ_FLAG_HIDDEN);
+          lv_label_set_text(id(lbl_fcst_condition), labels[idx]);
+          lv_label_set_text(id(lbl_fcst_description), descriptions[idx]);
+
+          auto fmt = [](char* buf, int n, float v) {
+            snprintf(buf, n, "%.1f°", v);
+            for (char* p = buf; *p; p++) if (*p == '.') { *p = ','; break; }
+          };
+          char buf[12];
+
+          int prob = rand() % 101;
+          snprintf(buf, sizeof(buf), "%d%%", prob);
+          lv_label_set_text(id(lbl_fcst_precip_prob), buf);
+
+          float precip = (rand() % 200) / 10.0f;
+          snprintf(buf, sizeof(buf), "%.1f mm", precip);
+          for (char* p = buf; *p; p++) if (*p == '.') { *p = ','; break; }
+          lv_label_set_text(id(lbl_fcst_precipitation), buf);
+          float high = 10.0f + (rand() % 200) / 10.0f;
+          fmt(buf, sizeof(buf), high);
+          lv_label_set_text(id(lbl_fcst_high), buf);
+          float low = -5.0f + (rand() % 150) / 10.0f;
+          fmt(buf, sizeof(buf), low);
+          lv_label_set_text(id(lbl_fcst_low), buf);
+
 packages:
   common: !include weather-common.yaml
