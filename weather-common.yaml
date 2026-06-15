@@ -1035,10 +1035,12 @@ lvgl:
                   - label:
                       id: lbl_fcst_condition
                       align: BOTTOM_MID
-                      y: -28
+                      x: 5
+                      y: -43
                       text: "---"
                       text_font: font_sm
                       text_color: ${clr_text}
+                      text_align: LEFT
                       long_mode: DOT
                       width: 240
                   # Forecast description
