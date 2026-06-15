@@ -7,7 +7,7 @@ Design: 3-column dark card grid on pure black background.
 
 ## Current phase
 
-**Phase 2 — Temperature, Wind, Sun & UV, and Barometer cards populated.** Grid layout verified working on Waveshare ESP32-S3-Touch-LCD-7. SDL simulator used for visual iteration; hardware target flashed via USB and confirmed. Next: remaining cards (Forecast, Rain).
+**Phase 2 — Temperature, Wind, Sun & UV, Barometer, and Rain cards populated.** Grid layout verified working on Waveshare ESP32-S3-Touch-LCD-7. SDL simulator used for visual iteration; hardware target flashed via USB and confirmed. Next: remaining cards (Forecast).
 
 ## Files
 
@@ -38,17 +38,21 @@ esphome run weatherdisplay.yaml
 
 ## Layout structure
 
-12×12 internal grid (each cell ~64×39 px). Widgets span 4 columns × 5 rows for main cards.
+12×12 internal grid (each cell ~64×39 px).
 
 ```text
 ┌──────────────────────────────────────────────────────────────────┐
-│  STATUS BAR  (wifi icon left · title center · time right)        │
+│  STATUS BAR  (wifi icon left · title center · time right)   row 0│
 ├───────────────────┬───────────────────┬──────────────────────────┤
 │  Temperature      │    Wind           │     Sun & UV             │
-│  col 0–3, row 1–5 │    col 4–7, row 1–5│    col 8–11, row 1–5  │
+│  col 0–3, row 1–5 │  col 4–7, row 1–5 │   col 8–11, row 1–4    │
+├───────────────────┼───────────────────├──────────────────────────┤
+│  Feels like /     │  Wind avg /       │     Barometer            │
+│  Dewpoint         │  Max gust         │   col 8–11, row 5–7      │
+│  col 0–3, row 6–7 │  col 4–7, row 6–7 │                          │
 ├───────────────────┼───────────────────┼──────────────────────────┤
-│  (placeholder)    │  (placeholder)    │     (placeholder)        │
-│  col 0–3, row 6   │  col 4–7, row 6   │    col 8–11, row 6      │
+│  Rain             │  (placeholder)    │     (placeholder)        │
+│  col 0–3, row 8–11│  col 4–7, row 8–11│   col 8–11, row 8–11   │
 └───────────────────┴───────────────────┴──────────────────────────┘
 ```
 
@@ -76,6 +80,7 @@ Colors are defined as `substitutions:` at the top of `weather-common.yaml`. Chan
 
 | ID | Family | Size | Use |
 | --- | --- | --- | --- |
+| `font_xxs` | Roboto | 8 | Smallest labels (rain widget sub-values) |
 | `font_xs` | Roboto | 11 | Tiny labels |
 | `font_sm` | Roboto | 14 | Default / card titles |
 | `font_md` | Roboto | 18 | Mid-size values |
@@ -102,6 +107,13 @@ MDI codepoints in use:
 | `F0599` | weather-sunny | Sun / UV |
 | `F0597` | weather-rainy | Rain |
 | `F059D` | weather-windy | Wind |
+| `F058C` | weather-pouring | Rain card header icon |
+| `F17FE` | sun-wireless | Solar radiation |
+| `F0510` | thermometer-lines | Feels like / apparent temp |
+| `F029A` | gauge | Barometer |
+| `F1594` | trending-up | Pressure rising |
+| `F1595` | trending-down | Pressure falling |
+| `F1598` | trending-neutral | Pressure stable |
 
 ## Widget IDs
 
@@ -111,7 +123,7 @@ MDI codepoints in use:
 - `display_heder` — "Vejret i Holmeengen" (static title)
 - `time_label` — HH:MM, updated via `lvgl_update_clock` script. SDL: triggered by `on_time` every minute. Hardware: immediate on `on_time_sync`, then every minute via `on_time`.
 
-### Temperature card (col 0–3)
+### Temperature card (col 0–3, row 1–5)
 
 - `lbl_temp_high` — daily high (font_md, with ↑ arrow icon to left)
 - `circle_temp` — 180×180 meter, transparent fill, 6 px coloured border driven by temperature threshold
@@ -126,7 +138,7 @@ HA sensors (entity IDs set via substitutions, overridden in `weatherdisplay.yaml
 | `ha_temp_high` | `max_temperature_today` | Daily high (attribute of current sensor) |
 | `ha_temp_low` | `min_temperature_today` | Daily low (attribute of current sensor) |
 
-### Wind card (col 4–7)
+### Wind card (col 4–7, row 1–5)
 
 - `circle_wind_border` — 180×180 meter, 4 px blue border, 360° scale with 17 tick marks
 - `bearing_indicator` — current bearing needle image (24×24 px, orbits outer edge). Rotation set via `lv_get_needle_angle_for_value` + `lv_obj_set_style_transform_rotation`.
@@ -162,14 +174,14 @@ lv_obj_set_style_transform_pivot_y(id(bearing_avg_indicator), 9, LV_PART_MAIN);
 
 Formula: `x_offset = R`, `pivot_x = image_width/2 - R`, `pivot_y = image_height/2`. This places the rotation pivot exactly at the scale centre so the needle orbits at radius R.
 
-### Sun & UV card (col 8–11)
+### Sun & UV card (col 8–11, row 1–4)
 
-- `circle_uv` — 180×180 meter, border colour driven by UV index (WHO scale)
-- `lbl_uv` — UV index integer value (font_xxl, centred inside circle)
-- `lbl_uv_unit` — static unit label
-- `circle_solar` — solar radiation meter
-- `lbl_solar` — solar radiation value W/m² (font_xxl)
-- `lbl_solar_unit` — static unit label
+- `circle_uv` — 115×115 meter, border colour driven by UV index (WHO scale)
+- `lbl_uv` — UV index integer value (font_xl, centred inside circle)
+- `lbl_uv_unit` — static "UV Index" label
+- `circle_solar` — 115×115 solar radiation meter
+- `lbl_solar` — solar radiation value W/m² (font_xl)
+- `lbl_solar_unit` — static "W/m²" label
 
 UV border colour scale (WHO):
 
@@ -201,8 +213,48 @@ HA sensors:
 | Substitution | Default in common | Purpose |
 | --- | --- | --- |
 | `ha_pressure` | `sensor.unknown_pressure` | Current pressure → arc value + label |
-| `ha_pressure_trend` | `sensor.unknown_pressure_trend` | Trend direction → symbol icon + colour |
-| `ha_pressure_trend_value` | `sensor.unknown_pressure_trend_value` | Trend description text |
+| `ha_pressure_trend` | `sensor.unknown_pressure_trend` | Trend direction (unused, reserved) |
+| `ha_pressure_trend_value` | `sensor.unknown_pressure_trend_value` | Trend value → symbol icon + colour + text |
+
+### Feels like / Dewpoint sub-card (col 0–3, row 6–7)
+
+- `temp_feels_like` — apparent temperature (font_lg)
+- `temp_dewpoint` — dew point temperature (font_lg)
+
+HA sensors:
+
+| Substitution | Default in common | Purpose |
+| --- | --- | --- |
+| `ha_feels_like` | `sensor.unknown_apparent_temperature` | Apparent temperature |
+| `ha_dew_point` | `sensor.unknown_dewpoint` | Dew point |
+
+### Wind averages sub-card (col 4–7, row 6–7)
+
+- `wind_10min_avg` — 10-minute average wind speed (font_lg)
+- `wind_max_gust` — daily maximum gust (font_lg)
+
+HA sensors:
+
+| Substitution | Default in common | Purpose |
+| --- | --- | --- |
+| `ha_wind_speed_avg` | `sensor.unknown_wind_speed` | 10-min avg speed |
+| `ha_wind_gust_high` | `sensor.unknown_wind_gust` | Daily max gust |
+
+### Rain card (col 0–3, row 8–11)
+
+- `circle_rain` — 140×140 meter, 6 px blue border
+- `lbl_rain_yesterday` — yesterday's total mm (font_xs, dim, TOP_MID y:5 inside circle), formatted "I går: x,x"
+- `rain_today` — today's total mm (font_xl, centred inside circle)
+- Static "mm" label (font_sm, dim, CENTER y:20 inside circle)
+- `lbl_rain_rate` — current rain rate (font_xs, dim, BOTTOM_MID y:-5 inside circle), formatted "x,x mm/h"
+
+HA sensors:
+
+| Substitution | Default in common | Purpose |
+| --- | --- | --- |
+| `ha_rain_today` | `sensor.unknown_rain_today` | Today's accumulated rain → `rain_today` label |
+| `ha_rain_rate` | `sensor.unknown_rain_rate` | Current rain rate → `lbl_rain_rate` |
+| `ha_rain_yesterday` | `sensor.unknown_rain_yesterday` | Yesterday's total → `lbl_rain_yesterday` |
 
 ## Hardware config (`weatherdisplay.yaml`)
 
@@ -252,5 +304,5 @@ Pushing an update to `weather-common.yaml` on `main` propagates to the device on
 - [x] Wind card — compass meter with current + avg bearing needles, speed, gust, cardinal direction
 - [x] Sun & UV card — UV meter with WHO-scale colour border + solar radiation display, live HA sensors
 - [x] Barometer card — half-circle arc gauge with pressure value, trend symbol + text
+- [x] Rain card — circle with today's total, yesterday's total, and current rate; live HA sensors
 - [ ] Forecast card
-- [ ] Rain card
