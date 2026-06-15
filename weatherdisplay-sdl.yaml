@@ -1,74 +1,32 @@
-# ============================================================
-# Weather Display — SDL Simulator target
-# 800×480 LVGL v9 — host platform for layout iteration
-#
-# Prerequisites (macOS):
-#   brew install sdl2
-#   pip install esphome
-#
-# Run:
-#   esphome run weatherdisplay-sdl.yaml
-# ============================================================
+substitutions:
+  name: "Weather Display"
+  device: "esphome-weather-sdl"
+  version: "0.1.0"
+  created_by: "Bjarne Riis"
+  display_rotation: "0" # 0, 90, 180, 270
 
 esphome:
-  name: weatherdisplay-sdl
-  friendly_name: Weather Display SDL
+  name: "${device}"
+  friendly_name: "${name}"
+  project:
+    name: "briis.${device}"
+    version: "${version}"
   on_boot:
-    priority: -100.0
-    then:
-      - lvgl.label.update:
-          id: lbl_time
-          text: !lambda |-
-            time_t now = ::time(nullptr);
-            struct tm *t = localtime(&now);
-            char buf[6];
-            strftime(buf, sizeof(buf), "%H:%M", t);
-            return std::string(buf);
-      - lambda: |-
-          static const char* icons[] = {
-            "\U000F092B", "\U000F091F", "\U000F0922", "\U000F0925", "\U000F0928"
-          };
-          static uint32_t colors[] = {
-            ${clr_wifi_bad}, ${clr_wifi_bad}, ${clr_wifi_weak}, ${clr_wifi_good}, ${clr_wifi_good}
-          };
-          srand(::time(nullptr));
-          int lvl = rand() % 5;
-          lv_label_set_text(id(lbl_wifi), icons[lvl]);
-          lv_obj_set_style_text_color(id(lbl_wifi), lv_color_hex(colors[lvl]), 0);
-      - lambda: |-
-          // Mock temperature data for SDL visual testing
-          auto fmt = [](char* buf, int n, float v) {
-            snprintf(buf, n, "%.1f°", v);
-            for (char* p = buf; *p; p++) if (*p == '.') { *p = ','; break; }
-          };
-          char buf[12];
-          float temp = 12.5f;
-          fmt(buf, sizeof(buf), temp);
-          lv_label_set_text(id(lbl_temp_current), buf);
-          lv_obj_set_style_border_color(id(circle_temp), lv_color_hex(${clr_temp_cool}), 0);
-          fmt(buf, sizeof(buf), 18.3f);
-          lv_label_set_text(id(lbl_temp_high), buf);
-          fmt(buf, sizeof(buf), 5.2f);
-          lv_label_set_text(id(lbl_temp_low), buf);
-      - lvgl.arc.update:
-          id: arc_wind_current
-          start_angle: 314
-          end_angle: 330
-          value: 100
-      - lvgl.arc.update:
-          id: arc_wind_avg
-          start_angle: 307
-          end_angle: 323
-          value: 100
-      - lambda: |-
-          lv_obj_set_style_arc_opa(id(arc_wind_current), LV_OPA_TRANSP, LV_PART_MAIN);
-          lv_obj_set_style_arc_opa(id(arc_wind_avg), LV_OPA_TRANSP, LV_PART_MAIN);
-          lv_obj_set_style_opa(id(arc_wind_current), LV_OPA_TRANSP, LV_PART_KNOB);
-          lv_obj_set_style_opa(id(arc_wind_avg), LV_OPA_TRANSP, LV_PART_KNOB);
-          lv_label_set_text(id(lbl_wind_info), "NØ 52°");
-          lv_label_set_text(id(lbl_wind_speed), "3,2");
-          lv_label_set_text(id(lbl_wind_gust), "Stød 5,1");
-          lv_image_set_pivot(id(bearing_indicator), -69, 8);
+    - priority: -100.0
+      then:
+        - script.execute: lvgl_update_clock
+        - script.execute: simulate_wifi
+        - script.execute: simulate_temp        
+        - lambda: |-
+            lv_obj_set_style_x(id(bearing_indicator), 78, LV_PART_MAIN);
+            lv_obj_set_style_transform_pivot_x(id(bearing_indicator), -66, LV_PART_MAIN);
+            lv_obj_set_style_transform_pivot_y(id(bearing_indicator), 12, LV_PART_MAIN);
+            lv_obj_set_style_x(id(bearing_avg_indicator), 78, LV_PART_MAIN);
+            lv_obj_set_style_transform_pivot_x(id(bearing_avg_indicator), -69, LV_PART_MAIN);
+            lv_obj_set_style_transform_pivot_y(id(bearing_avg_indicator), 9, LV_PART_MAIN);
+        - script.execute: simulate_wind
+        - script.execute: simulate_uv_solar
+        - script.execute: simulate_pressure
 
 host:
 
@@ -83,8 +41,32 @@ display:
       height: 480
     update_interval: 16ms
 
-interval:
-  - interval: 30s
+touchscreen:
+  - platform: sdl
+    id: touch_controller
+    display: lvgl_display
+
+time:
+  - platform: host
+    id: system_time
+    timezone: Europe/Copenhagen
+    on_time:
+      - seconds: 0
+        minutes: '*'
+        then:
+          - script.execute: lvgl_update_clock
+          - script.execute: simulate_wifi
+          - script.execute: simulate_temp
+          - script.execute: simulate_wind
+          - script.execute: simulate_uv_solar
+          - script.execute: simulate_pressure
+globals:
+  - id: sim_pressure
+    type: int
+    initial_value: '1013'
+
+script:
+  - id: simulate_wifi
     then:
       - lambda: |-
           static const char* icons[] = {
@@ -94,8 +76,123 @@ interval:
             ${clr_wifi_bad}, ${clr_wifi_bad}, ${clr_wifi_weak}, ${clr_wifi_good}, ${clr_wifi_good}
           };
           int lvl = rand() % 5;
-          lv_label_set_text(id(lbl_wifi), icons[lvl]);
-          lv_obj_set_style_text_color(id(lbl_wifi), lv_color_hex(colors[lvl]), 0);
+          lv_label_set_text(id(wifi_label), icons[lvl]);
+          lv_obj_set_style_text_color(id(wifi_label), lv_color_hex(colors[lvl]), 0);
+  - id: simulate_temp
+    then:
+     - lambda: |-
+          // Mock temperature data for SDL visual testing
+          auto fmt = [](char* buf, int n, float v) {
+            snprintf(buf, n, "%.1f°", v);
+            for (char* p = buf; *p; p++) if (*p == '.') { *p = ','; break; }
+          };
+          char buf[12];
+          float temp = -15.0f + (rand() % 501) / 10.0f;
+          fmt(buf, sizeof(buf), temp);
+          lv_label_set_text(id(lbl_temp_current), buf);
 
+          lv_color_t c;
+          if (temp < 5.0f)       c = lv_color_hex(${clr_temp_cold});
+          else if (temp < 15.0f) c = lv_color_hex(${clr_temp_cool});
+          else if (temp < 20.0f) c = lv_color_hex(${clr_temp_warm});
+          else                 c = lv_color_hex(${clr_temp_hot});
+          lv_obj_set_style_border_color(id(circle_temp), c, 0);
+
+          fmt(buf, sizeof(buf), 18.3f);
+          lv_label_set_text(id(lbl_temp_high), buf);
+          fmt(buf, sizeof(buf), 5.2f);
+          lv_label_set_text(id(lbl_temp_low), buf);
+          fmt(buf, sizeof(buf), temp - 2.5f);
+          lv_label_set_text(id(temp_feels_like), buf);
+          fmt(buf, sizeof(buf), temp - 6.0f);
+          lv_label_set_text(id(temp_dewpoint), buf);
+  - id: simulate_wind
+    then:
+      - lambda: |-
+          auto fmt = [](char* buf, int n, float v) {
+            snprintf(buf, n, "%.1f", v);
+            for (char* p = buf; *p; p++) if (*p == '.') { *p = ','; break; }
+          };      
+          char buf[12];
+          float speed = 0.0f + (rand() % 320) / 10.0f;
+          fmt(buf, sizeof(buf), speed);
+          lv_label_set_text(id(lbl_wind_speed), buf);
+
+          float gust = 0.0f + (rand() % 320) / 10.0f;
+          fmt(buf, sizeof(buf), gust);
+          lv_label_set_text(id(lbl_wind_gust), buf);
+
+          float speed_avg = 0.0f + (rand() % 200) / 10.0f;
+          fmt(buf, sizeof(buf), speed_avg);
+          lv_label_set_text(id(wind_10min_avg), buf);
+
+          float gust_high = gust + (rand() % 50) / 10.0f;
+          fmt(buf, sizeof(buf), gust_high);
+          lv_label_set_text(id(wind_max_gust), buf);
+
+          auto cardinal = [](float b) -> const char* {
+            static const char* d[] = {"N","NNØ","NØ","ØNØ","Ø","ØSØ","SØ","SSØ","S","SSV","SV","VSV","V","VNV","NV","NNV"};
+            return d[(int)((b + 11.25f) / 22.5f) % 16];
+          };
+          int bearing = 0 + (rand() % 360);
+          snprintf(buf, sizeof(buf), "%s", cardinal(bearing));
+          lv_label_set_text(id(lbl_wind_cardinal), buf);
+          lv_obj_set_style_transform_rotation(id(bearing_indicator), lv_get_needle_angle_for_value(id(bearing_indicator), bearing) * 10, LV_PART_MAIN);
+          int bearing_avg = 0 + (rand() % 360);
+          lv_obj_set_style_transform_rotation(id(bearing_avg_indicator), lv_get_needle_angle_for_value(id(bearing_avg_indicator), bearing_avg) * 10, LV_PART_MAIN);
+  - id: simulate_uv_solar
+    then:
+      - lambda: |-
+          auto fmt = [](char* buf, int n, float v) {
+            snprintf(buf, n, "%.0f", v);
+            for (char* p = buf; *p; p++) if (*p == '.') { *p = ','; break; }
+          };      
+          char buf[12];
+          auto uv_color = [](int uv) -> lv_color_t {
+            if (uv <= 2)  return lv_color_hex(${clr_wifi_good});   // 0–2  low      green
+            if (uv <= 5)  return lv_color_hex(${clr_temp_cool});   // 3–5  moderate yellow
+            if (uv <= 7)  return lv_color_hex(${clr_temp_warm});   // 6–7  high     orange
+            if (uv <= 10) return lv_color_hex(${clr_temp_hot});    // 8–10 very high red
+            return lv_color_hex(0x9C27B0);                         // 11+  extreme  violet
+          };
+          int uv = (rand() % 14);
+          fmt(buf, sizeof(buf), uv);
+          lv_label_set_text(id(lbl_uv), buf);
+          lv_obj_set_style_border_color(id(circle_uv), uv_color(uv), 0);
+          int solar = (rand() % 1500);
+          fmt(buf, sizeof(buf), solar);
+          lv_label_set_text(id(lbl_solar), buf);
+  - id: simulate_pressure
+    then:
+      - lambda: |-
+          id(sim_pressure) = 960 + (rand() % 101);
+          char buf[8];
+          snprintf(buf, sizeof(buf), "%d", id(sim_pressure));
+          lv_label_set_text(id(lbl_pressure), buf);
+          float sim_trend = ((rand() % 41) - 20) / 10.0f;
+          const char* icon;
+          lv_color_t color;
+          char text_buf[16];
+          if (sim_trend > 0) {
+            icon = "${trend_rising}";
+            color = lv_color_hex(${clr_trend_rising});
+            snprintf(text_buf, sizeof(text_buf), "Stiger %.1f", sim_trend);
+            for (char* p = text_buf; *p; p++) if (*p == '.') { *p = ','; break; }
+          } else if (sim_trend < 0) {
+            icon = "${trend_falling}";
+            color = lv_color_hex(${clr_trend_falling});
+            snprintf(text_buf, sizeof(text_buf), "Falder %.1f", -sim_trend);
+            for (char* p = text_buf; *p; p++) if (*p == '.') { *p = ','; break; }
+          } else {
+            icon = "${trend_stable}";
+            color = lv_color_hex(${clr_trend_stable});
+            snprintf(text_buf, sizeof(text_buf), "Stabil");
+          }
+          lv_label_set_text(id(pressure_trend_symbol), icon);
+          lv_obj_set_style_text_color(id(pressure_trend_symbol), color, 0);
+          lv_label_set_text(id(pressure_trend_text), text_buf);
+      - lvgl.arc.update:
+          id: baro_gauge
+          value: !lambda return id(sim_pressure);
 packages:
-  common: !include weatherdisplay-common.yaml
+  common: !include weather-common.yaml

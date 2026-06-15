@@ -7,15 +7,15 @@ Design: 3-column dark card grid on pure black background.
 
 ## Current phase
 
-**Phase 2 — Temperature, Wind, and Sun & UV cards populated.** Grid layout verified working on Waveshare ESP32-S3-Touch-LCD-7. SDL simulator used for visual iteration; hardware target flashed via USB and confirmed. Next: remaining cards (Forecast, Rain, Barometer).
+**Phase 2 — Temperature, Wind, Sun & UV, and Barometer cards populated.** Grid layout verified working on Waveshare ESP32-S3-Touch-LCD-7. SDL simulator used for visual iteration; hardware target flashed via USB and confirmed. Next: remaining cards (Forecast, Rain).
 
 ## Files
 
 | File | Purpose |
 | --- | --- |
 | `weather-common.yaml` | Shared: fonts, images, LVGL layout, `lvgl_update_clock` script. Included by both targets. |
-| `esphome-weather-sdl.yaml` | SDL simulator target (`host` platform). Layout iteration + mock data scripts. |
-| `esphome-weather.yaml` | ESP32-S3 hardware target. Waveshare 7" 800×480. HA sensors. |
+| `weatherdisplay-sdl.yaml` | SDL simulator target (`host` platform). Layout iteration + mock data scripts. |
+| `weatherdisplay.yaml` | ESP32-S3 hardware target. Waveshare 7" 800×480. HA sensors. |
 | `fonts/materialdesignicons-webfont.ttf` | MDI icon font. |
 | `images/wind_bearing_indicator.png` | Current wind bearing needle (24×24). |
 | `images/wind_bearing_avg_indicator.png` | Average bearing needle (18×18). |
@@ -25,7 +25,7 @@ Design: 3-column dark card grid on pure black background.
 SDL simulator (layout iteration):
 
 ```sh
-esphome run esphome-weather-sdl.yaml
+esphome run weatherdisplay-sdl.yaml
 ```
 
 Prerequisites: `brew install sdl2` + `pip install esphome`
@@ -33,7 +33,7 @@ Prerequisites: `brew install sdl2` + `pip install esphome`
 Flash to hardware:
 
 ```sh
-esphome run esphome-weather.yaml
+esphome run weatherdisplay.yaml
 ```
 
 ## Layout structure
@@ -118,7 +118,7 @@ MDI codepoints in use:
 - `lbl_temp_current` — current temperature (font_xxl, centered inside circle)
 - `lbl_temp_low` — daily low (font_md, with ↓ arrow icon to left)
 
-HA sensors (entity IDs set via substitutions, overridden in `esphome-weather.yaml`):
+HA sensors (entity IDs set via substitutions, overridden in `weatherdisplay.yaml`):
 
 | Substitution | Default in common | Purpose |
 | --- | --- | --- |
@@ -188,7 +188,23 @@ HA sensors:
 | `ha_uv_index` | `sensor.unknown_uv_index` | UV index → label + circle colour |
 | `ha_solar_radiation` | `sensor.unknown_solar_radiation` | Solar radiation → label |
 
-## Hardware config (`esphome-weather.yaml`)
+### Barometer card (col 8–11, row 5–7)
+
+- `baro_gauge` — 140×140 half-circle arc (180°–0°, range 960–1060 hPa), teal indicator arc
+- `lbl_pressure` — current pressure value (font_xl, centred inside arc)
+- `lbl_pressure_unit` — static "hPa" label (font_xs, dim)
+- `pressure_trend_symbol` — MDI trend arrow icon (mdi_sm), colour driven by trend
+- `pressure_trend_text` — trend description text (e.g. "Stabil"), font_sm
+
+HA sensors:
+
+| Substitution | Default in common | Purpose |
+| --- | --- | --- |
+| `ha_pressure` | `sensor.unknown_pressure` | Current pressure → arc value + label |
+| `ha_pressure_trend` | `sensor.unknown_pressure_trend` | Trend direction → symbol icon + colour |
+| `ha_pressure_trend_value` | `sensor.unknown_pressure_trend_value` | Trend description text |
+
+## Hardware config (`weatherdisplay.yaml`)
 
 Board: Waveshare ESP32-S3-Touch-LCD-7 · 16 MB flash · 8 MB octal PSRAM
 
@@ -208,9 +224,9 @@ Board: Waveshare ESP32-S3-Touch-LCD-7 · 16 MB flash · 8 MB octal PSRAM
 
 ### Package strategy
 
-`esphome-weather.yaml` (hardware) pulls `weather-common.yaml` from the **remote Forgejo repo** at `https://git.digitalhomes.dk/briis/esphome-weather` (ref: `main`, refresh: 10 s, auth via `!secret forgejo_token`).
+`weatherdisplay.yaml` (hardware) pulls `weather-common.yaml` from the **remote Forgejo repo** at `https://git.digitalhomes.dk/briis/esphome-weather` (ref: `main`, refresh: 10 s, auth via `!secret forgejo_token`).
 
-`esphome-weather-sdl.yaml` (SDL simulator) uses a local `!include weather-common.yaml`.
+`weatherdisplay-sdl.yaml` (SDL simulator) uses a local `!include weather-common.yaml`.
 
 Pushing an update to `weather-common.yaml` on `main` propagates to the device on next compile/OTA without reflashing.
 
@@ -221,8 +237,8 @@ Pushing an update to `weather-common.yaml` on `main` propagates to the device on
 - **`scrollbar_mode: "OFF"` needs quotes** — YAML parses bare `OFF` as boolean `false`.
 - **ESPHome rejects negative `pivot_x`** — the YAML schema validator requires `pivot_x >= 0`. Use `0` as a placeholder and fix with `lv_obj_set_style_transform_pivot_x` in `on_boot`. Must also fix `x` offset and `pivot_y` — all three are linked (see Bearing indicator section above).
 - **`lv_image_set_pivot` is wrong for meter indicators** — use `lv_obj_set_style_transform_pivot_x/y` instead. The indicator object is an `lv_obj_t*`; `lv_image_set_pivot` targets the image zoom pivot, not the rotation transform pivot.
-- **HA sensor substitutions belong in the hardware target** — defined as placeholders in `weather-common.yaml` but overridden in `esphome-weather.yaml`. Main-file substitutions take precedence over package substitutions in ESPHome.
-- **`esphome-weather.yaml` must be kept in sync in two places** — local dev copy AND the HA ESPHome addon config folder. The common file only needs to be on Forgejo.
+- **HA sensor substitutions belong in the hardware target** — defined as placeholders in `weather-common.yaml` but overridden in `weatherdisplay.yaml`. Main-file substitutions take precedence over package substitutions in ESPHome.
+- **`weatherdisplay.yaml` must be kept in sync in two places** — local dev copy AND the HA ESPHome addon config folder. The common file only needs to be on Forgejo.
 - **Time component id must be `system_time`** — `weather-common.yaml`'s `lvgl_update_clock` script references `id(system_time)`. Both SDL (host time) and hardware (HA time) must use this id.
 
 ## Phase 2 plan
@@ -235,6 +251,6 @@ Pushing an update to `weather-common.yaml` on `main` propagates to the device on
 - [x] Temperature card — circle outline + current temp + daily high/low, live HA sensors
 - [x] Wind card — compass meter with current + avg bearing needles, speed, gust, cardinal direction
 - [x] Sun & UV card — UV meter with WHO-scale colour border + solar radiation display, live HA sensors
+- [x] Barometer card — half-circle arc gauge with pressure value, trend symbol + text
 - [ ] Forecast card
 - [ ] Rain card
-- [ ] Barometer card
