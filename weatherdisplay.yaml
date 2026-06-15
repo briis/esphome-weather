@@ -4,23 +4,34 @@
 # ESP32-S3, 16 MB flash, 8 MB octal PSRAM
 #
 # Flash:
-#   esphome run weatherdisplay.yaml
+#   esphome run esphome-weather.yaml
 # ============================================================
 substitutions:
   name: "Weather Display"
   device: "weatherdisplay"
   version: "0.1.0"
   created_by: "Bjarne Riis"
-  # Temperature — overrides defaults in weatherdisplay-common.yaml
+  display_rotation: "0"
+
+  # Temperature — overrides defaults in weather-common.yaml
   ha_temp_current: "sensor.holmeengen_sensor_temperature"
   ha_temp_high:    "max_temperature_today"
   ha_temp_low:     "min_temperature_today"
 
-  # Wind — overrides defaults in weatherdisplay-common.yaml
+  # Wind — overrides defaults in weather-common.yaml
   ha_wind_speed:       "sensor.holmeengen_sensor_wind_speed"
   ha_wind_bearing:     "sensor.holmeengen_sensor_wind_bearing"
   ha_wind_gust:        "sensor.holmeengen_sensor_wind_gust"
   ha_wind_bearing_avg: "sensor.holmeengen_sensor_wind_bearing_avg_10_min"
+
+  # UV & Solar Radiation — overrides defaults in weather-common.yaml
+  ha_uv_index:         "sensor.holmeengen_sensor_uv_index"
+  ha_solar_radiation:  "sensor.holmeengen_sensor_solar_radiation"
+
+  # Barometer - overrides defaults in weather-common.yaml
+  ha_pressure:         "sensor.holmeengen_sensor_sealevel_pressure"
+  ha_pressure_trend:   "sensor.holmeengen_sensor_pressure_trend"
+  ha_pressure_trend_value: "sensor.holmeengen_sensor_pressure_trend_value"
 
 esphome:
   name: "${device}"
@@ -32,11 +43,12 @@ esphome:
     priority: -200.0
     then:
       - lambda: |-
-          lv_obj_set_style_arc_opa(id(arc_wind_current), LV_OPA_TRANSP, LV_PART_MAIN);
-          lv_obj_set_style_arc_opa(id(arc_wind_avg), LV_OPA_TRANSP, LV_PART_MAIN);
-          lv_obj_set_style_opa(id(arc_wind_current), LV_OPA_TRANSP, LV_PART_KNOB);
-          lv_obj_set_style_opa(id(arc_wind_avg), LV_OPA_TRANSP, LV_PART_KNOB);
-          lv_image_set_pivot(id(bearing_indicator), -69, 8);
+          lv_obj_set_style_x(id(bearing_indicator), 78, LV_PART_MAIN);
+          lv_obj_set_style_transform_pivot_x(id(bearing_indicator), -66, LV_PART_MAIN);
+          lv_obj_set_style_transform_pivot_y(id(bearing_indicator), 12, LV_PART_MAIN);
+          lv_obj_set_style_x(id(bearing_avg_indicator), 78, LV_PART_MAIN);
+          lv_obj_set_style_transform_pivot_x(id(bearing_avg_indicator), -69, LV_PART_MAIN);
+          lv_obj_set_style_transform_pivot_y(id(bearing_avg_indicator), 9, LV_PART_MAIN);
   platformio_options:
     build_flags: "-DBOARD_HAS_PSRAM"
     board_build.esp-idf.memory_type: qio_opi
@@ -68,13 +80,13 @@ wifi:
   on_connect:
     then:
       - lambda: |-
-          lv_label_set_text(id(lbl_wifi), "\U000F0928");
-          lv_obj_set_style_text_color(id(lbl_wifi), lv_color_hex(${clr_wifi_good}), 0);
+          lv_label_set_text(id(wifi_label), "\U000F0928");
+          lv_obj_set_style_text_color(id(wifi_label), lv_color_hex(${clr_wifi_good}), 0);
   on_disconnect:
     then:
       - lambda: |-
-          lv_label_set_text(id(lbl_wifi), "\U000F092B");
-          lv_obj_set_style_text_color(id(lbl_wifi), lv_color_hex(${clr_wifi_bad}), 0);
+          lv_label_set_text(id(wifi_label), "\U000F092B");
+          lv_obj_set_style_text_color(id(wifi_label), lv_color_hex(${clr_wifi_bad}), 0);
 
 api:
   encryption:
@@ -93,22 +105,22 @@ logger:
   level: ERROR
 
 # ---------------------------------------------------------------------------
-# Time — syncs system clock from HA; on_time_sync gives immediate display
-# The interval in weatherdisplay-common.yaml then keeps lbl_time updated
+# Time — syncs from HA; on_time_sync gives immediate display update.
+# id: system_time matches the id used by the lvgl_update_clock script in
+# weather-common.yaml, so both SDL and hardware share one script.
+# on_time keeps the clock ticking every minute thereafter.
 # ---------------------------------------------------------------------------
 time:
   - platform: homeassistant
-    id: ha_time
+    id: system_time
     on_time_sync:
       then:
-        - lvgl.label.update:
-            id: lbl_time
-            text: !lambda |-
-              auto now = id(ha_time).now();
-              if (!now.is_valid()) return std::string("--:--");
-              char buf[6];
-              sprintf(buf, "%02d:%02d", now.hour, now.minute);
-              return std::string(buf);
+        - script.execute: lvgl_update_clock
+    on_time:
+      - seconds: 0
+        minutes: '*'
+        then:
+          - script.execute: lvgl_update_clock
 
 # ---------------------------------------------------------------------------
 # Hardware — I/O expander, display, touch, backlight
@@ -214,6 +226,12 @@ switch:
         output: true
       inverted: false
     restore_mode: ALWAYS_ON
+    on_turn_on:
+      - delay: 500ms
+      - lvgl.resume
+      - lvgl.widget.redraw
+    on_turn_off:
+      - lvgl.pause
 
 sensor:
   - platform: wifi_signal
@@ -226,16 +244,16 @@ sensor:
             const char* icon;
             lv_color_t color;
             if (x >= -55) {
-              icon = "\U000F0928"; color = lv_color_hex(${clr_wifi_good});  // strong — green
+              icon = "\U000F0928"; color = lv_color_hex(${clr_wifi_good});
             } else if (x >= -67) {
-              icon = "\U000F0925"; color = lv_color_hex(${clr_wifi_good});  // good — green
+              icon = "\U000F0925"; color = lv_color_hex(${clr_wifi_good});
             } else if (x >= -80) {
-              icon = "\U000F0922"; color = lv_color_hex(${clr_wifi_weak});  // weak — amber
+              icon = "\U000F0922"; color = lv_color_hex(${clr_wifi_weak});
             } else {
-              icon = "\U000F091F"; color = lv_color_hex(${clr_wifi_bad});  // low — red
+              icon = "\U000F091F"; color = lv_color_hex(${clr_wifi_bad});
             }
-            lv_label_set_text(id(lbl_wifi), icon);
-            lv_obj_set_style_text_color(id(lbl_wifi), color, 0);
+            lv_label_set_text(id(wifi_label), icon);
+            lv_obj_set_style_text_color(id(wifi_label), color, 0);
 
   # ---------------------------------------------------------------------------
   # Temperature — current, daily high and low
@@ -285,26 +303,22 @@ sensor:
             lv_label_set_text(id(lbl_temp_low), buf);
 
   # ---------------------------------------------------------------------------
-  # Wind — current bearing, speed (average), gust, average bearing
+  # Wind — bearing, speed, gust, average bearing
   # ---------------------------------------------------------------------------
   - platform: homeassistant
     id: sensor_wind_bearing
     entity_id: ${ha_wind_bearing}
     on_value:
       then:
-        - lvgl.arc.update:
-            id: arc_wind_current
-            start_angle: !lambda return ((int)x + 262) % 360;
-            end_angle: !lambda return ((int)x + 278) % 360;
-            value: 100
         - lambda: |-
             auto cardinal = [](float b) -> const char* {
-              static const char* d[] = {"N","NØ","Ø","SØ","S","SV","V","NV"};
-              return d[((int)(b + 22.5f) / 45) % 8];
+              static const char* d[] = {"N","NNØ","NØ","ØNØ","Ø","ØSØ","SØ","SSØ","S","SSV","SV","VSV","V","VNV","NV","NNV"};
+              return d[(int)((b + 11.25f) / 22.5f) % 16];
             };
-            char buf[12];
-            snprintf(buf, sizeof(buf), "%s %d°", cardinal(x), (int)x);
-            lv_label_set_text(id(lbl_wind_info), buf);
+            char buf[8];
+            snprintf(buf, sizeof(buf), "%s", cardinal(x));
+            lv_label_set_text(id(lbl_wind_cardinal), buf);
+            lv_obj_set_style_transform_rotation(id(bearing_indicator), lv_get_needle_angle_for_value(id(bearing_indicator), (int)x) * 10, LV_PART_MAIN);
 
   - platform: homeassistant
     id: sensor_wind_speed
@@ -323,8 +337,8 @@ sensor:
     on_value:
       then:
         - lambda: |-
-            char buf[16];
-            snprintf(buf, sizeof(buf), "Stød %.1f", x);
+            char buf[8];
+            snprintf(buf, sizeof(buf), "%.1f", x);
             for (char* p = buf; *p; p++) if (*p == '.') { *p = ','; break; }
             lv_label_set_text(id(lbl_wind_gust), buf);
 
@@ -333,17 +347,89 @@ sensor:
     entity_id: ${ha_wind_bearing_avg}
     on_value:
       then:
+        - lambda: |-
+            lv_obj_set_style_transform_rotation(id(bearing_avg_indicator), lv_get_needle_angle_for_value(id(bearing_avg_indicator), (int)x) * 10, LV_PART_MAIN);
+
+  # ---------------------------------------------------------------------------
+  # UV & Solar Radiation
+  # ---------------------------------------------------------------------------
+  - platform: homeassistant
+    id: sensor_uv_index
+    entity_id: ${ha_uv_index}
+    on_value:
+      then:
+        - lambda: |-
+            auto uv_color = [](int uv) -> lv_color_t {
+              if (uv <= 2)  return lv_color_hex(${clr_wifi_good});   // 0–2  low       green
+              if (uv <= 5)  return lv_color_hex(${clr_temp_cool});   // 3–5  moderate  yellow
+              if (uv <= 7)  return lv_color_hex(${clr_temp_warm});   // 6–7  high      orange
+              if (uv <= 10) return lv_color_hex(${clr_temp_hot});    // 8–10 very high red
+              return lv_color_hex(0x9C27B0);                         // 11+  extreme   violet
+            };
+            char buf[8];
+            snprintf(buf, sizeof(buf), "%.0f", x);
+            lv_label_set_text(id(lbl_uv), buf);
+            lv_obj_set_style_border_color(id(circle_uv), uv_color((int)x), 0);
+
+  - platform: homeassistant
+    id: sensor_solar_radiation
+    entity_id: ${ha_solar_radiation}
+    on_value:
+      then:
+        - lambda: |-
+            char buf[8];
+            snprintf(buf, sizeof(buf), "%.0f", x);
+            lv_label_set_text(id(lbl_solar), buf);
+
+  # ---------------------------------------------------------------------------
+  # Barometer — current pressure and trend
+  # ---------------------------------------------------------------------------
+  - platform: homeassistant
+    id: sensor_pressure
+    entity_id: ${ha_pressure}
+    on_value:
+      then:
+        - lambda: |-
+            char buf[8];
+            snprintf(buf, sizeof(buf), "%.0f", x);
+            lv_label_set_text(id(lbl_pressure), buf);
         - lvgl.arc.update:
-            id: arc_wind_avg
-            start_angle: !lambda return ((int)x + 262) % 360;
-            end_angle: !lambda return ((int)x + 278) % 360;
-            value: 100
+            id: baro_gauge
+            value: !lambda return (int)x;
+
+  - platform: homeassistant
+    id: sensor_pressure_trend_value
+    entity_id: ${ha_pressure_trend_value}
+    on_value:
+      then:
+        - lambda: |-
+            const char* icon;
+            lv_color_t color;
+            char text_buf[16];
+            if (x > 0) {
+              icon = "${trend_rising}";
+              color = lv_color_hex(${clr_trend_rising});
+              snprintf(text_buf, sizeof(text_buf), "Stiger %.1f", x);
+              for (char* p = text_buf; *p; p++) if (*p == '.') { *p = ','; break; }
+            } else if (x < 0) {
+              icon = "${trend_falling}";
+              color = lv_color_hex(${clr_trend_falling});
+              snprintf(text_buf, sizeof(text_buf), "Falder %.1f", -x);
+              for (char* p = text_buf; *p; p++) if (*p == '.') { *p = ','; break; }
+            } else {
+              icon = "${trend_stable}";
+              color = lv_color_hex(${clr_trend_stable});
+              snprintf(text_buf, sizeof(text_buf), "Stabil");
+            }
+            lv_label_set_text(id(pressure_trend_symbol), icon);
+            lv_obj_set_style_text_color(id(pressure_trend_symbol), color, 0);
+            lv_label_set_text(id(pressure_trend_text), text_buf);
 
 packages:
   remote_package_files:
     url: https://git.digitalhomes.dk/briis/esphome-weather
-    files: 
-      - weatherdisplay-common.yaml
+    files:
+      - weather-common.yaml
     ref: main
     username: briis
     password: !secret forgejo_token
