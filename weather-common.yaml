@@ -57,6 +57,11 @@ substitutions:
   ha_pressure_trend:   "sensor.unknown_pressure_trend"
   ha_pressure_trend_value: "sensor.unknown_pressure_trend_value"
 
+  # Rain — override in esphome-weather.yaml
+  ha_rain_today:       "sensor.unknown_rain_today"
+  ha_rain_rate:        "sensor.unknown_rain_rate"
+  ha_rain_yesterday:   "sensor.unknown_rain_yesterday"
+
 # ---------------------------------------------------------------------------
 # Fonts
 # ---------------------------------------------------------------------------
@@ -104,12 +109,12 @@ font:
     id: mdi_sm
     size: 18
     bpp: 4
-    glyphs: "\U000F091F\U000F0922\U000F0925\U000F0928\U000F092B\U000F092F\U000F005D\U000F0045\U000F050F\U000F0564\U000F0599\U000F0597\U000F059D\U000F17FE\U000F0510\U000F029A\U000F1594\U000F1595\U000F1598"
+    glyphs: "\U000F091F\U000F0922\U000F0925\U000F0928\U000F092B\U000F092F\U000F005D\U000F0045\U000F050F\U000F0564\U000F0599\U000F0597\U000F059D\U000F17FE\U000F0510\U000F029A\U000F1594\U000F1595\U000F1598\U000F058C"
   - file: "fonts/materialdesignicons-webfont.ttf"
     id: mdi_md
     size: 24
     bpp: 4
-    glyphs: "\U000F091F\U000F0922\U000F0925\U000F0928\U000F092B\U000F092F\U000F005D\U000F0045\U000F050F\U000F0564\U000F0599\U000F0597\U000F059D\U000F17FE\U000F0510\U000F029A\U000F1594\U000F1595\U000F1598"
+    glyphs: "\U000F091F\U000F0922\U000F0925\U000F0928\U000F092B\U000F092F\U000F005D\U000F0045\U000F050F\U000F0564\U000F0599\U000F0597\U000F059D\U000F17FE\U000F0510\U000F029A\U000F1594\U000F1595\U000F1598\U000F058C"
 
 # ---------------------------------------------------------------------------
 # Images
@@ -153,6 +158,11 @@ lvgl:
   rotation: ${display_rotation}
   buffer_size: 100%
   default_font: font_sm
+  ### THEME ###
+  theme:
+    label:
+      text_color: "${clr_text}"
+      text_align: CENTER
 
   ### STYLES ###
   style_definitions:
@@ -748,3 +758,64 @@ lvgl:
                             text_font: font_lg
                             text_color: "${clr_text}"
                             text: "--,-"
+            # Rain Widget
+            - obj:
+                styles: widget_4x4
+                bg_color: ${clr_card}
+                grid_cell_column_pos: 0
+                grid_cell_row_pos: 8
+                grid_cell_column_span: 4
+                grid_cell_row_span: 4
+                widgets: 
+                  # Header labels
+                  - label:
+                      align: TOP_RIGHT
+                      x: -5
+                      y: 5
+                      text_font: mdi_sm
+                      text: "\U000F058C"
+                      text_color: ${clr_text}
+                  - meter:
+                      id: circle_rain
+                      align: CENTER
+                      width: 140
+                      height: 140
+                      bg_opa: TRANSP
+                      border_width: 6
+                      border_color: ${clr_temp_cold}
+                      indicator:
+                        bg_opa: TRANSP
+                        border_width: 0                      
+                      scales:
+                        range_from: 0
+                        range_to: 360
+                        angle_range: 360
+                        rotation: 270
+                      widgets:
+                        - label:
+                        - label:
+                            id: lbl_rain_yesterday
+                            align: TOP_MID
+                            y: 8
+                            text_font: font_sm
+                            text_color: "${clr_text_dim}"
+                            text: "I går: --,-"
+                        - label:
+                            id: rain_today
+                            align: CENTER
+                            text_font: font_xl
+                            text: "--,-"
+                        - label:
+                            align: RIGHT_MID
+                            x: 3
+                            y: -8
+                            text_font: font_sm
+                            text_color: "${clr_text_dim}"
+                            text_align: RIGHT
+                            text: "mm"
+                        - label:
+                            id: lbl_rain_rate
+                            align: BOTTOM_MID
+                            y: -8
+                            text_font: font_sm
+                            text: "--,- mm/h"

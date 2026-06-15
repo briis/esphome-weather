@@ -27,6 +27,7 @@ esphome:
         - script.execute: simulate_wind
         - script.execute: simulate_uv_solar
         - script.execute: simulate_pressure
+        - script.execute: simulate_rain
 
 host:
 
@@ -60,6 +61,7 @@ time:
           - script.execute: simulate_wind
           - script.execute: simulate_uv_solar
           - script.execute: simulate_pressure
+          - script.execute: simulate_rain
 globals:
   - id: sim_pressure
     type: int
@@ -194,5 +196,23 @@ script:
       - lvgl.arc.update:
           id: baro_gauge
           value: !lambda return id(sim_pressure);
+  - id: simulate_rain
+    then:
+      - lambda: |-
+          char buf[20];
+          float today = (rand() % 301) / 10.0f;
+          snprintf(buf, sizeof(buf), "%.1f", today);
+          for (char* p = buf; *p; p++) if (*p == '.') { *p = ','; break; }
+          lv_label_set_text(id(rain_today), buf);
+
+          float rate = (rand() % 51) / 10.0f;
+          snprintf(buf, sizeof(buf), "%.1f mm/h", rate);
+          for (char* p = buf; *p; p++) if (*p == '.') { *p = ','; break; }
+          lv_label_set_text(id(lbl_rain_rate), buf);
+
+          float yesterday = (rand() % 201) / 10.0f;
+          snprintf(buf, sizeof(buf), "I går: %.1f", yesterday);
+          for (char* p = buf; *p; p++) if (*p == '.') { *p = ','; break; }
+          lv_label_set_text(id(lbl_rain_yesterday), buf);
 packages:
   common: !include weather-common.yaml

@@ -37,6 +37,11 @@ substitutions:
   ha_pressure_trend:   "sensor.holmeengen_sensor_pressure_trend"
   ha_pressure_trend_value: "sensor.holmeengen_sensor_pressure_trend_value"
 
+  # Rain — overrides defaults in weather-common.yaml
+  ha_rain_today:       "sensor.holmeengen_sensor_rain_today"
+  ha_rain_rate:        "sensor.holmeengen_sensor_rain_rate"
+  ha_rain_yesterday:   "sensor.holmeengen_sensor_rain_yesterday"
+
 esphome:
   name: "${device}"
   friendly_name: "${name}"
@@ -472,6 +477,42 @@ sensor:
             lv_label_set_text(id(pressure_trend_symbol), icon);
             lv_obj_set_style_text_color(id(pressure_trend_symbol), color, 0);
             lv_label_set_text(id(pressure_trend_text), text_buf);
+
+  # ---------------------------------------------------------------------------
+  # Rain — today's total, current rate, yesterday's total
+  # ---------------------------------------------------------------------------
+  - platform: homeassistant
+    id: sensor_rain_today
+    entity_id: ${ha_rain_today}
+    on_value:
+      then:
+        - lambda: |-
+            char buf[8];
+            snprintf(buf, sizeof(buf), "%.1f", x);
+            for (char* p = buf; *p; p++) if (*p == '.') { *p = ','; break; }
+            lv_label_set_text(id(rain_today), buf);
+
+  - platform: homeassistant
+    id: sensor_rain_rate
+    entity_id: ${ha_rain_rate}
+    on_value:
+      then:
+        - lambda: |-
+            char buf[16];
+            snprintf(buf, sizeof(buf), "%.1f mm/h", x);
+            for (char* p = buf; *p; p++) if (*p == '.') { *p = ','; break; }
+            lv_label_set_text(id(lbl_rain_rate), buf);
+
+  - platform: homeassistant
+    id: sensor_rain_yesterday
+    entity_id: ${ha_rain_yesterday}
+    on_value:
+      then:
+        - lambda: |-
+            char buf[16];
+            snprintf(buf, sizeof(buf), "I går: %.1f", x);
+            for (char* p = buf; *p; p++) if (*p == '.') { *p = ','; break; }
+            lv_label_set_text(id(lbl_rain_yesterday), buf);
 
 packages:
   remote_package_files:
