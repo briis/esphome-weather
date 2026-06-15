@@ -666,7 +666,7 @@ lvgl:
                             text_align: CENTER
                             text_font: font_lg
                             text_color: "${clr_text}"
-                            text: "15,9°"
+                            text: "--,-°"
                         - label:
                             grid_cell_x_align: CENTER
                             grid_cell_column_pos: 1
@@ -692,3 +692,59 @@ lvgl:
                 grid_cell_row_pos: 6
                 grid_cell_column_span: 4
                 grid_cell_row_span: 2
+                widgets:
+                  - obj:
+                      styles: grid_layout_nested
+                      align: CENTER
+                      layout:
+                        type: grid
+                        grid_columns: [fr(1), fr(1)]
+                        grid_rows: [fr(1), 2, fr(2)]
+                        grid_column_align: CENTER
+                        grid_row_align: CENTER
+                      widgets:
+                        - label:
+                            grid_cell_x_align: CENTER
+                            grid_cell_column_pos: 0
+                            grid_cell_row_pos: 0
+                            text_align: CENTER
+                            text_font: font_sm
+                            text_color: "${clr_text_dim}"
+                            text: "Vind gns. 10m"
+                        - obj:
+                            grid_cell_column_pos: 0
+                            grid_cell_row_pos: 1
+                            grid_cell_column_span: 2
+                            grid_cell_x_align: STRETCH
+                            height: 2
+                            bg_color: "${clr_separator}"
+                            pad_all: 0
+                            border_width: 0
+                        - label:
+                            id: wind_10min_avg
+                            grid_cell_x_align: CENTER
+                            grid_cell_y_align: START
+                            grid_cell_column_pos: 0
+                            grid_cell_row_pos: 2
+                            text_align: CENTER
+                            text_font: font_lg
+                            text_color: "${clr_text}"
+                            text: "--,-"
+                        - label:
+                            grid_cell_x_align: CENTER
+                            grid_cell_column_pos: 1
+                            grid_cell_row_pos: 0
+                            text_align: CENTER
+                            text_font: font_sm
+                            text_color: "${clr_text_dim}"
+                            text: "Maks. vindstød"
+                        - label:
+                            id: wind_max_gust
+                            grid_cell_x_align: CENTER
+                            grid_cell_y_align: START
+                            grid_cell_column_pos: 1
+                            grid_cell_row_pos: 2
+                            text_align: CENTER
+                            text_font: font_lg
+                            text_color: "${clr_text}"
+                            text: "--,-"
