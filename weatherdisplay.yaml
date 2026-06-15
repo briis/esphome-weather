@@ -17,7 +17,9 @@ substitutions:
   ha_temp_current: "sensor.holmeengen_sensor_temperature"
   ha_temp_high:    "max_temperature_today"
   ha_temp_low:     "min_temperature_today"
-
+  ha_feels_like:   "sensor.holmeengen_sensor_apparent_temperature"
+  ha_dew_point:    "sensor.holmeengen_sensor_dewpoint"
+  
   # Wind — overrides defaults in weather-common.yaml
   ha_wind_speed:       "sensor.holmeengen_sensor_wind_speed"
   ha_wind_bearing:     "sensor.holmeengen_sensor_wind_bearing"
@@ -301,6 +303,28 @@ sensor:
             snprintf(buf, sizeof(buf), "%.1f°", x);
             for (char* p = buf; *p; p++) if (*p == '.') { *p = ','; break; }
             lv_label_set_text(id(lbl_temp_low), buf);
+
+  - platform: homeassistant
+    id: sensor_feels_like
+    entity_id: ${ha_feels_like}
+    on_value:
+      then:
+        - lambda: |-
+            char buf[12];
+            snprintf(buf, sizeof(buf), "%.1f°", x);
+            for (char* p = buf; *p; p++) if (*p == '.') { *p = ','; break; }
+            lv_label_set_text(id(temp_feels_like), buf);
+
+  - platform: homeassistant
+    id: sensor_dew_point
+    entity_id: ${ha_dew_point}
+    on_value:
+      then:
+        - lambda: |-
+            char buf[12];
+            snprintf(buf, sizeof(buf), "%.1f°", x);
+            for (char* p = buf; *p; p++) if (*p == '.') { *p = ','; break; }
+            lv_label_set_text(id(temp_dewpoint), buf);
 
   # ---------------------------------------------------------------------------
   # Wind — bearing, speed, gust, average bearing

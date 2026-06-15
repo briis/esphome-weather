@@ -39,6 +39,8 @@ substitutions:
   ha_temp_current: "sensor.unknown_temperature"
   ha_temp_high:    "max_temperature_today"
   ha_temp_low:     "min_temperature_today"
+  ha_feels_like:   "sensor.unknown_apparent_temperature"
+  ha_dew_point:    "sensor.unknown_dewpoint"
 
   # Wind sensor entity IDs — override in weatherdisplay.yaml
   ha_wind_speed:       "sensor.unknown_wind_speed"
@@ -59,6 +61,11 @@ substitutions:
 # Fonts
 # ---------------------------------------------------------------------------
 font:
+  - file: "gfonts://Roboto"
+    id: font_xxs
+    size: 8
+    bpp: 4
+    glyphs: " !\"#$%&'()*+,-./0123456789²:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz°æøåÆØÅ"
   - file: "gfonts://Roboto"
     id: font_xs
     size: 11
@@ -149,7 +156,7 @@ lvgl:
 
   ### STYLES ###
   style_definitions:
-    - id: main_grid_layout
+    - id: grid_layout
       width: 100%
       height: 100%
       x: 0
@@ -160,9 +167,31 @@ lvgl:
       pad_left: 5
       pad_right: 5
       border_opa: TRANSP
+    - id: grid_layout_nested
+      width: 100%
+      height: 100%
+      x: 0
+      y: 0
+      radius: 0      
+      bg_color: ${clr_card}
+      pad_all: 0
+      pad_left: 5
+      pad_right: 5
+      border_opa: TRANSP
     - id: widget_4x1
       width: 256 # Col: 64px
       height: 39 # Row: 39px
+      x: 0
+      y: 0
+      radius: 5
+      bg_color: ${clr_card}
+      pad_all: 0
+      border_opa: TRANSP
+      grid_cell_x_align: CENTER
+      grid_cell_y_align: CENTER
+    - id: widget_4x2
+      width: 256 # Col: 64px
+      height: 78 # Row: 39px
       x: 0
       y: 0
       radius: 5
@@ -214,7 +243,7 @@ lvgl:
       - obj:
           align: CENTER
           id: main_grid
-          styles: main_grid_layout
+          styles: grid_layout
           layout:
             type: grid
             grid_columns: [fr(1), fr(1), fr(1), fr(1), fr(1), fr(1), fr(1), fr(1), fr(1), fr(1), fr(1), fr(1)]
@@ -336,7 +365,7 @@ lvgl:
                       text: "--°"
                       text_color: ${clr_text}
                       text_font: font_md
-
+            # Wind Widget
             - obj:
                 styles: widget_4x5
                 bg_color: ${clr_card}
@@ -594,16 +623,72 @@ lvgl:
                             text: "hPa"
 
             - obj:
-                styles: widget_4x1
+                styles: widget_4x2
                 bg_color: ${clr_card}
                 grid_cell_column_pos: 0
                 grid_cell_row_pos: 6
                 grid_cell_column_span: 4
-                grid_cell_row_span: 1
+                grid_cell_row_span: 2
+                widgets:
+                  - obj:
+                      styles: grid_layout_nested
+                      align: CENTER
+                      layout:
+                        type: grid
+                        grid_columns: [fr(1), fr(1)]
+                        grid_rows: [fr(1), 2, fr(2)]
+                        grid_column_align: CENTER
+                        grid_row_align: CENTER
+                      widgets:
+                        - label:
+                            grid_cell_x_align: CENTER
+                            grid_cell_column_pos: 0
+                            grid_cell_row_pos: 0
+                            text_align: CENTER
+                            text_font: font_sm
+                            text_color: "${clr_text_dim}"
+                            text: "Føles som"
+                        - obj:
+                            grid_cell_column_pos: 0
+                            grid_cell_row_pos: 1
+                            grid_cell_column_span: 2
+                            grid_cell_x_align: STRETCH
+                            height: 2
+                            bg_color: "${clr_separator}"
+                            pad_all: 0
+                            border_width: 0
+                        - label:
+                            id: temp_feels_like
+                            grid_cell_x_align: CENTER
+                            grid_cell_y_align: START
+                            grid_cell_column_pos: 0
+                            grid_cell_row_pos: 2
+                            text_align: CENTER
+                            text_font: font_lg
+                            text_color: "${clr_text}"
+                            text: "15,9°"
+                        - label:
+                            grid_cell_x_align: CENTER
+                            grid_cell_column_pos: 1
+                            grid_cell_row_pos: 0
+                            text_align: CENTER
+                            text_font: font_sm
+                            text_color: "${clr_text_dim}"
+                            text: "Dugpunkt"
+                        - label:
+                            id: temp_dewpoint
+                            grid_cell_x_align: CENTER
+                            grid_cell_y_align: START
+                            grid_cell_column_pos: 1
+                            grid_cell_row_pos: 2
+                            text_align: CENTER
+                            text_font: font_lg
+                            text_color: "${clr_text}"
+                            text: "--,-°"
             - obj:
-                styles: widget_4x1
+                styles: widget_4x2
                 bg_color: ${clr_card}
                 grid_cell_column_pos: 4
                 grid_cell_row_pos: 6
                 grid_cell_column_span: 4
-                grid_cell_row_span: 1
+                grid_cell_row_span: 2

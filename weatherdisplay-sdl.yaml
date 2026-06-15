@@ -102,6 +102,10 @@ script:
           lv_label_set_text(id(lbl_temp_high), buf);
           fmt(buf, sizeof(buf), 5.2f);
           lv_label_set_text(id(lbl_temp_low), buf);
+          fmt(buf, sizeof(buf), temp - 2.5f);
+          lv_label_set_text(id(temp_feels_like), buf);
+          fmt(buf, sizeof(buf), temp - 6.0f);
+          lv_label_set_text(id(temp_dewpoint), buf);
   - id: simulate_wind
     then:
       - lambda: |-
