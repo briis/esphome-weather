@@ -18,8 +18,11 @@ Dark-themed 3-column card grid with the following widgets:
 | Wind | Compass meter with current + 10-min average bearing needles, speed, gust, cardinal direction |
 | Sun & UV | UV index with WHO-scale colour border, solar radiation W/m² |
 | Barometer | Half-circle pressure gauge (960–1060 hPa), trend symbol and description |
-| Forecast | *(coming soon)* |
-| Rain | *(coming soon)* |
+| Feels like / Dewpoint | Apparent temperature and dew point |
+| Wind averages | 10-min average wind speed and daily max gust |
+| Rain | Circle gauge with today's total, yesterday's total, and current rain rate |
+| Forecast | Weather condition image, high/low temps, precipitation probability + amount, condition description |
+| AQI | EPA-scale colour circle with AQI index, PM2.5 and PM10 particulate matter |
 
 ## Files
 

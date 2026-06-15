@@ -7,7 +7,7 @@ Design: 3-column dark card grid on pure black background.
 
 ## Current phase
 
-**Phase 2 — Temperature, Wind, Sun & UV, Barometer, and Rain cards populated.** Grid layout verified working on Waveshare ESP32-S3-Touch-LCD-7. SDL simulator used for visual iteration; hardware target flashed via USB and confirmed. Next: remaining cards (Forecast).
+**Phase 2 complete — all cards populated.** Temperature, Wind, Sun & UV, Barometer, Rain, Forecast, and AQI widgets implemented with live HA sensors and SDL simulation. Grid layout verified on Waveshare ESP32-S3-Touch-LCD-7.
 
 ## Files
 
@@ -51,7 +51,7 @@ esphome run weatherdisplay.yaml
 │  Dewpoint         │  Max gust         │   col 8–11, row 5–7      │
 │  col 0–3, row 6–7 │  col 4–7, row 6–7 │                          │
 ├───────────────────┼───────────────────┼──────────────────────────┤
-│  Rain             │  (placeholder)    │     (placeholder)        │
+│  Rain             │  Forecast         │     AQI                  │
 │  col 0–3, row 8–11│  col 4–7, row 8–11│   col 8–11, row 8–11   │
 └───────────────────┴───────────────────┴──────────────────────────┘
 ```
@@ -114,6 +114,8 @@ MDI codepoints in use:
 | `F1594` | trending-up | Pressure rising |
 | `F1595` | trending-down | Pressure falling |
 | `F1598` | trending-neutral | Pressure stable |
+| `F0595` | weather-forecast | Forecast card header icon |
+| `F0D7C` | air-filter | AQI card header icon |
 
 ## Widget IDs
 
@@ -256,6 +258,55 @@ HA sensors:
 | `ha_rain_rate` | `sensor.unknown_rain_rate` | Current rain rate → `lbl_rain_rate` |
 | `ha_rain_yesterday` | `sensor.unknown_rain_yesterday` | Yesterday's total → `lbl_rain_yesterday` |
 
+### Forecast card (col 4–7, row 8–11)
+
+- `fimg_clear_day` … `fimg_windy` — 11 weather condition images (64×64), only one visible at a time, toggled by condition code
+- `lbl_fcst_high` — forecast high temperature (font_md, with ↑ arrow icon)
+- `lbl_fcst_low` — forecast low temperature (font_md, with ↓ arrow icon, dim)
+- `lbl_fcst_precip_prob` — precipitation probability % (font_md, blue, right-aligned)
+- `lbl_fcst_precipitation` — precipitation amount mm (font_md, dim, right-aligned)
+- `lbl_fcst_condition` — short condition text (font_sm, truncated with DOT)
+- `lbl_fcst_description` — longer description (font_xs, dim, truncated with DOT)
+
+HA sensors:
+
+| Substitution | Default in common | Purpose |
+| --- | --- | --- |
+| `ha_fcast_condition` | `sensor.unknown_fcast_condition` | Condition code → image switch |
+| `ha_fcast_condition_txt` | `sensor.unknown_fcast_condition_txt` | Short label → `lbl_fcst_condition` |
+| `ha_fcast_description` | `sensor.unknown_fcast_description` | Long description → `lbl_fcst_description` |
+| `ha_fcst_temp_high` | `sensor.unknown_fcst_temp_high` | Forecast high → `lbl_fcst_high` |
+| `ha_fcst_temp_low` | `sensor.unknown_fcst_temp_low` | Forecast low → `lbl_fcst_low` |
+| `ha_fcst_precip_prob` | `sensor.unknown_fcst_precip_prob` | Precipitation probability → `lbl_fcst_precip_prob` |
+| `ha_fcst_precipitation` | `sensor.unknown_fcst_precipitation` | Precipitation amount → `lbl_fcst_precipitation` |
+
+### AQI card (col 8–11, row 8–11)
+
+- `circle_aqi` — 140×140 meter, 6 px border, colour driven by AQI level (EPA scale)
+- `lbl_aqi` — AQI integer value (font_xl, centred inside circle)
+- Static "AQI" label (font_sm, dim, BOTTOM_MID y:−15 inside circle)
+- `lbl_pm25` — PM2.5 particulate matter (font_sm, BOTTOM_LEFT), formatted "x,x μg/m³"
+- `lbl_pm10` — PM10 particulate matter (font_sm, BOTTOM_RIGHT), formatted "x,x μg/m³"
+
+AQI border colour scale (EPA):
+
+| AQI range | Level | Colour |
+| --- | --- | --- |
+| 0–50 | Good | green (`clr_wifi_good`) |
+| 51–100 | Moderate | yellow (`clr_temp_cool`) |
+| 101–150 | Unhealthy for Sensitive Groups | orange (`clr_temp_warm`) |
+| 151–200 | Unhealthy | red (`clr_temp_hot`) |
+| 201–300 | Very Unhealthy | violet `0x9C27B0` |
+| 301+ | Hazardous | maroon `0x7E0023` |
+
+HA sensors:
+
+| Substitution | Default in common | Purpose |
+| --- | --- | --- |
+| `ha_aqi_index` | `sensor.unknown_aqi_index` | AQI value → `lbl_aqi` + circle colour |
+| `ha_aqi_pm25` | `sensor.unknown_aqi_pm25` | PM2.5 → `lbl_pm25` |
+| `ha_aqi_pm10` | `sensor.unknown_aqi_pm10` | PM10 → `lbl_pm10` |
+
 ## Hardware config (`weatherdisplay.yaml`)
 
 Board: Waveshare ESP32-S3-Touch-LCD-7 · 16 MB flash · 8 MB octal PSRAM
@@ -305,4 +356,5 @@ Pushing an update to `weather-common.yaml` on `main` propagates to the device on
 - [x] Sun & UV card — UV meter with WHO-scale colour border + solar radiation display, live HA sensors
 - [x] Barometer card — half-circle arc gauge with pressure value, trend symbol + text
 - [x] Rain card — circle with today's total, yesterday's total, and current rate; live HA sensors
-- [ ] Forecast card
+- [x] Forecast card — weather condition image, high/low temps, precipitation probability + amount, condition text + description
+- [x] AQI card — EPA-scale colour circle with AQI value, PM2.5 and PM10 labels; live HA sensors + SDL simulation

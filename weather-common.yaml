@@ -71,6 +71,11 @@ substitutions:
   ha_fcst_precip_prob:    "sensor.unknown_fcst_precip_prob"
   ha_fcst_precipitation:  "sensor.unknown_fcst_precipitation"
 
+  # AQI — override in weatherdisplay.yaml
+  ha_aqi_index:  "sensor.unknown_aqi_index"
+  ha_aqi_pm25:   "sensor.unknown_aqi_pm25"
+  ha_aqi_pm10:   "sensor.unknown_aqi_pm10"
+
 # ---------------------------------------------------------------------------
 # Fonts
 # ---------------------------------------------------------------------------
@@ -84,12 +89,12 @@ font:
     id: font_xs
     size: 11
     bpp: 4
-    glyphs: " !\"#$%&'()*+,-./0123456789²:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz°æøåÆØÅ"
+    glyphs: " !\"#$%&'()*+,-./0123456789²³:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz°æøåÆØÅμ"
   - file: "gfonts://Roboto"
     id: font_sm
     size: 14
     bpp: 4
-    glyphs: " !\"#$%&'()*+,-./0123456789²:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz°æøåÆØÅ"
+    glyphs: " !\"#$%&'()*+,-./0123456789²³:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz°æøåÆØÅμ"
   - file: "gfonts://Roboto"
     id: font_md
     size: 18
@@ -858,7 +863,6 @@ lvgl:
                         rotation: 270
                       widgets:
                         - label:
-                        - label:
                             id: lbl_rain_yesterday
                             align: TOP_MID
                             y: 8
@@ -1072,3 +1076,61 @@ lvgl:
                       text_font: mdi_sm
                       text: "\U000F0D7C"
                       text_color: ${clr_text}
+                  - meter:
+                      id: circle_aqi
+                      align: CENTER
+                      width: 140
+                      height: 140
+                      bg_opa: TRANSP
+                      border_width: 6
+                      border_color: ${clr_temp_cold}
+                      indicator:
+                        bg_opa: TRANSP
+                        border_width: 0                      
+                      scales:
+                        range_from: 0
+                        range_to: 360
+                        angle_range: 360
+                        rotation: 270
+                      widgets:
+                        - label:
+                            id: lbl_aqi
+                            align: CENTER
+                            text_font: font_xl
+                            text: "00"
+                        - label:
+                            align: BOTTOM_MID
+                            y: -15
+                            text_font: font_sm
+                            text_color: "${clr_text_dim}"
+                            text: "AQI"
+                  - label:
+                      align: BOTTOM_LEFT
+                      x: 5
+                      y: -25
+                      text_font: font_xs
+                      text_color: "${clr_text_dim}"
+                      text: "PM 2.5"
+                  - label:
+                      id: lbl_pm25
+                      align: BOTTOM_LEFT
+                      x: 5
+                      y: -10
+                      text_font: font_xs
+                      text_color: "${clr_text}"
+                      text: "00,0 μg/m³"
+                  - label:
+                      align: BOTTOM_RIGHT
+                      x: -5
+                      y: -25
+                      text_font: font_xs
+                      text_color: "${clr_text_dim}"
+                      text: "PM 10"
+                  - label:
+                      id: lbl_pm10
+                      align: BOTTOM_RIGHT
+                      x: -5
+                      y: -10
+                      text_font: font_xs
+                      text_color: "${clr_text}"
+                      text: "00,0 μg/m³"
