@@ -42,6 +42,17 @@ substitutions:
   ha_rain_rate:        "sensor.holmeengen_sensor_rain_rate"
   ha_rain_yesterday:   "sensor.holmeengen_sensor_rain_yesterday"
 
+  # Forecast — overrides defaults in weather-common.yaml
+  ha_fcast_condition:     "sensor.holmeengen_sensor_condition"
+  ha_fcast_condition_txt: "sensor.holmeengen_sensor_condition_text"
+  ha_fcast_description:   "sensor.holmeengen_sensor_description"
+  
+  # AQI — overrides defaults in weather-common.yaml
+  ha_aqi_index:       "sensor.holmeengen_sensor_air_quality_index"
+  ha_aqi_pm1:         "sensor.holmeengen_sensor_particulate_matter_pm1"
+  ha_aqi_pm10:        "sensor.holmeengen_sensor_particulate_matter_pm10"
+  ha_aqi_pm25:        "sensor.holmeengen_sensor_particulate_matter_pm25"
+  
 esphome:
   name: "${device}"
   friendly_name: "${name}"
