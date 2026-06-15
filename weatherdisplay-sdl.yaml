@@ -122,6 +122,14 @@ script:
           fmt(buf, sizeof(buf), gust);
           lv_label_set_text(id(lbl_wind_gust), buf);
 
+          float speed_avg = 0.0f + (rand() % 200) / 10.0f;
+          fmt(buf, sizeof(buf), speed_avg);
+          lv_label_set_text(id(wind_10min_avg), buf);
+
+          float gust_high = gust + (rand() % 50) / 10.0f;
+          fmt(buf, sizeof(buf), gust_high);
+          lv_label_set_text(id(wind_max_gust), buf);
+
           auto cardinal = [](float b) -> const char* {
             static const char* d[] = {"N","NNØ","NØ","ØNØ","Ø","ØSØ","SØ","SSØ","S","SSV","SV","VSV","V","VNV","NV","NNV"};
             return d[(int)((b + 11.25f) / 22.5f) % 16];
