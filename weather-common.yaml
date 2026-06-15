@@ -221,6 +221,7 @@ lvgl:
   color_depth: 16
   rotation: ${display_rotation}
   buffer_size: 100%
+  full_refresh: true
   default_font: font_sm
   ### THEME ###
   theme:
