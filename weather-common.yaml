@@ -532,6 +532,24 @@ lvgl:
                       text_font: mdi_sm
                       text: "\U000F029A"
                       text_color: ${clr_text}
+                  - label:
+                      id: pressure_trend_symbol
+                      align: BOTTOM_LEFT
+                      x: 68
+                      y: -4
+                      text_font: mdi_sm
+                      text: "${trend_stable}"
+                      text_color: "${clr_trend_stable}"
+                      text_align: LEFT
+                  - label:
+                      id: pressure_trend_text
+                      align: BOTTOM_MID
+                      x: 5
+                      y: -4
+                      text_font: font_sm
+                      text: "Stabil"
+                      text_color: "${clr_text}"
+                      text_align: CENTER
                   - arc:
                       id: baro_gauge
                       x: 58

@@ -382,7 +382,7 @@ sensor:
             lv_label_set_text(id(lbl_solar), buf);
 
   # ---------------------------------------------------------------------------
-  # Barometer — current pressure
+  # Barometer — current pressure and trend
   # ---------------------------------------------------------------------------
   - platform: homeassistant
     id: sensor_pressure
@@ -396,6 +396,34 @@ sensor:
         - lvgl.arc.update:
             id: baro_gauge
             value: !lambda return (int)x;
+
+  - platform: homeassistant
+    id: sensor_pressure_trend_value
+    entity_id: ${ha_pressure_trend_value}
+    on_value:
+      then:
+        - lambda: |-
+            const char* icon;
+            lv_color_t color;
+            char text_buf[16];
+            if (x > 0) {
+              icon = "${trend_rising}";
+              color = lv_color_hex(${clr_trend_rising});
+              snprintf(text_buf, sizeof(text_buf), "Stiger %.1f", x);
+              for (char* p = text_buf; *p; p++) if (*p == '.') { *p = ','; break; }
+            } else if (x < 0) {
+              icon = "${trend_falling}";
+              color = lv_color_hex(${clr_trend_falling});
+              snprintf(text_buf, sizeof(text_buf), "Falder %.1f", -x);
+              for (char* p = text_buf; *p; p++) if (*p == '.') { *p = ','; break; }
+            } else {
+              icon = "${trend_stable}";
+              color = lv_color_hex(${clr_trend_stable});
+              snprintf(text_buf, sizeof(text_buf), "Stabil");
+            }
+            lv_label_set_text(id(pressure_trend_symbol), icon);
+            lv_obj_set_style_text_color(id(pressure_trend_symbol), color, 0);
+            lv_label_set_text(id(pressure_trend_text), text_buf);
 
 packages:
   remote_package_files:
