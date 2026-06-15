@@ -131,7 +131,7 @@ HA sensors (entity IDs set via substitutions, overridden in `esphome-weather.yam
 - `circle_wind_border` — 180×180 meter, 4 px blue border, 360° scale with 17 tick marks
 - `bearing_indicator` — current bearing needle image (24×24 px, orbits outer edge). Rotation set via `lv_get_needle_angle_for_value` + `lv_obj_set_style_transform_rotation`.
 - `bearing_avg_indicator` — 10-min average bearing needle image (18×18 px, same orbit radius)
-- `lbl_wind_cardinal` — cardinal direction of current bearing (e.g. "NØ"), top-centre of meter
+- `lbl_wind_cardinal` — 16-point cardinal direction of current bearing (e.g. "NNØ"), top-centre of meter. Formula: `d[(int)((b + 11.25f) / 22.5f) % 16]`
 - `lbl_wind_speed` — current wind speed m/s (font_xxl, centred)
 - `lbl_wind_gust` — gust speed m/s (font_md, bottom area)
 

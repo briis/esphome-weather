@@ -112,8 +112,8 @@ script:
           lv_label_set_text(id(lbl_wind_gust), buf);
 
           auto cardinal = [](float b) -> const char* {
-            static const char* d[] = {"N","NØ","Ø","SØ","S","SV","V","NV"};
-            return d[((int)(b + 22.5f) / 45) % 8];
+            static const char* d[] = {"N","NNØ","NØ","ØNØ","Ø","ØSØ","SØ","SSØ","S","SSV","SV","VSV","V","VNV","NV","NNV"};
+            return d[(int)((b + 11.25f) / 22.5f) % 16];
           };
           int bearing = 0 + (rand() % 360);
           snprintf(buf, sizeof(buf), "%s", cardinal(bearing));
