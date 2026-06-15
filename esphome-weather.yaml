@@ -29,7 +29,7 @@ substitutions:
   ha_solar_radiation:  "sensor.holmeengen_sensor_solar_radiation"
 
   # Barometer - overrides defaults in weather-common.yaml
-  ha_pressure:         "sensor.holmeengen_sensor_pressure"
+  ha_pressure:         "sensor.holmeengen_sensor_sealevel_pressure"
   ha_pressure_trend:   "sensor.holmeengen_sensor_pressure_trend"
   ha_pressure_trend_value: "sensor.holmeengen_sensor_pressure_trend_value"
 
