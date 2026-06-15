@@ -28,6 +28,11 @@ substitutions:
   ha_uv_index:         "sensor.holmeengen_sensor_uv_index"
   ha_solar_radiation:  "sensor.holmeengen_sensor_solar_radiation"
 
+  # Barometer - overrides defaults in weather-common.yaml
+  ha_pressure:         "sensor.holmeengen_sensor_pressure"
+  ha_pressure_trend:   "sensor.holmeengen_sensor_pressure_trend"
+  ha_pressure_trend_value: "sensor.holmeengen_sensor_pressure_trend_value"
+
 esphome:
   name: "${device}"
   friendly_name: "${name}"
@@ -375,6 +380,22 @@ sensor:
             char buf[8];
             snprintf(buf, sizeof(buf), "%.0f", x);
             lv_label_set_text(id(lbl_solar), buf);
+
+  # ---------------------------------------------------------------------------
+  # Barometer — current pressure
+  # ---------------------------------------------------------------------------
+  - platform: homeassistant
+    id: sensor_pressure
+    entity_id: ${ha_pressure}
+    on_value:
+      then:
+        - lambda: |-
+            char buf[8];
+            snprintf(buf, sizeof(buf), "%.0f", x);
+            lv_label_set_text(id(lbl_pressure), buf);
+        - lvgl.arc.update:
+            id: baro_gauge
+            value: !lambda return (int)x;
 
 packages:
   remote_package_files:

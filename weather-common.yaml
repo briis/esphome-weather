@@ -27,6 +27,14 @@ substitutions:
   clr_temp_warm: "0xFF9800"   # orange — 15 to 19°C
   clr_temp_hot:  "0xF44336"   # red    — 20°C and above
 
+  # Trend Symbols
+  trend_rising:   "\U000F1594"  # Up Arrow  — rising
+  trend_falling:  "\U000F1595"  # Down Arrow — falling
+  trend_stable:   "\U000F1598"  # Horizontal Arrow — stable
+  clr_trend_rising:   "0x4CAF50"   # green  — rising
+  clr_trend_falling:  "0xF44336"   # red    — falling
+  clr_trend_stable:   "0xE1E1E1"   # gray
+
   # Temperature entity / attributes — override in the target file (weatherdisplay.yaml)
   ha_temp_current: "sensor.unknown_temperature"
   ha_temp_high:    "max_temperature_today"
@@ -41,6 +49,11 @@ substitutions:
   # UV & Solar Radiation — override in esphome-weather.yaml
   ha_uv_index:         "sensor.unknown_uv_index"
   ha_solar_radiation:  "sensor.unknown_solar_radiation"
+
+  # Barometer - override in esphome-weather.yaml
+  ha_pressure:         "sensor.unknown_pressure"
+  ha_pressure_trend:   "sensor.unknown_pressure_trend"
+  ha_pressure_trend_value: "sensor.unknown_pressure_trend_value"
 
 # ---------------------------------------------------------------------------
 # Fonts
@@ -84,12 +97,12 @@ font:
     id: mdi_sm
     size: 18
     bpp: 4
-    glyphs: "\U000F091F\U000F0922\U000F0925\U000F0928\U000F092B\U000F092F\U000F005D\U000F0045\U000F050F\U000F0564\U000F0599\U000F0597\U000F059D\U000F17FE\U000F0510\U000F029A"
+    glyphs: "\U000F091F\U000F0922\U000F0925\U000F0928\U000F092B\U000F092F\U000F005D\U000F0045\U000F050F\U000F0564\U000F0599\U000F0597\U000F059D\U000F17FE\U000F0510\U000F029A\U000F1594\U000F1595\U000F1598"
   - file: "fonts/materialdesignicons-webfont.ttf"
     id: mdi_md
     size: 24
     bpp: 4
-    glyphs: "\U000F091F\U000F0922\U000F0925\U000F0928\U000F092B\U000F092F\U000F005D\U000F0045\U000F050F\U000F0564\U000F0599\U000F0597\U000F059D\U000F17FE\U000F0510\U000F029A"
+    glyphs: "\U000F091F\U000F0922\U000F0925\U000F0928\U000F092B\U000F092F\U000F005D\U000F0045\U000F050F\U000F0564\U000F0599\U000F0597\U000F059D\U000F17FE\U000F0510\U000F029A\U000F1594\U000F1595\U000F1598"
 
 # ---------------------------------------------------------------------------
 # Images
@@ -502,23 +515,65 @@ lvgl:
                             text: "W/m²"
             # Barometer Widget
             - obj:
-                styles: widget_4x4
+                styles: widget_4x3
                 bg_color: ${clr_card}
                 grid_cell_column_pos: 8
                 grid_cell_row_pos: 5
                 grid_cell_column_span: 4
-                grid_cell_row_span: 4
+                grid_cell_row_span: 3
                 pad_left: 5
                 pad_right: 5
+                scrollbar_mode: "OFF"
                 widgets:
-                  # Header labels
+                  # Header icon
                   - label:
                       align: TOP_RIGHT
                       y: 5
                       text_font: mdi_sm
                       text: "\U000F029A"
                       text_color: ${clr_text}
-
+                  - arc:
+                      id: baro_gauge
+                      x: 58
+                      y: 10
+                      width: 140
+                      height: 140
+                      value: 1010
+                      min_value: 960
+                      max_value: 1060
+                      adjustable: false
+                      start_angle: 180
+                      end_angle: 0
+                      arc_color: 0x404040
+                      arc_width: 8
+                      arc_opa: 100%
+                      arc_rounded: false
+                      indicator:
+                        arc_color: 0x009688
+                        arc_width: 8
+                        arc_opa: 100%
+                        arc_rounded: true
+                      bg_opa: 0%
+                      widgets:
+                        # Current pressure value — inside the arc below the needle pivot
+                        - label:
+                            id: lbl_pressure
+                            align: TOP_MID
+                            y: 30
+                            width: 100
+                            text_font: font_xl
+                            text_color: ${clr_text}
+                            text_align: CENTER
+                            text: "----"
+                        # Unit label
+                        - label:
+                            id: lbl_pressure_unit
+                            align: TOP_MID
+                            y: 65
+                            text_font: font_xs
+                            text_color: ${clr_text_dim}
+                            text_align: CENTER
+                            text: "hPa"
 
             - obj:
                 styles: widget_4x1

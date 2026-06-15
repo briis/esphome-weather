@@ -26,6 +26,7 @@ esphome:
             lv_obj_set_style_transform_pivot_y(id(bearing_avg_indicator), 9, LV_PART_MAIN);
         - script.execute: simulate_wind
         - script.execute: simulate_uv_solar
+        - script.execute: simulate_pressure
 
 host:
 
@@ -58,6 +59,12 @@ time:
           - script.execute: simulate_temp
           - script.execute: simulate_wind
           - script.execute: simulate_uv_solar
+          - script.execute: simulate_pressure
+globals:
+  - id: sim_pressure
+    type: int
+    initial_value: '1013'
+
 script:
   - id: simulate_wifi
     then:
@@ -143,5 +150,15 @@ script:
           int solar = (rand() % 1500);
           fmt(buf, sizeof(buf), solar);
           lv_label_set_text(id(lbl_solar), buf);
+  - id: simulate_pressure
+    then:
+      - lambda: |-
+          id(sim_pressure) = 960 + (rand() % 101);
+          char buf[8];
+          snprintf(buf, sizeof(buf), "%d", id(sim_pressure));
+          lv_label_set_text(id(lbl_pressure), buf);
+      - lvgl.arc.update:
+          id: baro_gauge
+          value: !lambda return id(sim_pressure);
 packages:
   common: !include weather-common.yaml
