@@ -131,17 +131,17 @@ font:
     id: mdi_xs
     size: 14
     bpp: 4
-    glyphs: "\U000F091F\U000F0922\U000F0925\U000F0928\U000F092B\U000F092F\U000F005D\U000F0045\U000F050F\U000F0564\U000F0599\U000F0597\U000F059D\U000F17FE\U000F0510\U000F029A\U000F1594\U000F1595\U000F1598\U000F058C\U000F0595\U000F0D7C\U000F059B\U000F059C\U000F0596"
+    glyphs: "\U000F091F\U000F0922\U000F0925\U000F0928\U000F092B\U000F092F\U000F005D\U000F0045\U000F050F\U000F0564\U000F0599\U000F0597\U000F059D\U000F17FE\U000F0510\U000F029A\U000F1594\U000F1595\U000F1598\U000F058C\U000F0595\U000F0D7C\U000F059B\U000F059C\U000F0596\U000F1A73"
   - file: "fonts/materialdesignicons-webfont.ttf"
     id: mdi_sm
     size: 18
     bpp: 4
-    glyphs: "\U000F091F\U000F0922\U000F0925\U000F0928\U000F092B\U000F092F\U000F005D\U000F0045\U000F050F\U000F0564\U000F0599\U000F0597\U000F059D\U000F17FE\U000F0510\U000F029A\U000F1594\U000F1595\U000F1598\U000F058C\U000F0595\U000F0D7C\U000F059B\U000F059C\U000F0596"
+    glyphs: "\U000F091F\U000F0922\U000F0925\U000F0928\U000F092B\U000F092F\U000F005D\U000F0045\U000F050F\U000F0564\U000F0599\U000F0597\U000F059D\U000F17FE\U000F0510\U000F029A\U000F1594\U000F1595\U000F1598\U000F058C\U000F0595\U000F0D7C\U000F059B\U000F059C\U000F0596\U000F1A73"
   - file: "fonts/materialdesignicons-webfont.ttf"
     id: mdi_md
     size: 24
     bpp: 4
-    glyphs: "\U000F091F\U000F0922\U000F0925\U000F0928\U000F092B\U000F092F\U000F005D\U000F0045\U000F050F\U000F0564\U000F0599\U000F0597\U000F059D\U000F17FE\U000F0510\U000F029A\U000F1594\U000F1595\U000F1598\U000F058C\U000F0595\U000F0D7C\U000F059B\U000F059C\U000F0596"
+    glyphs: "\U000F091F\U000F0922\U000F0925\U000F0928\U000F092B\U000F092F\U000F005D\U000F0045\U000F050F\U000F0564\U000F0599\U000F0597\U000F059D\U000F17FE\U000F0510\U000F029A\U000F1594\U000F1595\U000F1598\U000F058C\U000F0595\U000F0D7C\U000F059B\U000F059C\U000F0596\U000F1A73"
 
 # ---------------------------------------------------------------------------
 # Images
@@ -829,10 +829,16 @@ lvgl:
                 widgets:
                   # Header labels
                   - label:
-                      align: TOP_RIGHT
+                      align: TOP_LEFT
                       y: 5
                       text_font: mdi_sm
                       text: "\U000F17FE"
+                      text_color: ${clr_text}
+                  - label:
+                      align: TOP_RIGHT
+                      y: 5
+                      text_font: mdi_sm
+                      text: "\U000F1A73"
                       text_color: ${clr_text}
                   # UV Index
                   - meter:
@@ -920,12 +926,12 @@ lvgl:
                 widgets:
                   # Header icon
                   - label:
-                      align: TOP_RIGHT
-                      x: -5
+                      align: TOP_MID
+                      x: 5
                       y: 5
-                      text_font: mdi_sm
-                      text: "\U000F0595"
-                      text_color: ${clr_text}
+                      text_font: font_sm
+                      text: "Vejret i dag"
+                      text_color: ${clr_tick}
                   # Weather condition images — one per condition, hidden/shown by lambda
                   - image:
                       id: fimg_clear_day
