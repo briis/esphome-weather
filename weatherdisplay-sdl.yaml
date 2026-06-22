@@ -112,6 +112,9 @@ script:
           lv_label_set_text(id(temp_feels_like), buf);
           fmt(buf, sizeof(buf), temp - 6.0f);
           lv_label_set_text(id(temp_dewpoint), buf);
+          int hum = 30 + rand() % 71;
+          snprintf(buf, sizeof(buf), "%d%%", hum);
+          lv_label_set_text(id(lbl_humidity), buf);
   - id: simulate_wind
     then:
       - lambda: |-

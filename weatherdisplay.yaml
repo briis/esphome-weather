@@ -11,7 +11,7 @@ substitutions:
   device: "weatherdisplay"
   version: "0.1.0"
   created_by: "Bjarne Riis"
-  display_rotation: "0"
+  display_rotation: "180"
 
   # Temperature — overrides defaults in weather-common.yaml
   ha_temp_current: "sensor.holmeengen_sensor_temperature"
@@ -19,6 +19,7 @@ substitutions:
   ha_temp_low:     "min_temperature_today"
   ha_feels_like:   "sensor.holmeengen_sensor_apparent_temperature"
   ha_dew_point:    "sensor.holmeengen_sensor_dewpoint"
+  ha_humidity:     "sensor.holmeengen_sensor_humidity"
 
   # Wind — overrides defaults in weather-common.yaml
   ha_wind_speed:       "sensor.holmeengen_sensor_wind_speed"
@@ -357,6 +358,16 @@ sensor:
             snprintf(buf, sizeof(buf), "%.1f°", x);
             for (char* p = buf; *p; p++) if (*p == '.') { *p = ','; break; }
             lv_label_set_text(id(temp_dewpoint), buf);
+
+  - platform: homeassistant
+    id: sensor_humidity
+    entity_id: ${ha_humidity}
+    on_value:
+      then:
+        - lambda: |-
+            char buf[8];
+            snprintf(buf, sizeof(buf), "%.0f%%", x);
+            lv_label_set_text(id(lbl_humidity), buf);
 
   # ---------------------------------------------------------------------------
   # Wind — bearing, speed, gust, average bearing
