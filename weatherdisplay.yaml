@@ -9,7 +9,7 @@
 substitutions:
   name: "Weather Display"
   device: "weatherdisplay"
-  version: "1.0.0"
+  version: "1.0.1"
   created_by: "Bjarne Riis"
   display_rotation: "180"
 
@@ -247,9 +247,15 @@ touchscreen:
             - lvgl.widget.redraw:
       - if:
           condition:
-            switch.is_off: backlight
+            switch.is_on: night_mode_switch
           then:
-            - switch.turn_on: backlight
+            - script.execute: night_mode_sleep_timer
+          else:
+            - if:
+                condition:
+                  switch.is_off: backlight
+                then:
+                  - switch.turn_on: backlight
 
 switch:
   - platform: gpio
@@ -750,7 +756,25 @@ number:
     restore_value: true
     optimistic: true
 
+globals:
+  - id: night_wake_active
+    type: bool
+    initial_value: 'false'
+
 script:
+  - id: night_mode_sleep_timer
+    mode: restart
+    then:
+      - globals.set:
+          id: night_wake_active
+          value: 'true'
+      - switch.turn_on: backlight
+      - delay: 2min
+      - globals.set:
+          id: night_wake_active
+          value: 'false'
+      - script.execute: night_mode_check
+
   - id: night_mode_check
     mode: single
     then:
@@ -765,7 +789,7 @@ script:
             ? (now_min >= off_min || now_min < on_min)
             : (now_min >= off_min && now_min < on_min);
           if (in_night) {
-            id(backlight).turn_off();
+            if (!id(night_wake_active)) id(backlight).turn_off();
           } else if (!id(backlight).state) {
             id(backlight).turn_on();
           }
