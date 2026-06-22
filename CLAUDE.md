@@ -343,6 +343,8 @@ Pushing an update to `weather-common.yaml` on `main` propagates to the device on
 - **HA sensor substitutions belong in the hardware target** — defined as placeholders in `weather-common.yaml` but overridden in `weatherdisplay.yaml`. Main-file substitutions take precedence over package substitutions in ESPHome.
 - **`weatherdisplay.yaml` must be kept in sync in two places** — local dev copy AND the HA ESPHome addon config folder. The common file only needs to be on Forgejo.
 - **Time component id must be `system_time`** — `weather-common.yaml`'s `lvgl_update_clock` script references `id(system_time)`. Both SDL (host time) and hardware (HA time) must use this id.
+- **Octal PSRAM boot-crash with ESP-IDF 5.5.4 / pioarduino 55.03.38-1** — newer ESP-IDF enables `CONFIG_ESPTOOLPY_FLASH_MODE_AUTO_DETECT` by default, which conflicts with OPI PSRAM init on the Waveshare board. Without PSRAM the LVGL framebuffer (1.5 MB) can't be allocated and the device boot-loops at `spimem_flash_ll_set_dummy_out` / `heap_caps_aligned_alloc_base` before any ESPHome output appears. Fix is already in `weatherdisplay.yaml` `sdkconfig_options`: `CONFIG_ESPTOOLPY_FLASH_MODE_AUTO_DETECT: ""`, `CONFIG_ESPTOOLPY_FLASHMODE_DIO: "y"`, `CONFIG_SPIRAM_FETCH_INSTRUCTIONS: "y"`, `CONFIG_SPIRAM_RODATA: "y"`.
+- **HA add-on package cache can serve stale `weather-common.yaml`** — the `refresh: 10s` in the `packages: remote_package_files:` block does not always invalidate the add-on's cached copy. Symptom: hardware shows an older layout while SDL (which uses `!include`) shows the correct one. Fix: compile and flash locally with `esphome run weatherdisplay.yaml --device /dev/cu.usbmodemXXXX`, which fetches the package fresh from Forgejo.
 
 ## Phase 2 plan
 
