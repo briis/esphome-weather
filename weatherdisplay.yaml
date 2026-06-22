@@ -9,7 +9,7 @@
 substitutions:
   name: "Weather Display"
   device: "weatherdisplay"
-  version: "0.1.0"
+  version: "1.0.0"
   created_by: "Bjarne Riis"
   display_rotation: "180"
 
@@ -151,11 +151,13 @@ time:
     on_time_sync:
       then:
         - script.execute: lvgl_update_clock
+        - script.execute: night_mode_check
     on_time:
       - seconds: 0
         minutes: '*'
         then:
           - script.execute: lvgl_update_clock
+          - script.execute: night_mode_check
 
 # ---------------------------------------------------------------------------
 # Hardware — I/O expander, display, touch, backlight
@@ -267,6 +269,17 @@ switch:
       - lvgl.widget.redraw
     on_turn_off:
       - lvgl.pause
+
+  - platform: template
+    id: night_mode_switch
+    name: "Nat mode"
+    icon: "mdi:weather-night"
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    turn_on_action:
+      - script.execute: night_mode_check
+    turn_off_action:
+      - switch.turn_on: backlight
 
 sensor:
   - platform: wifi_signal
@@ -691,6 +704,71 @@ text_sensor:
       then:
         - lambda: |-
             lv_label_set_text(id(lbl_sunset), x.c_str());
+
+# ---------------------------------------------------------------------------
+# Night mode — turn display off at configured time, on again at another time
+# ---------------------------------------------------------------------------
+number:
+  - platform: template
+    id: night_off_hour
+    name: "Nat sluk - time"
+    icon: "mdi:clock-outline"
+    min_value: 0
+    max_value: 23
+    step: 1
+    initial_value: 22
+    restore_value: true
+    optimistic: true
+  - platform: template
+    id: night_off_minute
+    name: "Nat sluk - minut"
+    icon: "mdi:clock-outline"
+    min_value: 0
+    max_value: 59
+    step: 1
+    initial_value: 0
+    restore_value: true
+    optimistic: true
+  - platform: template
+    id: night_on_hour
+    name: "Nat tænd - time"
+    icon: "mdi:clock-outline"
+    min_value: 0
+    max_value: 23
+    step: 1
+    initial_value: 7
+    restore_value: true
+    optimistic: true
+  - platform: template
+    id: night_on_minute
+    name: "Nat tænd - minut"
+    icon: "mdi:clock-outline"
+    min_value: 0
+    max_value: 59
+    step: 1
+    initial_value: 0
+    restore_value: true
+    optimistic: true
+
+script:
+  - id: night_mode_check
+    mode: single
+    then:
+      - lambda: |-
+          if (!id(night_mode_switch).state) return;
+          auto t = id(system_time).now();
+          if (!t.is_valid()) return;
+          int now_min = t.hour * 60 + t.minute;
+          int off_min = (int)id(night_off_hour).state * 60 + (int)id(night_off_minute).state;
+          int on_min  = (int)id(night_on_hour).state  * 60 + (int)id(night_on_minute).state;
+          bool in_night = (off_min > on_min)
+            ? (now_min >= off_min || now_min < on_min)
+            : (now_min >= off_min && now_min < on_min);
+          if (in_night) {
+            id(backlight).turn_off();
+          } else if (!id(backlight).state) {
+            id(backlight).turn_on();
+          }
 
 packages:
   remote_package_files:
