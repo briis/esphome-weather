@@ -11,7 +11,7 @@ packages:
   remote_package_files:
     url: https://git.digitalhomes.dk/briis/esphome-weather
     files:
-      - weather-config-hw.yaml
+      - weatherdisplay-config-hw.yaml
       - weather-common.yaml
     ref: main
     username: briis

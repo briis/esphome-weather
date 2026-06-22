@@ -1,0 +1,312 @@
+substitutions:
+  name: "Weather Display"
+  device: "esphome-weather-sdl"
+  version: "0.2.0"
+  created_by: "Bjarne Riis"
+  display_rotation: "0" # 0, 90, 180, 270
+
+esphome:
+  name: "${device}"
+  friendly_name: "${name}"
+  project:
+    name: "briis.${device}"
+    version: "${version}"
+  on_boot:
+    - priority: -100.0
+      then:
+        - script.execute: lvgl_update_clock
+        - script.execute: simulate_wifi
+        - script.execute: simulate_temp        
+        - lambda: |-
+            lv_obj_set_style_x(id(bearing_indicator), 78, LV_PART_MAIN);
+            lv_obj_set_style_transform_pivot_x(id(bearing_indicator), -66, LV_PART_MAIN);
+            lv_obj_set_style_transform_pivot_y(id(bearing_indicator), 12, LV_PART_MAIN);
+            lv_obj_set_style_x(id(bearing_avg_indicator), 78, LV_PART_MAIN);
+            lv_obj_set_style_transform_pivot_x(id(bearing_avg_indicator), -69, LV_PART_MAIN);
+            lv_obj_set_style_transform_pivot_y(id(bearing_avg_indicator), 9, LV_PART_MAIN);
+        - script.execute: simulate_wind
+        - script.execute: simulate_uv_solar
+        - script.execute: simulate_pressure
+        - script.execute: simulate_rain
+        - script.execute: simulate_forecast
+        - script.execute: simulate_aqi
+
+host:
+
+logger:
+  level: INFO
+
+display:
+  - platform: sdl
+    id: lvgl_display
+    dimensions:
+      width: 800
+      height: 480
+    update_interval: 16ms
+
+touchscreen:
+  - platform: sdl
+    id: touch_controller
+    display: lvgl_display
+
+time:
+  - platform: host
+    id: system_time
+    timezone: Europe/Copenhagen
+    on_time:
+      - seconds: 0
+        minutes: '*'
+        then:
+          - script.execute: lvgl_update_clock
+          - script.execute: simulate_wifi
+          - script.execute: simulate_temp
+          - script.execute: simulate_wind
+          - script.execute: simulate_uv_solar
+          - script.execute: simulate_pressure
+          - script.execute: simulate_rain
+          - script.execute: simulate_forecast
+          - script.execute: simulate_aqi
+globals:
+  - id: sim_pressure
+    type: int
+    initial_value: '1013'
+
+script:
+  - id: simulate_wifi
+    then:
+      - lambda: |-
+          static const char* icons[] = {
+            "\U000F092B", "\U000F091F", "\U000F0922", "\U000F0925", "\U000F0928"
+          };
+          static uint32_t colors[] = {
+            ${clr_wifi_bad}, ${clr_wifi_bad}, ${clr_wifi_weak}, ${clr_wifi_good}, ${clr_wifi_good}
+          };
+          int lvl = rand() % 5;
+          lv_label_set_text(id(wifi_label), icons[lvl]);
+          lv_obj_set_style_text_color(id(wifi_label), lv_color_hex(colors[lvl]), 0);
+  - id: simulate_temp
+    then:
+     - lambda: |-
+          // Mock temperature data for SDL visual testing
+          auto fmt = [](char* buf, int n, float v) {
+            snprintf(buf, n, "%.1f°", v);
+            for (char* p = buf; *p; p++) if (*p == '.') { *p = ','; break; }
+          };
+          char buf[12];
+          float temp = -15.0f + (rand() % 501) / 10.0f;
+          fmt(buf, sizeof(buf), temp);
+          lv_label_set_text(id(lbl_temp_current), buf);
+
+          lv_color_t c;
+          if (temp < 5.0f)       c = lv_color_hex(${clr_temp_cold});
+          else if (temp < 15.0f) c = lv_color_hex(${clr_temp_cool});
+          else if (temp < 20.0f) c = lv_color_hex(${clr_temp_warm});
+          else                 c = lv_color_hex(${clr_temp_hot});
+          lv_obj_set_style_border_color(id(circle_temp), c, 0);
+
+          fmt(buf, sizeof(buf), 18.3f);
+          lv_label_set_text(id(lbl_temp_high), buf);
+          fmt(buf, sizeof(buf), 5.2f);
+          lv_label_set_text(id(lbl_temp_low), buf);
+          fmt(buf, sizeof(buf), temp - 2.5f);
+          lv_label_set_text(id(temp_feels_like), buf);
+          fmt(buf, sizeof(buf), temp - 6.0f);
+          lv_label_set_text(id(temp_dewpoint), buf);
+          int hum = 30 + rand() % 71;
+          snprintf(buf, sizeof(buf), "%d%%", hum);
+          lv_label_set_text(id(lbl_humidity), buf);
+  - id: simulate_wind
+    then:
+      - lambda: |-
+          auto fmt = [](char* buf, int n, float v) {
+            snprintf(buf, n, "%.1f", v);
+            for (char* p = buf; *p; p++) if (*p == '.') { *p = ','; break; }
+          };      
+          char buf[12];
+          float speed = 0.0f + (rand() % 320) / 10.0f;
+          fmt(buf, sizeof(buf), speed);
+          lv_label_set_text(id(lbl_wind_speed), buf);
+
+          float gust = 0.0f + (rand() % 320) / 10.0f;
+          fmt(buf, sizeof(buf), gust);
+          lv_label_set_text(id(lbl_wind_gust), buf);
+
+          float speed_avg = 0.0f + (rand() % 200) / 10.0f;
+          fmt(buf, sizeof(buf), speed_avg);
+          lv_label_set_text(id(wind_10min_avg), buf);
+
+          float gust_high = gust + (rand() % 50) / 10.0f;
+          fmt(buf, sizeof(buf), gust_high);
+          lv_label_set_text(id(wind_max_gust), buf);
+
+          auto cardinal = [](float b) -> const char* {
+            static const char* d[] = {"N","NNØ","NØ","ØNØ","Ø","ØSØ","SØ","SSØ","S","SSV","SV","VSV","V","VNV","NV","NNV"};
+            return d[(int)((b + 11.25f) / 22.5f) % 16];
+          };
+          int bearing = 0 + (rand() % 360);
+          snprintf(buf, sizeof(buf), "%s", cardinal(bearing));
+          lv_label_set_text(id(lbl_wind_cardinal), buf);
+          lv_obj_set_style_transform_rotation(id(bearing_indicator), lv_get_needle_angle_for_value(id(bearing_indicator), bearing) * 10, LV_PART_MAIN);
+          int bearing_avg = 0 + (rand() % 360);
+          lv_obj_set_style_transform_rotation(id(bearing_avg_indicator), lv_get_needle_angle_for_value(id(bearing_avg_indicator), bearing_avg) * 10, LV_PART_MAIN);
+  - id: simulate_uv_solar
+    then:
+      - lambda: |-
+          auto fmt = [](char* buf, int n, float v) {
+            snprintf(buf, n, "%.0f", v);
+            for (char* p = buf; *p; p++) if (*p == '.') { *p = ','; break; }
+          };      
+          char buf[12];
+          auto uv_color = [](int uv) -> lv_color_t {
+            if (uv <= 2)  return lv_color_hex(${clr_wifi_good});   // 0–2  low      green
+            if (uv <= 5)  return lv_color_hex(${clr_temp_cool});   // 3–5  moderate yellow
+            if (uv <= 7)  return lv_color_hex(${clr_temp_warm});   // 6–7  high     orange
+            if (uv <= 10) return lv_color_hex(${clr_temp_hot});    // 8–10 very high red
+            return lv_color_hex(0x9C27B0);                         // 11+  extreme  violet
+          };
+          int uv = (rand() % 14);
+          fmt(buf, sizeof(buf), uv);
+          lv_label_set_text(id(lbl_uv), buf);
+          lv_obj_set_style_border_color(id(circle_uv), uv_color(uv), 0);
+          int solar = (rand() % 1500);
+          fmt(buf, sizeof(buf), solar);
+          lv_label_set_text(id(lbl_solar), buf);
+  - id: simulate_pressure
+    then:
+      - lambda: |-
+          id(sim_pressure) = 960 + (rand() % 101);
+          char buf[8];
+          snprintf(buf, sizeof(buf), "%d", id(sim_pressure));
+          lv_label_set_text(id(lbl_pressure), buf);
+          float sim_trend = ((rand() % 41) - 20) / 10.0f;
+          const char* icon;
+          lv_color_t color;
+          char text_buf[16];
+          if (sim_trend > 0) {
+            icon = "${trend_rising}";
+            color = lv_color_hex(${clr_trend_rising});
+            snprintf(text_buf, sizeof(text_buf), "Stiger %.1f", sim_trend);
+            for (char* p = text_buf; *p; p++) if (*p == '.') { *p = ','; break; }
+          } else if (sim_trend < 0) {
+            icon = "${trend_falling}";
+            color = lv_color_hex(${clr_trend_falling});
+            snprintf(text_buf, sizeof(text_buf), "Falder %.1f", -sim_trend);
+            for (char* p = text_buf; *p; p++) if (*p == '.') { *p = ','; break; }
+          } else {
+            icon = "${trend_stable}";
+            color = lv_color_hex(${clr_trend_stable});
+            snprintf(text_buf, sizeof(text_buf), "Stabil");
+          }
+          lv_label_set_text(id(pressure_trend_symbol), icon);
+          lv_obj_set_style_text_color(id(pressure_trend_symbol), color, 0);
+          lv_label_set_text(id(pressure_trend_text), text_buf);
+      - lvgl.arc.update:
+          id: baro_gauge
+          value: !lambda return id(sim_pressure);
+  - id: simulate_rain
+    then:
+      - lambda: |-
+          char buf[20];
+          float today = (rand() % 301) / 10.0f;
+          snprintf(buf, sizeof(buf), "%.1f", today);
+          for (char* p = buf; *p; p++) if (*p == '.') { *p = ','; break; }
+          lv_label_set_text(id(rain_today), buf);
+
+          float rate = (rand() % 51) / 10.0f;
+          snprintf(buf, sizeof(buf), "%.1f #7788AA mm/h#", rate);
+          for (char* p = buf; *p; p++) if (*p == '.') { *p = ','; break; }
+          lv_label_set_text(id(lbl_rain_rate), buf);
+
+          float yesterday = (rand() % 201) / 10.0f;
+          snprintf(buf, sizeof(buf), "%.1f", yesterday);
+          for (char* p = buf; *p; p++) if (*p == '.') { *p = ','; break; }
+          lv_label_set_text(id(lbl_rain_yesterday), buf);
+  - id: simulate_forecast
+    then:
+      - lambda: |-
+          static const char* conditions[] = {
+            "clear-day", "clear-night", "cloudy", "fog", "lightning",
+            "lightning-rainy", "partlycloudy", "rainy", "snowy", "snowy-rainy", "windy"
+          };
+          static const char* labels[] = {
+            "Klart", "Klart (nat)", "Skyet", "Tåge", "Torden",
+            "Torden og regn", "Delvist skyet", "Regn", "Sne", "Slud", "Blæsende"
+          };
+          static const char* descriptions[] = {
+            "Klart vejr hele dagen", "Klart og stille nat", "Overskyet hele dagen",
+            "Tæt tåge om morgenen", "Risiko for tordenvejr", "Torden med kraftig regn",
+            "Perioder med sol og skyer", "Regnbyger i løbet af dagen",
+            "Snebyger ventes", "Blandet sne og regn", "Kraftig vind"
+          };
+          int idx = rand() % 11;
+          std::string cond = conditions[idx];
+
+          static lv_obj_t* all[] = {
+            id(fimg_clear_day), id(fimg_clear_night), id(fimg_cloudy),
+            id(fimg_fog), id(fimg_lightning), id(fimg_lightning_rainy),
+            id(fimg_partlycloudy), id(fimg_rainy), id(fimg_snowy),
+            id(fimg_snowy_rainy), id(fimg_windy)
+          };
+          for (auto* o : all) lv_obj_add_flag(o, LV_OBJ_FLAG_HIDDEN);
+          lv_obj_t* show = id(fimg_clear_day);
+          if      (cond == "clear-night")     show = id(fimg_clear_night);
+          else if (cond == "cloudy")          show = id(fimg_cloudy);
+          else if (cond == "fog")             show = id(fimg_fog);
+          else if (cond == "lightning")       show = id(fimg_lightning);
+          else if (cond == "lightning-rainy") show = id(fimg_lightning_rainy);
+          else if (cond == "partlycloudy")    show = id(fimg_partlycloudy);
+          else if (cond == "rainy")           show = id(fimg_rainy);
+          else if (cond == "snowy")           show = id(fimg_snowy);
+          else if (cond == "snowy-rainy")     show = id(fimg_snowy_rainy);
+          else if (cond == "windy")           show = id(fimg_windy);
+          lv_obj_clear_flag(show, LV_OBJ_FLAG_HIDDEN);
+          lv_label_set_text(id(lbl_fcst_condition), labels[idx]);
+          lv_label_set_text(id(lbl_fcst_description), descriptions[idx]);
+
+          auto fmt = [](char* buf, int n, float v) {
+            snprintf(buf, n, "%.1f°", v);
+            for (char* p = buf; *p; p++) if (*p == '.') { *p = ','; break; }
+          };
+          char buf[12];
+
+          int prob = rand() % 101;
+          snprintf(buf, sizeof(buf), "%d%%", prob);
+          lv_label_set_text(id(lbl_fcst_precip_prob), buf);
+
+          float precip = (rand() % 200) / 10.0f;
+          snprintf(buf, sizeof(buf), "%.1f mm", precip);
+          for (char* p = buf; *p; p++) if (*p == '.') { *p = ','; break; }
+          lv_label_set_text(id(lbl_fcst_precipitation), buf);
+          float high = 10.0f + (rand() % 200) / 10.0f;
+          fmt(buf, sizeof(buf), high);
+          lv_label_set_text(id(lbl_fcst_high), buf);
+          float low = -5.0f + (rand() % 150) / 10.0f;
+          fmt(buf, sizeof(buf), low);
+          lv_label_set_text(id(lbl_fcst_low), buf);
+
+  - id: simulate_aqi
+    then:
+      - lambda: |-
+          auto aqi_color = [](int aqi) -> lv_color_t {
+            if (aqi <= 50)  return lv_color_hex(${clr_wifi_good});
+            if (aqi <= 100) return lv_color_hex(${clr_temp_cool});
+            if (aqi <= 150) return lv_color_hex(${clr_temp_warm});
+            if (aqi <= 200) return lv_color_hex(${clr_temp_hot});
+            if (aqi <= 300) return lv_color_hex(0x9C27B0);
+            return lv_color_hex(0x7E0023);
+          };
+          char buf[20];
+          int aqi = rand() % 351;
+          snprintf(buf, sizeof(buf), "%d", aqi);
+          lv_label_set_text(id(lbl_aqi), buf);
+          lv_obj_set_style_border_color(id(circle_aqi), aqi_color(aqi), 0);
+
+  #         float pm25 = (rand() % 1500) / 10.0f;
+  #         snprintf(buf, sizeof(buf), "%.1f μg/m³", pm25);
+  #         for (char* p = buf; *p; p++) if (*p == '.') { *p = ','; break; }
+  #         lv_label_set_text(id(lbl_pm25), buf);
+
+  #         float pm10 = (rand() % 3000) / 10.0f;
+  #         snprintf(buf, sizeof(buf), "%.1f μg/m³", pm10);
+  #         for (char* p = buf; *p; p++) if (*p == '.') { *p = ','; break; }
+  #         lv_label_set_text(id(lbl_pm10), buf);
