@@ -7,15 +7,17 @@ Design: 3-column dark card grid on pure black background.
 
 ## Current phase
 
-**Phase 2 complete — all cards populated.** Temperature, Wind, Sun & UV, Barometer, Rain, Forecast, and AQI widgets implemented with live HA sensors and SDL simulation. Grid layout verified on Waveshare ESP32-S3-Touch-LCD-7.
+**Phase 3 complete.** All cards populated with live HA sensors. Extended with humidity display, sunrise/sunset times, configurable night mode, and split file structure for Forgejo-driven deployment. Verified on Waveshare ESP32-S3-Touch-LCD-7.
 
 ## Files
 
 | File | Purpose |
 | --- | --- |
-| `weather-common.yaml` | Shared: fonts, images, LVGL layout, `lvgl_update_clock` script. Included by both targets. |
-| `weatherdisplay-sdl.yaml` | SDL simulator target (`host` platform). Layout iteration + mock data scripts. |
-| `weatherdisplay.yaml` | ESP32-S3 hardware target. Waveshare 7" 800×480. HA sensors. |
+| `weather-common.yaml` | Shared: fonts, images, LVGL layout, `lvgl_update_clock` script. Pulled from Forgejo by hardware; included locally by SDL. |
+| `weatherdisplay.yaml` | Hardware run file — thin wrapper. Declares `packages: remote_package_files:` pointing to Forgejo. Rarely needs editing. |
+| `weatherdisplay-sdl.yaml` | SDL run file — thin wrapper. Includes `weatherdisplay-config-sdl.yaml` and `weather-common.yaml` locally. |
+| `weatherdisplay-config-hw.yaml` | Full hardware config: ESP32-S3 board, PSRAM sdkconfig, WiFi, HA sensors, night mode, substitutions. Lives on Forgejo. |
+| `weatherdisplay-config-sdl.yaml` | SDL simulator config: host platform, SDL display, mock data scripts. Local only. |
 | `fonts/materialdesignicons-webfont.ttf` | MDI icon font. |
 | `images/wind_bearing_indicator.png` | Current wind bearing needle (24×24). |
 | `images/wind_bearing_avg_indicator.png` | Average bearing needle (18×18). |
@@ -30,11 +32,36 @@ esphome run weatherdisplay-sdl.yaml
 
 Prerequisites: `brew install sdl2` + `pip install esphome`
 
-Flash to hardware:
+Flash to hardware (initial flash or after changing board-level config):
 
 ```sh
 esphome run weatherdisplay.yaml
 ```
+
+**Normal workflow for layout / sensor changes:** push `weather-common.yaml` and/or `weatherdisplay-config-hw.yaml` to Forgejo `main`. The device picks up changes on next OTA from the HA ESPHome add-on — no local flash needed.
+
+## Deployment — package strategy
+
+`weatherdisplay.yaml` is a minimal pointer:
+
+```yaml
+packages:
+  remote_package_files:
+    url: https://git.digitalhomes.dk/briis/esphome-weather
+    files:
+      - weatherdisplay-config-hw.yaml
+      - weather-common.yaml
+    ref: main
+    username: briis
+    password: !secret forgejo_token
+    refresh: 10s
+```
+
+Both config files are pulled from Forgejo at compile time. Pushing a change to either file on `main` propagates to the device on the next OTA without touching the ESPHome add-on UI.
+
+`weatherdisplay-sdl.yaml` uses a local `!include` for both files — no Forgejo dependency.
+
+**Note on HA add-on cache:** The add-on can serve a stale copy even with `refresh: 10s`. If the device shows an older layout, compile and flash locally: `esphome run weatherdisplay.yaml --device /dev/cu.usbmodemXXXX`.
 
 ## Layout structure
 
@@ -48,8 +75,9 @@ esphome run weatherdisplay.yaml
 │  col 0–3, row 1–5 │  col 4–7, row 1–5 │   col 8–11, row 1–4    │
 ├───────────────────┼───────────────────├──────────────────────────┤
 │  Feels like /     │  Wind avg /       │     Barometer            │
-│  Dewpoint         │  Max gust         │   col 8–11, row 5–7      │
-│  col 0–3, row 6–7 │  col 4–7, row 6–7 │                          │
+│  Dewpoint /       │  Max gust         │   col 8–11, row 5–7      │
+│  Humidity         │  col 4–7, row 6–7 │                          │
+│  col 0–3, row 6–7 │                   │                          │
 ├───────────────────┼───────────────────┼──────────────────────────┤
 │  Rain             │  Forecast         │     AQI                  │
 │  col 0–3, row 8–11│  col 4–7, row 8–11│   col 8–11, row 8–11   │
@@ -132,7 +160,7 @@ MDI codepoints in use:
 - `lbl_temp_current` — current temperature (font_xxl, centered inside circle)
 - `lbl_temp_low` — daily low (font_md, with ↓ arrow icon to left)
 
-HA sensors (entity IDs set via substitutions, overridden in `weatherdisplay.yaml`):
+HA sensors (entity IDs set via substitutions, overridden in `weatherdisplay-config-hw.yaml`):
 
 | Substitution | Default in common | Purpose |
 | --- | --- | --- |
@@ -184,6 +212,8 @@ Formula: `x_offset = R`, `pivot_x = image_width/2 - R`, `pivot_y = image_height/
 - `circle_solar` — 115×115 solar radiation meter
 - `lbl_solar` — solar radiation value W/m² (font_xl)
 - `lbl_solar_unit` — static "W/m²" label
+- `lbl_sunrise` — today's sunrise time (font_xs, dim), updated by `ts_sunrise` text sensor
+- `lbl_sunset` — today's sunset time (font_xs, dim), updated by `ts_sunset` text sensor
 
 UV border colour scale (WHO):
 
@@ -201,6 +231,10 @@ HA sensors:
 | --- | --- | --- |
 | `ha_uv_index` | `sensor.unknown_uv_index` | UV index → label + circle colour |
 | `ha_solar_radiation` | `sensor.unknown_solar_radiation` | Solar radiation → label |
+| `ha_sunrise` | `sensor.unknown_sunrise` | Sunrise time string → `lbl_sunrise` |
+| `ha_sunset` | `sensor.unknown_sunset` | Sunset time string → `lbl_sunset` |
+
+**Sunrise/sunset must be `text_sensor:`** — HA exposes these as string entities. Declaring them under `sensor:` causes a `LoadProhibited` crash (see Known gotchas). Hardware IDs are `ts_sunrise` / `ts_sunset`.
 
 ### Barometer card (col 8–11, row 5–7)
 
@@ -218,10 +252,13 @@ HA sensors:
 | `ha_pressure_trend` | `sensor.unknown_pressure_trend` | Trend direction (unused, reserved) |
 | `ha_pressure_trend_value` | `sensor.unknown_pressure_trend_value` | Trend value → symbol icon + colour + text |
 
-### Feels like / Dewpoint sub-card (col 0–3, row 6–7)
+### Feels like / Dewpoint / Humidity sub-card (col 0–3, row 6–7)
+
+Three-column grid (`grid_columns: [fr(1), fr(1), fr(1)]`):
 
 - `temp_feels_like` — apparent temperature (font_lg)
 - `temp_dewpoint` — dew point temperature (font_lg)
+- `lbl_humidity` — relative humidity % (font_lg), formatted `"%.0f%%"`
 
 HA sensors:
 
@@ -229,6 +266,7 @@ HA sensors:
 | --- | --- | --- |
 | `ha_feels_like` | `sensor.unknown_apparent_temperature` | Apparent temperature |
 | `ha_dew_point` | `sensor.unknown_dewpoint` | Dew point |
+| `ha_humidity` | `sensor.unknown_humidity` | Relative humidity → `lbl_humidity` |
 
 ### Wind averages sub-card (col 4–7, row 6–7)
 
@@ -268,7 +306,7 @@ HA sensors:
 - `lbl_fcst_condition` — short condition text (font_sm, truncated with DOT)
 - `lbl_fcst_description` — longer description (font_xs, dim, truncated with DOT)
 
-HA sensors:
+HA sensors — all four numeric forecast sensors have `filters: - filter_out: nan` to prevent PSRAM crash on boot (see Known gotchas):
 
 | Substitution | Default in common | Purpose |
 | --- | --- | --- |
@@ -307,7 +345,36 @@ HA sensors:
 | `ha_aqi_pm25` | `sensor.unknown_aqi_pm25` | PM2.5 → `lbl_pm25` |
 | `ha_aqi_pm10` | `sensor.unknown_aqi_pm10` | PM10 → `lbl_pm10` |
 
-## Hardware config (`weatherdisplay.yaml`)
+## Night mode
+
+Configurable display off/on schedule, exposed to HA as a switch and four number entities. All defined in `weatherdisplay-config-hw.yaml`.
+
+### HA-visible entities
+
+| Entity | Type | Default | Description |
+| --- | --- | --- | --- |
+| `night_mode_switch` | `switch` (template) | off | "Nat mode" — enable/disable the schedule. Turning off restores the backlight immediately. |
+| `night_off_hour` | `number` | 22 | Hour to turn display off |
+| `night_off_minute` | `number` | 0 | Minute to turn display off |
+| `night_on_hour` | `number` | 7 | Hour to turn display back on |
+| `night_on_minute` | `number` | 0 | Minute to turn display back on |
+
+All number entities use `restore_value: true` so they survive reboots.
+
+### Scripts
+
+- `night_mode_check` (mode: single) — called every minute by `on_time` and `on_time_sync`. Compares current time against the off/on window using integer minute arithmetic. Supports midnight-spanning windows (e.g. 22:00–07:00). Skips if `night_wake_active` is true.
+- `night_mode_sleep_timer` (mode: restart) — triggered by touch when night mode is on. Sets `night_wake_active = true`, turns backlight on, waits 2 minutes, clears the flag, then calls `night_mode_check` to re-evaluate.
+
+### Global
+
+- `night_wake_active` (bool, initial: false) — prevents `night_mode_check` from turning the display off during the 2-minute touch-wake window.
+
+### Touch behaviour
+
+When touched during night mode: `night_mode_sleep_timer` runs with `mode: restart`, so repeated touches reset the 2-minute countdown. When touched while night mode is disabled (or outside the night window): normal backlight-on logic.
+
+## Hardware config (`weatherdisplay-config-hw.yaml`)
 
 Board: Waveshare ESP32-S3-Touch-LCD-7 · 16 MB flash · 8 MB octal PSRAM
 
@@ -320,18 +387,10 @@ Board: Waveshare ESP32-S3-Touch-LCD-7 · 16 MB flash · 8 MB octal PSRAM
 | I/O expander | `ch422g` (id: `io_ex`) — display reset/enable, touch reset |
 | Touch | GT911 on I2C (SDA GPIO8, SCL GPIO9), interrupt GPIO4 |
 | Backlight | `ch422g` io_ex pin 2, `allow_other_uses: true` (shared with display enable) |
-| On touch | Resumes LVGL if paused; turns backlight on if off |
+| On touch | Resumes LVGL if paused; then branches on `night_mode_switch` state (see Night mode) |
 | OTA | Turns backlight off on begin |
 | Captive portal | Enabled |
 | Time component id | `system_time` (matches id used in `lvgl_update_clock` script in common) |
-
-### Package strategy
-
-`weatherdisplay.yaml` (hardware) pulls `weather-common.yaml` from the **remote Forgejo repo** at `https://git.digitalhomes.dk/briis/esphome-weather` (ref: `main`, refresh: 10 s, auth via `!secret forgejo_token`).
-
-`weatherdisplay-sdl.yaml` (SDL simulator) uses a local `!include weather-common.yaml`.
-
-Pushing an update to `weather-common.yaml` on `main` propagates to the device on next compile/OTA without reflashing.
 
 ## Known gotchas
 
@@ -340,23 +399,10 @@ Pushing an update to `weather-common.yaml` on `main` propagates to the device on
 - **`scrollbar_mode: "OFF"` needs quotes** — YAML parses bare `OFF` as boolean `false`.
 - **ESPHome rejects negative `pivot_x`** — the YAML schema validator requires `pivot_x >= 0`. Use `0` as a placeholder and fix with `lv_obj_set_style_transform_pivot_x` in `on_boot`. Must also fix `x` offset and `pivot_y` — all three are linked (see Bearing indicator section above).
 - **`lv_image_set_pivot` is wrong for meter indicators** — use `lv_obj_set_style_transform_pivot_x/y` instead. The indicator object is an `lv_obj_t*`; `lv_image_set_pivot` targets the image zoom pivot, not the rotation transform pivot.
-- **HA sensor substitutions belong in the hardware target** — defined as placeholders in `weather-common.yaml` but overridden in `weatherdisplay.yaml`. Main-file substitutions take precedence over package substitutions in ESPHome.
-- **`weatherdisplay.yaml` must be kept in sync in two places** — local dev copy AND the HA ESPHome addon config folder. The common file only needs to be on Forgejo.
+- **HA sensor substitutions belong in the hardware target** — defined as placeholders in `weather-common.yaml` but overridden in `weatherdisplay-config-hw.yaml`. Main-file substitutions take precedence over package substitutions in ESPHome.
+- **`weatherdisplay-config-hw.yaml` must stay in sync** — the copy on Forgejo is what the device compiles from. If you edit locally and don't push, the next OTA will revert the change.
 - **Time component id must be `system_time`** — `weather-common.yaml`'s `lvgl_update_clock` script references `id(system_time)`. Both SDL (host time) and hardware (HA time) must use this id.
-- **Octal PSRAM boot-crash with ESP-IDF 5.5.4 / pioarduino 55.03.38-1** — newer ESP-IDF enables `CONFIG_ESPTOOLPY_FLASH_MODE_AUTO_DETECT` by default, which conflicts with OPI PSRAM init on the Waveshare board. Without PSRAM the LVGL framebuffer (1.5 MB) can't be allocated and the device boot-loops at `spimem_flash_ll_set_dummy_out` / `heap_caps_aligned_alloc_base` before any ESPHome output appears. Fix is already in `weatherdisplay.yaml` `sdkconfig_options`: `CONFIG_ESPTOOLPY_FLASH_MODE_AUTO_DETECT: ""`, `CONFIG_ESPTOOLPY_FLASHMODE_DIO: "y"`, `CONFIG_SPIRAM_FETCH_INSTRUCTIONS: "y"`, `CONFIG_SPIRAM_RODATA: "y"`.
-- **HA add-on package cache can serve stale `weather-common.yaml`** — the `refresh: 10s` in the `packages: remote_package_files:` block does not always invalidate the add-on's cached copy. Symptom: hardware shows an older layout while SDL (which uses `!include`) shows the correct one. Fix: compile and flash locally with `esphome run weatherdisplay.yaml --device /dev/cu.usbmodemXXXX`, which fetches the package fresh from Forgejo.
-
-## Phase 2 plan
-
-- [x] ESP32-S3 hardware config — verified with real board config
-- [x] Flash to hardware — display and touch confirmed working
-- [x] Live clock (`time_label`) — updates every minute, correct on both SDL and hardware
-- [x] WiFi signal icon (`wifi_label`) — RSSI-based icon + colour, simulated on SDL
-- [x] Named color substitutions — all hex values replaced with `${clr_*}` references in common file
-- [x] Temperature card — circle outline + current temp + daily high/low, live HA sensors
-- [x] Wind card — compass meter with current + avg bearing needles, speed, gust, cardinal direction
-- [x] Sun & UV card — UV meter with WHO-scale colour border + solar radiation display, live HA sensors
-- [x] Barometer card — half-circle arc gauge with pressure value, trend symbol + text
-- [x] Rain card — circle with today's total, yesterday's total, and current rate; live HA sensors
-- [x] Forecast card — weather condition image, high/low temps, precipitation probability + amount, condition text + description
-- [x] AQI card — EPA-scale colour circle with AQI value, PM2.5 and PM10 labels; live HA sensors + SDL simulation
+- **String HA entities must be `text_sensor:`** — entities like `sensor.next_sunrise` deliver a string, not a float. Declaring them under `sensor:` (numeric platform) causes a `LoadProhibited` crash at runtime when the `on_value` lambda applies `%s` formatting to a float pointer. Use `text_sensor:` + `lv_label_set_text(id(lbl_foo), x.c_str())`.
+- **NaN + `CONFIG_SPIRAM_RODATA` crash** — forecast sensors send NaN on first boot while the HA weather integration is initialising. With `CONFIG_SPIRAM_RODATA: "y"`, the ROM `_svfprintf_r` crashes when formatting NaN with `%.1f` (PSRAM cache access issue in ROM code). Fix: add `filters: - filter_out: nan` to every forecast sensor that uses `%.1f` in its `on_value` lambda.
+- **Octal PSRAM boot-crash with ESP-IDF 5.5.4 / pioarduino 55.03.38-1** — newer ESP-IDF enables `CONFIG_ESPTOOLPY_FLASH_MODE_AUTO_DETECT` by default, which conflicts with OPI PSRAM init on the Waveshare board. Without PSRAM the LVGL framebuffer (1.5 MB) can't be allocated and the device boot-loops. Fix already in `weatherdisplay-config-hw.yaml` `sdkconfig_options`: `CONFIG_ESPTOOLPY_FLASH_MODE_AUTO_DETECT: ""`, `CONFIG_ESPTOOLPY_FLASHMODE_DIO: "y"`, `CONFIG_SPIRAM_FETCH_INSTRUCTIONS: "y"`, `CONFIG_SPIRAM_RODATA: "y"`.
+- **HA add-on package cache can serve stale files** — `refresh: 10s` does not always invalidate the add-on's cached copy. Compile and flash locally to bypass the cache when needed.
