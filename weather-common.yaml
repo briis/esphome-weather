@@ -442,7 +442,7 @@ lvgl:
                       align: CENTER
                       text_color: ${clr_text}
                       text_font: font_xxl
-                      text: "14.5°"
+                      text: "--,-°"
                   - label:
                       align: BOTTOM_MID
                       x: -25
@@ -799,7 +799,7 @@ lvgl:
                       y: -15
                       text_font: font_md
                       text_color: "${clr_text}"
-                      text: "04:30"
+                      text: "--:--"
                   - label:
                       align: BOTTOM_RIGHT
                       x: -5
@@ -814,7 +814,7 @@ lvgl:
                       y: -15
                       text_font: font_md
                       text_color: "${clr_text}"
-                      text: "22:00"
+                      text: "--:--"
 
             # UV and Solar Radiation widgets
             - obj:
