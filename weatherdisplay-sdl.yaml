@@ -210,12 +210,12 @@ script:
           lv_label_set_text(id(rain_today), buf);
 
           float rate = (rand() % 51) / 10.0f;
-          snprintf(buf, sizeof(buf), "%.1f mm/h", rate);
+          snprintf(buf, sizeof(buf), "%.1f #7788AA mm/h#", rate);
           for (char* p = buf; *p; p++) if (*p == '.') { *p = ','; break; }
           lv_label_set_text(id(lbl_rain_rate), buf);
 
           float yesterday = (rand() % 201) / 10.0f;
-          snprintf(buf, sizeof(buf), "I går: %.1f", yesterday);
+          snprintf(buf, sizeof(buf), "%.1f", yesterday);
           for (char* p = buf; *p; p++) if (*p == '.') { *p = ','; break; }
           lv_label_set_text(id(lbl_rain_yesterday), buf);
   - id: simulate_forecast
@@ -298,15 +298,15 @@ script:
           lv_label_set_text(id(lbl_aqi), buf);
           lv_obj_set_style_border_color(id(circle_aqi), aqi_color(aqi), 0);
 
-          float pm25 = (rand() % 1500) / 10.0f;
-          snprintf(buf, sizeof(buf), "%.1f μg/m³", pm25);
-          for (char* p = buf; *p; p++) if (*p == '.') { *p = ','; break; }
-          lv_label_set_text(id(lbl_pm25), buf);
+  #         float pm25 = (rand() % 1500) / 10.0f;
+  #         snprintf(buf, sizeof(buf), "%.1f μg/m³", pm25);
+  #         for (char* p = buf; *p; p++) if (*p == '.') { *p = ','; break; }
+  #         lv_label_set_text(id(lbl_pm25), buf);
 
-          float pm10 = (rand() % 3000) / 10.0f;
-          snprintf(buf, sizeof(buf), "%.1f μg/m³", pm10);
-          for (char* p = buf; *p; p++) if (*p == '.') { *p = ','; break; }
-          lv_label_set_text(id(lbl_pm10), buf);
+  #         float pm10 = (rand() % 3000) / 10.0f;
+  #         snprintf(buf, sizeof(buf), "%.1f μg/m³", pm10);
+  #         for (char* p = buf; *p; p++) if (*p == '.') { *p = ','; break; }
+  #         lv_label_set_text(id(lbl_pm10), buf);
 
 packages:
   common: !include weather-common.yaml

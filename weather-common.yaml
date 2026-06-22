@@ -47,6 +47,7 @@ substitutions:
   ha_wind_bearing:     "sensor.unknown_wind_bearing"
   ha_wind_gust:        "sensor.unknown_wind_gust"
   ha_wind_bearing_avg: "sensor.unknown_wind_bearing_avg"
+  clr_wind_circle:     "0xCEDD39"
 
   # UV & Solar Radiation — override in esphome-weather.yaml
   ha_uv_index:         "sensor.unknown_uv_index"
@@ -76,6 +77,12 @@ substitutions:
   ha_aqi_pm25:   "sensor.unknown_aqi_pm25"
   ha_aqi_pm10:   "sensor.unknown_aqi_pm10"
 
+  # Sunrise - Sunset — override in weatherdisplay.yaml
+  ha_sunrise:    "sensor.unknown_sunrise"
+  ha_sunset:     "sensor.unknown_sunset"
+  sym_sunrise:   "\U000F059C"
+  sym_sunset:    "\U000F059B"
+  
 # ---------------------------------------------------------------------------
 # Fonts
 # ---------------------------------------------------------------------------
@@ -120,15 +127,20 @@ font:
   # F092F wifi · F005D arrow-up · F0045 arrow-down · F050F thermometer
   # F0564 water · F0599 weather-sunny · F0597 weather-rainy · F059D weather-windy
   - file: "fonts/materialdesignicons-webfont.ttf"
+    id: mdi_xs
+    size: 14
+    bpp: 4
+    glyphs: "\U000F091F\U000F0922\U000F0925\U000F0928\U000F092B\U000F092F\U000F005D\U000F0045\U000F050F\U000F0564\U000F0599\U000F0597\U000F059D\U000F17FE\U000F0510\U000F029A\U000F1594\U000F1595\U000F1598\U000F058C\U000F0595\U000F0D7C\U000F059B\U000F059C\U000F0596"
+  - file: "fonts/materialdesignicons-webfont.ttf"
     id: mdi_sm
     size: 18
     bpp: 4
-    glyphs: "\U000F091F\U000F0922\U000F0925\U000F0928\U000F092B\U000F092F\U000F005D\U000F0045\U000F050F\U000F0564\U000F0599\U000F0597\U000F059D\U000F17FE\U000F0510\U000F029A\U000F1594\U000F1595\U000F1598\U000F058C\U000F0595\U000F0D7C"
+    glyphs: "\U000F091F\U000F0922\U000F0925\U000F0928\U000F092B\U000F092F\U000F005D\U000F0045\U000F050F\U000F0564\U000F0599\U000F0597\U000F059D\U000F17FE\U000F0510\U000F029A\U000F1594\U000F1595\U000F1598\U000F058C\U000F0595\U000F0D7C\U000F059B\U000F059C\U000F0596"
   - file: "fonts/materialdesignicons-webfont.ttf"
     id: mdi_md
     size: 24
     bpp: 4
-    glyphs: "\U000F091F\U000F0922\U000F0925\U000F0928\U000F092B\U000F092F\U000F005D\U000F0045\U000F050F\U000F0564\U000F0599\U000F0597\U000F059D\U000F17FE\U000F0510\U000F029A\U000F1594\U000F1595\U000F1598\U000F058C\U000F0595\U000F0D7C"
+    glyphs: "\U000F091F\U000F0922\U000F0925\U000F0928\U000F092B\U000F092F\U000F005D\U000F0045\U000F050F\U000F0564\U000F0599\U000F0597\U000F059D\U000F17FE\U000F0510\U000F029A\U000F1594\U000F1595\U000F1598\U000F058C\U000F0595\U000F0D7C\U000F059B\U000F059C\U000F0596"
 
 # ---------------------------------------------------------------------------
 # Images
@@ -469,7 +481,7 @@ lvgl:
                       height: 180
                       bg_opa: TRANSP
                       border_width: 3
-                      border_color: ${clr_temp_cold}
+                      border_color: ${clr_wind_circle}
                       pad_all: 0
                       indicator:
                         bg_opa: TRANSP
@@ -530,12 +542,267 @@ lvgl:
                       text: "m/s"
                       text_color: ${clr_text}
                       text_font: font_sm
+            # Rain Widget
+            - obj:
+                styles: widget_4x5
+                bg_color: ${clr_card}
+                grid_cell_column_pos: 8
+                grid_cell_row_pos: 1
+                grid_cell_column_span: 4
+                grid_cell_row_span: 5
+                widgets: 
+                  # Header labels
+                  - label:
+                      align: TOP_RIGHT
+                      x: -5
+                      y: 5
+                      text_font: mdi_sm
+                      text: "\U000F0596"
+                      text_color: ${clr_text}
+                  - meter:
+                      id: circle_rain
+                      align: CENTER
+                      width: 180
+                      height: 180
+                      bg_opa: TRANSP
+                      border_width: 6
+                      border_color: ${clr_temp_cold}
+                      indicator:
+                        bg_opa: TRANSP
+                        border_width: 0                      
+                      scales:
+                        range_from: 0
+                        range_to: 360
+                        angle_range: 360
+                        rotation: 270
+                      widgets:
+                        - label:
+                            align: TOP_MID
+                            y: 2
+                            text_font: font_sm
+                            text_color: "${clr_text_dim}"
+                            text: "I går:"
+                        - label:
+                            id: lbl_rain_yesterday
+                            align: TOP_MID
+                            y: 20
+                            text_font: font_md
+                            text_color: "${clr_text}"
+                            text: "--,-"
+                        - label:
+                            id: rain_today
+                            align: CENTER
+                            text_font: font_xxl
+                            text: "--,-"
+                        - label:
+                            id: lbl_rain_rate
+                            align: BOTTOM_MID
+                            y: -30
+                            recolor: true
+                            text_font: font_sm
+                            text_color: "${clr_text}"
+                            text: "--,- #7788AA mm/h#"
+                        - label:
+                            align: BOTTOM_MID
+                            y: -2
+                            text_font: font_sm
+                            text_color: "${clr_text}"
+                            text_align: RIGHT
+                            text: "mm"
+            # Temperatur Additional Data
+            - obj:
+                styles: widget_4x2
+                bg_color: ${clr_card}
+                grid_cell_column_pos: 0
+                grid_cell_row_pos: 6
+                grid_cell_column_span: 4
+                grid_cell_row_span: 2
+                widgets:
+                  - obj:
+                      styles: grid_layout_nested
+                      align: CENTER
+                      layout:
+                        type: grid
+                        grid_columns: [fr(1), fr(1)]
+                        grid_rows: [fr(1), 2, fr(2)]
+                        grid_column_align: CENTER
+                        grid_row_align: CENTER
+                      widgets:
+                        - label:
+                            grid_cell_x_align: CENTER
+                            grid_cell_column_pos: 0
+                            grid_cell_row_pos: 0
+                            text_align: CENTER
+                            text_font: font_sm
+                            text_color: "${clr_text_dim}"
+                            text: "Føles som"
+                        - obj:
+                            grid_cell_column_pos: 0
+                            grid_cell_row_pos: 1
+                            grid_cell_column_span: 2
+                            grid_cell_x_align: STRETCH
+                            height: 2
+                            bg_color: "${clr_separator}"
+                            pad_all: 0
+                            border_width: 0
+                        - label:
+                            id: temp_feels_like
+                            grid_cell_x_align: CENTER
+                            grid_cell_y_align: START
+                            grid_cell_column_pos: 0
+                            grid_cell_row_pos: 2
+                            text_align: CENTER
+                            text_font: font_lg
+                            text_color: "${clr_text}"
+                            text: "--,-°"
+                        - label:
+                            grid_cell_x_align: CENTER
+                            grid_cell_column_pos: 1
+                            grid_cell_row_pos: 0
+                            text_align: CENTER
+                            text_font: font_sm
+                            text_color: "${clr_text_dim}"
+                            text: "Dugpunkt"
+                        - label:
+                            id: temp_dewpoint
+                            grid_cell_x_align: CENTER
+                            grid_cell_y_align: START
+                            grid_cell_column_pos: 1
+                            grid_cell_row_pos: 2
+                            text_align: CENTER
+                            text_font: font_lg
+                            text_color: "${clr_text}"
+                            text: "--,-°"
+            # Wind Additional Data
+            - obj:
+                styles: widget_4x2
+                bg_color: ${clr_card}
+                grid_cell_column_pos: 4
+                grid_cell_row_pos: 6
+                grid_cell_column_span: 4
+                grid_cell_row_span: 2
+                widgets:
+                  - obj:
+                      styles: grid_layout_nested
+                      align: CENTER
+                      layout:
+                        type: grid
+                        grid_columns: [fr(1), fr(1)]
+                        grid_rows: [fr(1), 2, fr(2)]
+                        grid_column_align: CENTER
+                        grid_row_align: CENTER
+                      widgets:
+                        - label:
+                            grid_cell_x_align: CENTER
+                            grid_cell_column_pos: 0
+                            grid_cell_row_pos: 0
+                            text_align: CENTER
+                            text_font: font_sm
+                            text_color: "${clr_text_dim}"
+                            text: "Vind gns. 10m"
+                        - obj:
+                            grid_cell_column_pos: 0
+                            grid_cell_row_pos: 1
+                            grid_cell_column_span: 2
+                            grid_cell_x_align: STRETCH
+                            height: 2
+                            bg_color: "${clr_separator}"
+                            pad_all: 0
+                            border_width: 0
+                        - label:
+                            id: wind_10min_avg
+                            grid_cell_x_align: CENTER
+                            grid_cell_y_align: START
+                            grid_cell_column_pos: 0
+                            grid_cell_row_pos: 2
+                            text_align: CENTER
+                            text_font: font_lg
+                            text_color: "${clr_text}"
+                            text: "--,-"
+                        - label:
+                            grid_cell_x_align: CENTER
+                            grid_cell_column_pos: 1
+                            grid_cell_row_pos: 0
+                            text_align: CENTER
+                            text_font: font_sm
+                            text_color: "${clr_text_dim}"
+                            text: "Maks. vindstød"
+                        - label:
+                            id: wind_max_gust
+                            grid_cell_x_align: CENTER
+                            grid_cell_y_align: START
+                            grid_cell_column_pos: 1
+                            grid_cell_row_pos: 2
+                            text_align: CENTER
+                            text_font: font_lg
+                            text_color: "${clr_text}"
+                            text: "--,-"
+            # Sunrise - Sunset
+            - obj:
+                styles: widget_4x2
+                bg_color: ${clr_card}
+                grid_cell_column_pos: 8
+                grid_cell_row_pos: 6
+                grid_cell_column_span: 4
+                grid_cell_row_span: 2
+                widgets:
+                  - label:
+                      align: TOP_LEFT
+                      x: 5
+                      text_font: font_sm
+                      text_color: "${clr_text_dim}"
+                      text: "Solopgang"
+                  - label:
+                      align: TOP_RIGHT
+                      x: -5
+                      text_font: font_sm
+                      text_color: "${clr_text_dim}"
+                      text: "Solnedgang"
+                  - obj:
+                      align: TOP_MID
+                      y: 20
+                      height: 2
+                      width: 246
+                      bg_color: "${clr_separator}"
+                      pad_all: 0
+                      border_width: 0
+                  - label:
+                      align: BOTTOM_LEFT
+                      x: 5
+                      y: -15
+                      text_font: mdi_md
+                      text_color: "${clr_temp_cool}"
+                      text: "${sym_sunrise}"
+                  - label:
+                      id: lbl_sunrise
+                      align: BOTTOM_LEFT
+                      x: 35
+                      y: -15
+                      text_font: font_md
+                      text_color: "${clr_text}"
+                      text: "04:30"
+                  - label:
+                      align: BOTTOM_RIGHT
+                      x: -5
+                      y: -15
+                      text_font: mdi_md
+                      text_color: "${clr_temp_warm}"
+                      text: "${sym_sunset}"
+                  - label:
+                      id: lbl_sunset
+                      align: BOTTOM_RIGHT
+                      x: -35
+                      y: -15
+                      text_font: font_md
+                      text_color: "${clr_text}"
+                      text: "22:00"
+
             # UV and Solar Radiation widgets
             - obj:
                 styles: widget_4x4
                 bg_color: ${clr_card}
-                grid_cell_column_pos: 8
-                grid_cell_row_pos: 1
+                grid_cell_column_pos: 0
+                grid_cell_row_pos: 8
                 grid_cell_column_span: 4
                 grid_cell_row_span: 4
                 pad_left: 5
@@ -622,272 +889,7 @@ lvgl:
                             text_color: ${clr_text_dim}
                             text_font: font_xs
                             text: "W/m²"
-            # Barometer Widget
-            - obj:
-                styles: widget_4x3
-                bg_color: ${clr_card}
-                grid_cell_column_pos: 8
-                grid_cell_row_pos: 5
-                grid_cell_column_span: 4
-                grid_cell_row_span: 3
-                pad_left: 5
-                pad_right: 5
-                scrollbar_mode: "OFF"
-                widgets:
-                  # Header icon
-                  - label:
-                      align: TOP_RIGHT
-                      y: 5
-                      text_font: mdi_sm
-                      text: "\U000F029A"
-                      text_color: ${clr_text}
-                  - label:
-                      id: pressure_trend_symbol
-                      align: BOTTOM_LEFT
-                      x: 68
-                      y: -4
-                      text_font: mdi_sm
-                      text: "${trend_stable}"
-                      text_color: "${clr_trend_stable}"
-                      text_align: LEFT
-                  - label:
-                      id: pressure_trend_text
-                      align: BOTTOM_MID
-                      x: 5
-                      y: -4
-                      text_font: font_sm
-                      text: "Stabil"
-                      text_color: "${clr_text}"
-                      text_align: CENTER
-                  - arc:
-                      id: baro_gauge
-                      x: 58
-                      y: 10
-                      width: 140
-                      height: 140
-                      value: 1010
-                      min_value: 960
-                      max_value: 1060
-                      adjustable: false
-                      start_angle: 180
-                      end_angle: 0
-                      arc_color: 0x404040
-                      arc_width: 8
-                      arc_opa: 100%
-                      arc_rounded: false
-                      indicator:
-                        arc_color: 0x009688
-                        arc_width: 8
-                        arc_opa: 100%
-                        arc_rounded: true
-                      bg_opa: 0%
-                      widgets:
-                        # Current pressure value — inside the arc below the needle pivot
-                        - label:
-                            id: lbl_pressure
-                            align: TOP_MID
-                            y: 30
-                            width: 100
-                            text_font: font_xl
-                            text_color: ${clr_text}
-                            text_align: CENTER
-                            text: "----"
-                        # Unit label
-                        - label:
-                            id: lbl_pressure_unit
-                            align: TOP_MID
-                            y: 65
-                            text_font: font_xs
-                            text_color: ${clr_text_dim}
-                            text_align: CENTER
-                            text: "hPa"
 
-            - obj:
-                styles: widget_4x2
-                bg_color: ${clr_card}
-                grid_cell_column_pos: 0
-                grid_cell_row_pos: 6
-                grid_cell_column_span: 4
-                grid_cell_row_span: 2
-                widgets:
-                  - obj:
-                      styles: grid_layout_nested
-                      align: CENTER
-                      layout:
-                        type: grid
-                        grid_columns: [fr(1), fr(1)]
-                        grid_rows: [fr(1), 2, fr(2)]
-                        grid_column_align: CENTER
-                        grid_row_align: CENTER
-                      widgets:
-                        - label:
-                            grid_cell_x_align: CENTER
-                            grid_cell_column_pos: 0
-                            grid_cell_row_pos: 0
-                            text_align: CENTER
-                            text_font: font_sm
-                            text_color: "${clr_text_dim}"
-                            text: "Føles som"
-                        - obj:
-                            grid_cell_column_pos: 0
-                            grid_cell_row_pos: 1
-                            grid_cell_column_span: 2
-                            grid_cell_x_align: STRETCH
-                            height: 2
-                            bg_color: "${clr_separator}"
-                            pad_all: 0
-                            border_width: 0
-                        - label:
-                            id: temp_feels_like
-                            grid_cell_x_align: CENTER
-                            grid_cell_y_align: START
-                            grid_cell_column_pos: 0
-                            grid_cell_row_pos: 2
-                            text_align: CENTER
-                            text_font: font_lg
-                            text_color: "${clr_text}"
-                            text: "--,-°"
-                        - label:
-                            grid_cell_x_align: CENTER
-                            grid_cell_column_pos: 1
-                            grid_cell_row_pos: 0
-                            text_align: CENTER
-                            text_font: font_sm
-                            text_color: "${clr_text_dim}"
-                            text: "Dugpunkt"
-                        - label:
-                            id: temp_dewpoint
-                            grid_cell_x_align: CENTER
-                            grid_cell_y_align: START
-                            grid_cell_column_pos: 1
-                            grid_cell_row_pos: 2
-                            text_align: CENTER
-                            text_font: font_lg
-                            text_color: "${clr_text}"
-                            text: "--,-°"
-            - obj:
-                styles: widget_4x2
-                bg_color: ${clr_card}
-                grid_cell_column_pos: 4
-                grid_cell_row_pos: 6
-                grid_cell_column_span: 4
-                grid_cell_row_span: 2
-                widgets:
-                  - obj:
-                      styles: grid_layout_nested
-                      align: CENTER
-                      layout:
-                        type: grid
-                        grid_columns: [fr(1), fr(1)]
-                        grid_rows: [fr(1), 2, fr(2)]
-                        grid_column_align: CENTER
-                        grid_row_align: CENTER
-                      widgets:
-                        - label:
-                            grid_cell_x_align: CENTER
-                            grid_cell_column_pos: 0
-                            grid_cell_row_pos: 0
-                            text_align: CENTER
-                            text_font: font_sm
-                            text_color: "${clr_text_dim}"
-                            text: "Vind gns. 10m"
-                        - obj:
-                            grid_cell_column_pos: 0
-                            grid_cell_row_pos: 1
-                            grid_cell_column_span: 2
-                            grid_cell_x_align: STRETCH
-                            height: 2
-                            bg_color: "${clr_separator}"
-                            pad_all: 0
-                            border_width: 0
-                        - label:
-                            id: wind_10min_avg
-                            grid_cell_x_align: CENTER
-                            grid_cell_y_align: START
-                            grid_cell_column_pos: 0
-                            grid_cell_row_pos: 2
-                            text_align: CENTER
-                            text_font: font_lg
-                            text_color: "${clr_text}"
-                            text: "--,-"
-                        - label:
-                            grid_cell_x_align: CENTER
-                            grid_cell_column_pos: 1
-                            grid_cell_row_pos: 0
-                            text_align: CENTER
-                            text_font: font_sm
-                            text_color: "${clr_text_dim}"
-                            text: "Maks. vindstød"
-                        - label:
-                            id: wind_max_gust
-                            grid_cell_x_align: CENTER
-                            grid_cell_y_align: START
-                            grid_cell_column_pos: 1
-                            grid_cell_row_pos: 2
-                            text_align: CENTER
-                            text_font: font_lg
-                            text_color: "${clr_text}"
-                            text: "--,-"
-            # Rain Widget
-            - obj:
-                styles: widget_4x4
-                bg_color: ${clr_card}
-                grid_cell_column_pos: 0
-                grid_cell_row_pos: 8
-                grid_cell_column_span: 4
-                grid_cell_row_span: 4
-                widgets: 
-                  # Header labels
-                  - label:
-                      align: TOP_RIGHT
-                      x: -5
-                      y: 5
-                      text_font: mdi_sm
-                      text: "\U000F058C"
-                      text_color: ${clr_text}
-                  - meter:
-                      id: circle_rain
-                      align: CENTER
-                      width: 140
-                      height: 140
-                      bg_opa: TRANSP
-                      border_width: 6
-                      border_color: ${clr_temp_cold}
-                      indicator:
-                        bg_opa: TRANSP
-                        border_width: 0                      
-                      scales:
-                        range_from: 0
-                        range_to: 360
-                        angle_range: 360
-                        rotation: 270
-                      widgets:
-                        - label:
-                            id: lbl_rain_yesterday
-                            align: TOP_MID
-                            y: 8
-                            text_font: font_sm
-                            text_color: "${clr_text_dim}"
-                            text: "I går: --,-"
-                        - label:
-                            id: rain_today
-                            align: CENTER
-                            text_font: font_xl
-                            text: "--,-"
-                        - label:
-                            align: RIGHT_MID
-                            x: 3
-                            y: -8
-                            text_font: font_sm
-                            text_color: "${clr_text_dim}"
-                            text_align: RIGHT
-                            text: "mm"
-                        - label:
-                            id: lbl_rain_rate
-                            align: BOTTOM_MID
-                            y: -8
-                            text_font: font_sm
-                            text: "--,- mm/h"
             # Forecast Widget
             - obj:
                 styles: widget_4x4
@@ -1059,7 +1061,6 @@ lvgl:
                       long_mode: DOT
                       width: 240
 
-            # AQI Widget
             - obj:
                 styles: widget_4x4
                 bg_color: ${clr_card}
@@ -1067,20 +1068,28 @@ lvgl:
                 grid_cell_row_pos: 8
                 grid_cell_column_span: 4
                 grid_cell_row_span: 4
-                widgets: 
+                pad_left: 5
+                pad_right: 5
+                widgets:
                   # Header labels
+                  - label:
+                      align: TOP_LEFT
+                      y: 5
+                      text_font: mdi_sm
+                      text: "\U000F0D7C"
+                      text_color: ${clr_text}
                   - label:
                       align: TOP_RIGHT
                       x: -5
                       y: 5
                       text_font: mdi_sm
-                      text: "\U000F0D7C"
+                      text: "\U000F029A"
                       text_color: ${clr_text}
                   - meter:
                       id: circle_aqi
-                      align: CENTER
-                      width: 140
-                      height: 140
+                      align: LEFT_MID
+                      width: 115
+                      height: 115
                       bg_opa: TRANSP
                       border_width: 6
                       border_color: ${clr_temp_cold}
@@ -1094,43 +1103,154 @@ lvgl:
                         rotation: 270
                       widgets:
                         - label:
+                            align: TOP_MID
+                            y: 5
+                            text_color: ${clr_text}
+                            text_font: font_xs
+                            text: "Luftkvalitet"
+                        - label:
                             id: lbl_aqi
                             align: CENTER
                             text_font: font_xl
                             text: "00"
                         - label:
                             align: BOTTOM_MID
-                            y: -15
-                            text_font: font_sm
+                            y: -5
+                            text_font: font_xs
                             text_color: "${clr_text_dim}"
                             text: "AQI"
-                  - label:
-                      align: BOTTOM_LEFT
-                      x: 5
-                      y: -25
-                      text_font: font_xs
-                      text_color: "${clr_text_dim}"
-                      text: "PM 2.5"
-                  - label:
-                      id: lbl_pm25
-                      align: BOTTOM_LEFT
-                      x: 5
-                      y: -10
-                      text_font: font_xs
-                      text_color: "${clr_text}"
-                      text: "00,0 μg/m³"
-                  - label:
-                      align: BOTTOM_RIGHT
-                      x: -5
-                      y: -25
-                      text_font: font_xs
-                      text_color: "${clr_text_dim}"
-                      text: "PM 10"
-                  - label:
-                      id: lbl_pm10
-                      align: BOTTOM_RIGHT
-                      x: -5
-                      y: -10
-                      text_font: font_xs
-                      text_color: "${clr_text}"
-                      text: "00,0 μg/m³"
+                  - arc:
+                      id: baro_gauge
+                      align: RIGHT_MID
+                      width: 115
+                      height: 115
+                      value: 1010
+                      min_value: 960
+                      max_value: 1060
+                      adjustable: false
+                      arc_color: 0x404040
+                      arc_width: 6
+                      arc_opa: 100%
+                      arc_rounded: false
+                      indicator:
+                        arc_color: 0x009688
+                        arc_width: 6
+                        arc_opa: 100%
+                        arc_rounded: true
+                      bg_opa: 0
+                      widgets:
+                        - label:
+                            align: TOP_MID
+                            y: 20
+                            text_color: ${clr_text}
+                            text_font: font_xs
+                            text: "Barometer"
+                        - label:
+                            id: lbl_pressure
+                            align: CENTER
+                            width: 100
+                            text_font: font_xl
+                            text_color: ${clr_text}
+                            text_align: CENTER
+                            text: "----"
+                        - label:
+                            align: BOTTOM_MID
+                            y: -20
+                            text_font: font_xs
+                            text_color: "${clr_text_dim}"
+                            text: "hPa"
+                        - label:
+                            id: pressure_trend_symbol
+                            align: BOTTOM_LEFT
+                            x: 15
+                            text_font: mdi_xs
+                            text: "${trend_stable}"
+                            text_color: "${clr_trend_stable}"
+                            text_align: LEFT
+                        - label:
+                            id: pressure_trend_text
+                            align: BOTTOM_MID
+                            text_font: font_xs
+                            text: "Stabil"
+                            text_color: "${clr_text}"
+                            text_align: CENTER
+
+            # Barometer Widget
+            # - obj:
+            #     styles: widget_4x3
+            #     bg_color: ${clr_card}
+            #     grid_cell_column_pos: 8
+            #     grid_cell_row_pos: 5
+            #     grid_cell_column_span: 4
+            #     grid_cell_row_span: 3
+            #     pad_left: 5
+            #     pad_right: 5
+            #     scrollbar_mode: "OFF"
+            #     widgets:
+            #       # Header icon
+            #       - label:
+            #           align: TOP_RIGHT
+            #           y: 5
+            #           text_font: mdi_sm
+            #           text: "\U000F029A"
+            #           text_color: ${clr_text}
+            #       - label:
+            #           id: pressure_trend_symbol
+            #           align: BOTTOM_LEFT
+            #           x: 68
+            #           y: -4
+            #           text_font: mdi_sm
+            #           text: "${trend_stable}"
+            #           text_color: "${clr_trend_stable}"
+            #           text_align: LEFT
+            #       - label:
+            #           id: pressure_trend_text
+            #           align: BOTTOM_MID
+            #           x: 5
+            #           y: -4
+            #           text_font: font_sm
+            #           text: "Stabil"
+            #           text_color: "${clr_text}"
+            #           text_align: CENTER
+            #       - arc:
+            #           id: baro_gauge
+            #           x: 58
+            #           y: 10
+            #           width: 140
+            #           height: 140
+            #           value: 1010
+            #           min_value: 960
+            #           max_value: 1060
+            #           adjustable: false
+            #           start_angle: 180
+            #           end_angle: 0
+            #           arc_color: 0x404040
+            #           arc_width: 8
+            #           arc_opa: 100%
+            #           arc_rounded: false
+            #           indicator:
+            #             arc_color: 0x009688
+            #             arc_width: 8
+            #             arc_opa: 100%
+            #             arc_rounded: true
+            #           bg_opa: 0%
+            #           widgets:
+            #             # Current pressure value — inside the arc below the needle pivot
+            #             - label:
+            #                 id: lbl_pressure
+            #                 align: TOP_MID
+            #                 y: 30
+            #                 width: 100
+            #                 text_font: font_xl
+            #                 text_color: ${clr_text}
+            #                 text_align: CENTER
+            #                 text: "----"
+            #             # Unit label
+            #             - label:
+            #                 id: lbl_pressure_unit
+            #                 align: TOP_MID
+            #                 y: 65
+            #                 text_font: font_xs
+            #                 text_color: ${clr_text_dim}
+            #                 text_align: CENTER
+            #                 text: "hPa"

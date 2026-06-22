@@ -53,9 +53,15 @@ substitutions:
   
   # AQI — overrides defaults in weather-common.yaml
   ha_aqi_index:       "sensor.holmeengen_sensor_air_quality_index"
-  ha_aqi_pm10:        "sensor.holmeengen_sensor_particulate_matter_pm10"
-  ha_aqi_pm25:        "sensor.holmeengen_sensor_particulate_matter_pm25"
+#  ha_aqi_pm10:        "sensor.holmeengen_sensor_particulate_matter_pm10"
+#  ha_aqi_pm25:        "sensor.holmeengen_sensor_particulate_matter_pm25"
   
+  # Sunrise - Sunset — overrides defaults in weather-common.yaml
+  ha_sunrise:    "sensor.next_sunrise"
+  ha_sunset:     "sensor.next_sunset"
+  sym_sunrise:   "\U000F059C"
+  sym_sunset:    "\U000F059B"
+
 esphome:
   name: "${device}"
   friendly_name: "${name}"
@@ -514,7 +520,7 @@ sensor:
       then:
         - lambda: |-
             char buf[16];
-            snprintf(buf, sizeof(buf), "%.1f mm/h", x);
+            snprintf(buf, sizeof(buf), "%.1f #7788AA mm/h#", x);
             for (char* p = buf; *p; p++) if (*p == '.') { *p = ','; break; }
             lv_label_set_text(id(lbl_rain_rate), buf);
 
@@ -525,7 +531,7 @@ sensor:
       then:
         - lambda: |-
             char buf[16];
-            snprintf(buf, sizeof(buf), "I går: %.1f", x);
+            snprintf(buf, sizeof(buf), "%.1f", x);
             for (char* p = buf; *p; p++) if (*p == '.') { *p = ','; break; }
             lv_label_set_text(id(lbl_rain_yesterday), buf);
 
@@ -597,27 +603,30 @@ sensor:
             lv_label_set_text(id(lbl_aqi), buf);
             lv_obj_set_style_border_color(id(circle_aqi), aqi_color((int)x), 0);
 
-  - platform: homeassistant
-    id: sensor_aqi_pm25
-    entity_id: ${ha_aqi_pm25}
-    on_value:
-      then:
-        - lambda: |-
-            char buf[16];
-            snprintf(buf, sizeof(buf), "%.1f μg/m³", x);
-            for (char* p = buf; *p; p++) if (*p == '.') { *p = ','; break; }
-            lv_label_set_text(id(lbl_pm25), buf);
+
+  # ---------------------------------------------------------------------------
+  # Sunrise & Sunset Times
+  # ---------------------------------------------------------------------------
 
   - platform: homeassistant
-    id: sensor_aqi_pm10
-    entity_id: ${ha_aqi_pm10}
+    id: sensor_sunrise
+    entity_id: ${ha_sunrise}
     on_value:
       then:
         - lambda: |-
-            char buf[16];
-            snprintf(buf, sizeof(buf), "%.1f μg/m³", x);
-            for (char* p = buf; *p; p++) if (*p == '.') { *p = ','; break; }
-            lv_label_set_text(id(lbl_pm10), buf);
+            char buf[8];
+            snprintf(buf, sizeof(buf), "%s", x);
+            lv_label_set_text(id(lbl_sunrise), buf);
+
+  - platform: homeassistant
+    id: sensor_sunset
+    entity_id: ${ha_sunset}
+    on_value:
+      then:
+        - lambda: |-
+            char buf[8];
+            snprintf(buf, sizeof(buf), "%s", x);
+            lv_label_set_text(id(lbl_sunset), buf);
 
 text_sensor:
   # ---------------------------------------------------------------------------
