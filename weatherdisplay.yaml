@@ -608,30 +608,6 @@ sensor:
             lv_obj_set_style_border_color(id(circle_aqi), aqi_color((int)x), 0);
 
 
-  # ---------------------------------------------------------------------------
-  # Sunrise & Sunset Times
-  # ---------------------------------------------------------------------------
-
-  - platform: homeassistant
-    id: sensor_sunrise
-    entity_id: ${ha_sunrise}
-    on_value:
-      then:
-        - lambda: |-
-            char buf[8];
-            snprintf(buf, sizeof(buf), "%s", x);
-            lv_label_set_text(id(lbl_sunrise), buf);
-
-  - platform: homeassistant
-    id: sensor_sunset
-    entity_id: ${ha_sunset}
-    on_value:
-      then:
-        - lambda: |-
-            char buf[8];
-            snprintf(buf, sizeof(buf), "%s", x);
-            lv_label_set_text(id(lbl_sunset), buf);
-
 text_sensor:
   # ---------------------------------------------------------------------------
   # Forecast — condition code, short text, description
@@ -677,6 +653,25 @@ text_sensor:
       then:
         - lambda: |-
             lv_label_set_text(id(lbl_fcst_description), x.c_str());
+
+  # ---------------------------------------------------------------------------
+  # Sunrise & Sunset Times
+  # ---------------------------------------------------------------------------
+  - platform: homeassistant
+    id: ts_sunrise
+    entity_id: ${ha_sunrise}
+    on_value:
+      then:
+        - lambda: |-
+            lv_label_set_text(id(lbl_sunrise), x.c_str());
+
+  - platform: homeassistant
+    id: ts_sunset
+    entity_id: ${ha_sunset}
+    on_value:
+      then:
+        - lambda: |-
+            lv_label_set_text(id(lbl_sunset), x.c_str());
 
 packages:
   remote_package_files:
