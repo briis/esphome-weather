@@ -545,6 +545,8 @@ sensor:
   - platform: homeassistant
     id: sensor_fcst_precip_prob
     entity_id: ${ha_fcst_precip_prob}
+    filters:
+      - filter_out: nan
     on_value:
       then:
         - lambda: |-
@@ -555,6 +557,8 @@ sensor:
   - platform: homeassistant
     id: sensor_fcst_precipitation
     entity_id: ${ha_fcst_precipitation}
+    filters:
+      - filter_out: nan
     on_value:
       then:
         - lambda: |-
@@ -566,6 +570,8 @@ sensor:
   - platform: homeassistant
     id: sensor_fcst_temp_high
     entity_id: ${ha_fcst_temp_high}
+    filters:
+      - filter_out: nan
     on_value:
       then:
         - lambda: |-
@@ -577,6 +583,8 @@ sensor:
   - platform: homeassistant
     id: sensor_fcst_temp_low
     entity_id: ${ha_fcst_temp_low}
+    filters:
+      - filter_out: nan
     on_value:
       then:
         - lambda: |-
