@@ -602,7 +602,7 @@ lvgl:
                             recolor: true
                             text_font: font_sm
                             text_color: "${clr_text}"
-                            text: "--,- #7788AA mm/h#"
+                            text: "--,- #7788AA mm/t#"
                         - label:
                             align: BOTTOM_MID
                             y: -2

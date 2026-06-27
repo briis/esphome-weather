@@ -206,16 +206,17 @@ script:
   - id: simulate_rain
     then:
       - lambda: |-
-          char buf[20];
+          char buf[16];
           float today = (rand() % 301) / 10.0f;
           snprintf(buf, sizeof(buf), "%.1f", today);
           for (char* p = buf; *p; p++) if (*p == '.') { *p = ','; break; }
           lv_label_set_text(id(rain_today), buf);
 
+          char rate_buf[24];
           float rate = (rand() % 51) / 10.0f;
-          snprintf(buf, sizeof(buf), "%.1f #7788AA mm/h#", rate);
-          for (char* p = buf; *p; p++) if (*p == '.') { *p = ','; break; }
-          lv_label_set_text(id(lbl_rain_rate), buf);
+          snprintf(rate_buf, sizeof(rate_buf), "%.1f #7788AA mm/t#", rate);
+          for (char* p = rate_buf; *p; p++) if (*p == '.') { *p = ','; break; }
+          lv_label_set_text(id(lbl_rain_rate), rate_buf);
 
           float yesterday = (rand() % 201) / 10.0f;
           snprintf(buf, sizeof(buf), "%.1f", yesterday);
