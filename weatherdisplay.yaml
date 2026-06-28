@@ -554,7 +554,7 @@ sensor:
       then:
         - lambda: |-
             char buf[24];
-            snprintf(buf, sizeof(buf), "%.1f #7788AA mm/t#", x);
+            snprintf(buf, sizeof(buf), "%.1f #7788AA mm/t #", x);
             for (char* p = buf; *p; p++) if (*p == '.') { *p = ','; break; }
             lv_label_set_text(id(lbl_rain_rate), buf);
 
