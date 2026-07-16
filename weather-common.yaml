@@ -147,67 +147,80 @@ font:
 # Images
 # ---------------------------------------------------------------------------
 image:
-  - file: "images/wind_bearing_indicator.png"
+  - platform: file
+    file: "images/wind_bearing_indicator.png"
     id: bearing_img
     type: rgb565
     resize: 24x24
     transparency: alpha_channel
-  - file: "images/wind_bearing_avg_indicator.png"
+  - platform: file
+    file: "images/wind_bearing_avg_indicator.png"
     id: bearing_avg_img
     type: rgb565
     resize: 18x18
     transparency: alpha_channel
-  - file: "images/weather/clear-day.png"
+  - platform: file
+    file: "images/weather/clear-day.png"
     id: img_clear_day
     type: rgb565
     resize: 64x64
     transparency: alpha_channel
-  - file: "images/weather/clear-night.png"
+  - platform: file
+    file: "images/weather/clear-night.png"
     id: img_clear_night
     type: rgb565
     resize: 64x64
     transparency: alpha_channel
-  - file: "images/weather/cloudy.png"
+  - platform: file
+    file: "images/weather/cloudy.png"
     id: img_cloudy
     type: rgb565
     resize: 64x64
     transparency: alpha_channel
-  - file: "images/weather/fog.png"
+  - platform: file
+    file: "images/weather/fog.png"
     id: img_fog
     type: rgb565
     resize: 64x64
     transparency: alpha_channel
-  - file: "images/weather/lightning.png"
+  - platform: file
+    file: "images/weather/lightning.png"
     id: img_lightning
     type: rgb565
     resize: 64x64
     transparency: alpha_channel
-  - file: "images/weather/lightning-rainy.png"
+  - platform: file
+    file: "images/weather/lightning-rainy.png"
     id: img_lightning_rainy
     type: rgb565
     resize: 64x64
     transparency: alpha_channel
-  - file: "images/weather/partlycloudy.png"
+  - platform: file
+    file: "images/weather/partlycloudy.png"
     id: img_partlycloudy
     type: rgb565
     resize: 64x64
     transparency: alpha_channel
-  - file: "images/weather/rainy.png"
+  - platform: file
+    file: "images/weather/rainy.png"
     id: img_rainy
     type: rgb565
     resize: 64x64
     transparency: alpha_channel
-  - file: "images/weather/snowy.png"
+  - platform: file
+    file: "images/weather/snowy.png"
     id: img_snowy
     type: rgb565
     resize: 64x64
     transparency: alpha_channel
-  - file: "images/weather/snowy-rainy.png"
+  - platform: file
+    file: "images/weather/snowy-rainy.png"
     id: img_snowy_rainy
     type: rgb565
     resize: 64x64
     transparency: alpha_channel
-  - file: "images/weather/windy.png"
+  - platform: file
+    file: "images/weather/windy.png"
     id: img_windy
     type: rgb565
     resize: 64x64
@@ -224,7 +237,7 @@ script:
           text: !lambda |-
             auto n = id(system_time).now();
             if (!n.is_valid()) return std::string("--:--");
-            char b[6];
+            char b[8];
             snprintf(b, sizeof(b), "%02d:%02d", n.hour, n.minute);
             return std::string(b);
 

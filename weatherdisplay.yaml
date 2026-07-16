@@ -9,7 +9,7 @@
 substitutions:
   name: "Weather Display"
   device: "weatherdisplay"
-  version: "1.0.3"
+  version: "1.0.4"
   created_by: "Bjarne Riis"
   display_rotation: "180"
 
@@ -79,10 +79,8 @@ esphome:
           lv_obj_set_style_x(id(bearing_avg_indicator), 78, LV_PART_MAIN);
           lv_obj_set_style_transform_pivot_x(id(bearing_avg_indicator), -69, LV_PART_MAIN);
           lv_obj_set_style_transform_pivot_y(id(bearing_avg_indicator), 9, LV_PART_MAIN);
-  platformio_options:
-    build_flags: "-DBOARD_HAS_PSRAM"
-    board_build.esp-idf.memory_type: qio_opi
-    board_build.flash_mode: dio
+  build_flags:
+    - "-DBOARD_HAS_PSRAM"
 
 # ---------------------------------------------------------------------------
 # ESP32-S3 — esp-idf required for mipi_rgb display support
