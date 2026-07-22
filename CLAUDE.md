@@ -311,7 +311,7 @@ HA sensors — all four numeric forecast sensors have `filters: - filter_out: na
 | Substitution | Default in common | Purpose |
 | --- | --- | --- |
 | `ha_fcast_condition` | `sensor.unknown_fcast_condition` | Condition code → image switch |
-| `ha_fcast_condition_txt` | `sensor.unknown_fcast_condition_txt` | Short label → `lbl_fcst_condition` |
+| `ha_fcast_condition_txt` | `sensor.unknown_fcast_condition_txt` | Raw HA weather condition state (e.g. `partlycloudy`) → translated to Danish on-device → `lbl_fcst_condition` |
 | `ha_fcast_description` | `sensor.unknown_fcast_description` | Long description → `lbl_fcst_description` |
 | `ha_fcst_temp_high` | `sensor.unknown_fcst_temp_high` | Forecast high → `lbl_fcst_high` |
 | `ha_fcst_temp_low` | `sensor.unknown_fcst_temp_low` | Forecast low → `lbl_fcst_low` |
