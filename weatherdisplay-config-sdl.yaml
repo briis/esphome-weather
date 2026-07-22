@@ -319,7 +319,7 @@ script:
       - lambda: |-
           // Mock lightning data for SDL visual testing
           int count = rand() % 6;
-          char buf[12];
+          char buf[20];
           snprintf(buf, sizeof(buf), "%d", count);
           lv_label_set_text(id(lbl_lightning_count), buf);
 
@@ -327,12 +327,24 @@ script:
             lv_label_set_text(id(lbl_lightning_latest), "--");
             lv_label_set_text(id(lbl_lightning_distance), "--");
           } else {
-            int mins_ago = rand() % 180;
-            snprintf(buf, sizeof(buf), "%02d:%02d", (12 + mins_ago / 60) % 24, mins_ago % 60);
+            // Mock a "time since" spread from seconds to a few days, mirroring
+            // the relative-time formatting used on the hardware target.
+            long elapsed = rand() % (3 * 86400);
+            if (elapsed < 60)          snprintf(buf, sizeof(buf), "%ld s", elapsed);
+            else if (elapsed < 3600)   snprintf(buf, sizeof(buf), "%ld min", elapsed / 60);
+            else if (elapsed < 86400)  snprintf(buf, sizeof(buf), "%ld t", elapsed / 3600);
+            else                       snprintf(buf, sizeof(buf), "%ld d", elapsed / 86400);
             lv_label_set_text(id(lbl_lightning_latest), buf);
 
             float dist = (rand() % 300) / 10.0f;
             snprintf(buf, sizeof(buf), "%.1f km", dist);
             for (char* p = buf; *p; p++) if (*p == '.') { *p = ','; break; }
             lv_label_set_text(id(lbl_lightning_distance), buf);
+
+            // Mock a "new strike" popup so the toast can be visually tested in SDL
+            lv_label_set_text(id(lbl_popup_lightning_latest), lv_label_get_text(id(lbl_lightning_latest)));
+            lv_label_set_text(id(lbl_popup_lightning_count), lv_label_get_text(id(lbl_lightning_count)));
+            lv_label_set_text(id(lbl_popup_lightning_distance), lv_label_get_text(id(lbl_lightning_distance)));
+            lv_obj_clear_flag(id(lightning_popup), LV_OBJ_FLAG_HIDDEN);
+            id(lightning_popup_hide).execute();
           }

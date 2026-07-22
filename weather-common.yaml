@@ -246,6 +246,13 @@ script:
             snprintf(b, sizeof(b), "%02d:%02d", n.hour, n.minute);
             return std::string(b);
 
+  - id: lightning_popup_hide
+    mode: restart
+    then:
+      - delay: 12s
+      - lambda: |-
+          lv_obj_add_flag(id(lightning_popup), LV_OBJ_FLAG_HIDDEN);
+
 # ---------------------------------------------------------------------------
 # LVGL — page layout (display id resolved from host file)
 # ---------------------------------------------------------------------------
@@ -1307,6 +1314,104 @@ lvgl:
                             text: "Stabil"
                             text_color: "${clr_text}"
                             text_align: CENTER
+
+      # Lightning strike popup — shown on top of the whole page, auto-hidden
+      # by the lightning_popup_hide script a few seconds after it appears.
+      - obj:
+          id: lightning_popup
+          align: CENTER
+          hidden: true
+          clickable: false
+          scrollable: false
+          width: 360
+          height: 220
+          radius: 12
+          bg_color: ${clr_card}
+          bg_opa: COVER
+          border_width: 2
+          border_color: ${clr_temp_hot}
+          shadow_width: 30
+          shadow_opa: 70%
+          pad_all: 0
+          widgets:
+            - image:
+                align: TOP_MID
+                y: 12
+                src: img_lightning
+            - label:
+                align: TOP_MID
+                y: 82
+                text_font: font_md
+                text_color: "${clr_text}"
+                text: "Lyn registreret!"
+            - obj:
+                clickable: false
+                scrollable: false
+                align: BOTTOM_MID
+                y: -12
+                width: 95%
+                height: 90
+                bg_opa: TRANSP
+                border_width: 0
+                pad_all: 0
+                layout:
+                  type: grid
+                  grid_columns: [fr(1), fr(1), fr(1)]
+                  grid_rows: [fr(1), fr(1)]
+                  grid_column_align: CENTER
+                  grid_row_align: CENTER
+                widgets:
+                  - label:
+                      grid_cell_x_align: CENTER
+                      grid_cell_column_pos: 0
+                      grid_cell_row_pos: 0
+                      text_align: CENTER
+                      text_font: font_sm
+                      text_color: "${clr_text_dim}"
+                      text: "Tidspunkt"
+                  - label:
+                      id: lbl_popup_lightning_latest
+                      grid_cell_x_align: CENTER
+                      grid_cell_column_pos: 0
+                      grid_cell_row_pos: 1
+                      text_align: CENTER
+                      text_font: font_md
+                      text_color: "${clr_text}"
+                      text: "--"
+                  - label:
+                      grid_cell_x_align: CENTER
+                      grid_cell_column_pos: 1
+                      grid_cell_row_pos: 0
+                      text_align: CENTER
+                      text_font: font_sm
+                      text_color: "${clr_text_dim}"
+                      text: "Antal (3t)"
+                  - label:
+                      id: lbl_popup_lightning_count
+                      grid_cell_x_align: CENTER
+                      grid_cell_column_pos: 1
+                      grid_cell_row_pos: 1
+                      text_align: CENTER
+                      text_font: font_md
+                      text_color: "${clr_text}"
+                      text: "--"
+                  - label:
+                      grid_cell_x_align: CENTER
+                      grid_cell_column_pos: 2
+                      grid_cell_row_pos: 0
+                      text_align: CENTER
+                      text_font: font_sm
+                      text_color: "${clr_text_dim}"
+                      text: "Afstand"
+                  - label:
+                      id: lbl_popup_lightning_distance
+                      grid_cell_x_align: CENTER
+                      grid_cell_column_pos: 2
+                      grid_cell_row_pos: 1
+                      text_align: CENTER
+                      text_font: font_md
+                      text_color: "${clr_text}"
+                      text: "--"
 
             # Barometer Widget
             # - obj:

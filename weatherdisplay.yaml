@@ -9,7 +9,7 @@
 substitutions:
   name: "Weather Display"
   device: "weatherdisplay"
-  version: 1.0.6
+  version: 1.0.7
   created_by: "Bjarne Riis"
   display_rotation: "180"
 
@@ -161,6 +161,7 @@ time:
         then:
           - script.execute: lvgl_update_clock
           - script.execute: night_mode_check
+          - script.execute: lightning_relative_time_update
 
 # ---------------------------------------------------------------------------
 # Hardware — I/O expander, display, touch, backlight
@@ -764,8 +765,56 @@ text_sensor:
       then:
         - lambda: |-
             std::string txt = x;
-            if (txt.empty() || txt == "unknown" || txt == "unavailable") txt = "--";
-            lv_label_set_text(id(lbl_lightning_latest), txt.c_str());
+            bool known = !(txt.empty() || txt == "unknown" || txt == "unavailable");
+
+            // HA timestamp sensors report UTC ISO8601, e.g. "2026-07-22T13:45:00+00:00".
+            // Normalize to the "YYYY-MM-DD HH:MM:SS" form ESPTime::strptime understands
+            // and drop any fractional seconds / offset suffix.
+            time_t parsed_epoch = 0;
+            if (known && txt.size() >= 19) {
+              std::string norm = txt.substr(0, 19);
+              norm[10] = ' ';
+              ESPTime t{};
+              if (ESPTime::strptime(norm, t)) {
+                t.recalc_timestamp_utc();
+                parsed_epoch = t.timestamp;
+              } else {
+                known = false;
+              }
+            } else {
+              known = false;
+            }
+            id(lightning_last_epoch) = known ? (int32_t) parsed_epoch : 0;
+            id(lightning_relative_time_update).execute();
+
+            // Skip the popup for the initial value pushed on boot/reconnect —
+            // only a real change afterwards means a new strike happened.
+            if (!id(lightning_seen_boot)) {
+              id(lightning_seen_boot) = true;
+              return;
+            }
+            if (!known) return;
+
+            lv_label_set_text(id(lbl_popup_lightning_latest), lv_label_get_text(id(lbl_lightning_latest)));
+
+            float cnt = id(sensor_lightning_strikes3h).state;
+            char cbuf[8];
+            if (!std::isnan(cnt)) snprintf(cbuf, sizeof(cbuf), "%.0f", cnt);
+            else snprintf(cbuf, sizeof(cbuf), "--");
+            lv_label_set_text(id(lbl_popup_lightning_count), cbuf);
+
+            float dist = id(sensor_lightning_distance).state;
+            char dbuf[12];
+            if (!std::isnan(dist)) {
+              snprintf(dbuf, sizeof(dbuf), "%.1f km", dist);
+              for (char* p = dbuf; *p; p++) if (*p == '.') { *p = ','; break; }
+            } else {
+              snprintf(dbuf, sizeof(dbuf), "--");
+            }
+            lv_label_set_text(id(lbl_popup_lightning_distance), dbuf);
+
+            lv_obj_clear_flag(id(lightning_popup), LV_OBJ_FLAG_HIDDEN);
+            id(lightning_popup_hide).execute();
 
 # ---------------------------------------------------------------------------
 # Night mode — turn display off at configured time, on again at another time
@@ -816,8 +865,30 @@ globals:
   - id: night_wake_active
     type: bool
     initial_value: 'false'
+  - id: lightning_seen_boot
+    type: bool
+    initial_value: 'false'
+  - id: lightning_last_epoch
+    type: int
+    initial_value: '0'
 
 script:
+  - id: lightning_relative_time_update
+    then:
+      - lambda: |-
+          if (id(lightning_last_epoch) == 0) {
+            lv_label_set_text(id(lbl_lightning_latest), "--");
+            return;
+          }
+          long elapsed = (long)(id(system_time).now().timestamp - id(lightning_last_epoch));
+          if (elapsed < 0) elapsed = 0;
+          char buf[16];
+          if (elapsed < 60)          snprintf(buf, sizeof(buf), "%ld s", elapsed);
+          else if (elapsed < 3600)   snprintf(buf, sizeof(buf), "%ld min", elapsed / 60);
+          else if (elapsed < 86400)  snprintf(buf, sizeof(buf), "%ld t", elapsed / 3600);
+          else                       snprintf(buf, sizeof(buf), "%ld d", elapsed / 86400);
+          lv_label_set_text(id(lbl_lightning_latest), buf);
+
   - id: night_mode_sleep_timer
     mode: restart
     then:
