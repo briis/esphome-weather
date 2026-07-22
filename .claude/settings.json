@@ -8,7 +8,12 @@
       "Bash(python3 -m pip show esphome)",
       "Bash(/opt/homebrew/opt/esphome/libexec/bin/python -c \"import esphome; print\\(esphome.__version__ if hasattr\\(esphome,'__version__'\\) else 'ok'\\)\")",
       "Bash(/opt/homebrew/opt/esphome/libexec/bin/python -m esphome version)",
-      "Bash(mkdir -p /Users/bjarne/Development/esphome-weather/.vscode)"
+      "Bash(mkdir -p /Users/bjarne/Development/esphome-weather/.vscode)",
+      "Bash(python3 -c \"import esphome, os; print\\(os.path.dirname\\(esphome.__file__\\)\\)\")",
+      "Read(//System/Volumes/Data/opt/homebrew/Cellar/esphome/2026.7.1/libexec/lib/python3.14/site-packages/esphome/components/lvgl/**)",
+      "Read(//opt/homebrew/Cellar/esphome/2026.7.1/libexec/lib/python3.14/site-packages/esphome/components/lvgl/**)",
+      "Bash(esphome config *)",
+      "Bash(esphome compile *)"
     ],
     "additionalDirectories": [
       "/Users/bjarne/Development/esphome-weather"
