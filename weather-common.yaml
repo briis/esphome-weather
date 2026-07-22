@@ -64,6 +64,11 @@ substitutions:
   ha_rain_rate:        "sensor.unknown_rain_rate"
   ha_rain_yesterday:   "sensor.unknown_rain_yesterday"
 
+  # Lightning — override in weatherdisplay.yaml
+  ha_lightning_latest:    "sensor.unknown_lightning_latest"
+  ha_lightning_strikes3h: "sensor.unknown_lightning_strikes3h"
+  ha_lightning_distance:  "sensor.unknown_lightning_distance"
+
   # Forecast — override in weatherdisplay.yaml
   ha_fcast_condition:     "sensor.unknown_fcast_condition"
   ha_fcast_condition_txt: "sensor.unknown_fcast_condition_txt"
@@ -623,7 +628,7 @@ lvgl:
                             text_color: "${clr_text}"
                             text_align: RIGHT
                             text: "mm"
-            # Temperatur Additional Data
+            # Temperatur Additional Data — tap to toggle vs. lightning data
             - obj:
                 styles: widget_4x2
                 bg_color: ${clr_card}
@@ -631,8 +636,19 @@ lvgl:
                 grid_cell_row_pos: 6
                 grid_cell_column_span: 4
                 grid_cell_row_span: 2
+                on_click:
+                  - lambda: |-
+                      if (lv_obj_has_flag(id(additional_lightning_grid), LV_OBJ_FLAG_HIDDEN)) {
+                        lv_obj_add_flag(id(additional_temp_grid), LV_OBJ_FLAG_HIDDEN);
+                        lv_obj_clear_flag(id(additional_lightning_grid), LV_OBJ_FLAG_HIDDEN);
+                      } else {
+                        lv_obj_clear_flag(id(additional_temp_grid), LV_OBJ_FLAG_HIDDEN);
+                        lv_obj_add_flag(id(additional_lightning_grid), LV_OBJ_FLAG_HIDDEN);
+                      }
                 widgets:
                   - obj:
+                      id: additional_temp_grid
+                      clickable: false
                       styles: grid_layout_nested
                       align: CENTER
                       layout:
@@ -651,6 +667,7 @@ lvgl:
                             text_color: "${clr_text_dim}"
                             text: "Føles som"
                         - obj:
+                            clickable: false
                             grid_cell_column_pos: 0
                             grid_cell_row_pos: 1
                             grid_cell_column_span: 3
@@ -705,6 +722,84 @@ lvgl:
                             text_font: font_lg
                             text_color: "${clr_text}"
                             text: "--%"
+                  - obj:
+                      id: additional_lightning_grid
+                      hidden: true
+                      clickable: false
+                      scrollable: false
+                      styles: grid_layout_nested
+                      align: CENTER
+                      layout:
+                        type: grid
+                        grid_columns: [fr(1), fr(1), fr(1)]
+                        grid_rows: [fr(1), 2, fr(2)]
+                        grid_column_align: CENTER
+                        grid_row_align: CENTER
+                      widgets:
+                        - label:
+                            grid_cell_x_align: CENTER
+                            grid_cell_column_pos: 0
+                            grid_cell_row_pos: 0
+                            text_align: CENTER
+                            text_font: font_sm
+                            text_color: "${clr_text_dim}"
+                            text: "Sidste lyn"
+                        - obj:
+                            clickable: false
+                            grid_cell_column_pos: 0
+                            grid_cell_row_pos: 1
+                            grid_cell_column_span: 3
+                            grid_cell_x_align: STRETCH
+                            height: 2
+                            bg_color: "${clr_separator}"
+                            pad_all: 0
+                            border_width: 0
+                        - label:
+                            id: lbl_lightning_latest
+                            grid_cell_x_align: CENTER
+                            grid_cell_y_align: START
+                            grid_cell_column_pos: 0
+                            grid_cell_row_pos: 2
+                            text_align: CENTER
+                            text_font: font_md
+                            text_color: "${clr_text}"
+                            text: "--"
+                        - label:
+                            grid_cell_x_align: CENTER
+                            grid_cell_column_pos: 1
+                            grid_cell_row_pos: 0
+                            text_align: CENTER
+                            text_font: font_sm
+                            text_color: "${clr_text_dim}"
+                            text: "Antal (3t)"
+                        - label:
+                            id: lbl_lightning_count
+                            grid_cell_x_align: CENTER
+                            grid_cell_y_align: START
+                            grid_cell_column_pos: 1
+                            grid_cell_row_pos: 2
+                            text_align: CENTER
+                            text_font: font_md
+                            text_color: "${clr_text}"
+                            text: "--"
+                        - label:
+                            grid_cell_x_align: CENTER
+                            grid_cell_column_pos: 2
+                            grid_cell_row_pos: 0
+                            text_align: CENTER
+                            text_font: font_sm
+                            text_color: "${clr_text_dim}"
+                            text: "Afstand"
+                        - label:
+                            id: lbl_lightning_distance
+                            grid_cell_x_align: CENTER
+                            grid_cell_y_align: START
+                            grid_cell_column_pos: 2
+                            grid_cell_row_pos: 2
+                            text_align: CENTER
+                            text_font: font_md
+                            text_color: "${clr_text}"
+                            text: "--"
             # Wind Additional Data
             - obj:
                 styles: widget_4x2

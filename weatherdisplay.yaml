@@ -9,7 +9,7 @@
 substitutions:
   name: "Weather Display"
   device: "weatherdisplay"
-  version: 1.0.5
+  version: 1.0.6
   created_by: "Bjarne Riis"
   display_rotation: "180"
 
@@ -56,6 +56,11 @@ substitutions:
   ha_aqi_index:       "sensor.wdl_home_aqi_pm2p5"
 #  ha_aqi_pm10:        "sensor.holmeengen_sensor_particulate_matter_pm10"
 #  ha_aqi_pm25:        "sensor.holmeengen_sensor_particulate_matter_pm25"
+  
+  # Lightning — overrides defaults in weather-common.yaml
+  ha_lightning_latest:    "sensor.wdl_home_lightning_last_detected"
+  ha_lightning_strikes3h: "sensor.wdl_home_lightning_count_3h"
+  ha_lightning_distance:  "sensor.wdl_home_lightning_min_dist_3h_km"
   
   # Sunrise - Sunset — overrides defaults in weather-common.yaml
   ha_sunrise:    "sensor.next_sunrise"
@@ -641,6 +646,32 @@ sensor:
             lv_label_set_text(id(lbl_aqi), buf);
             lv_obj_set_style_border_color(id(circle_aqi), aqi_color((int)x), 0);
 
+  # ---------------------------------------------------------------------------
+  # Lightning — strike count (3h) and minimum distance (3h)
+  # ---------------------------------------------------------------------------
+  - platform: homeassistant
+    id: sensor_lightning_strikes3h
+    entity_id: ${ha_lightning_strikes3h}
+    on_value:
+      then:
+        - lambda: |-
+            char buf[8];
+            snprintf(buf, sizeof(buf), "%.0f", x);
+            lv_label_set_text(id(lbl_lightning_count), buf);
+
+  - platform: homeassistant
+    id: sensor_lightning_distance
+    entity_id: ${ha_lightning_distance}
+    filters:
+      - filter_out: nan
+    on_value:
+      then:
+        - lambda: |-
+            char buf[12];
+            snprintf(buf, sizeof(buf), "%.1f km", x);
+            for (char* p = buf; *p; p++) if (*p == '.') { *p = ','; break; }
+            lv_label_set_text(id(lbl_lightning_distance), buf);
+
 
 text_sensor:
   # ---------------------------------------------------------------------------
@@ -722,6 +753,19 @@ text_sensor:
       then:
         - lambda: |-
             lv_label_set_text(id(lbl_sunset), x.c_str());
+
+  # ---------------------------------------------------------------------------
+  # Lightning — time of last detected strike
+  # ---------------------------------------------------------------------------
+  - platform: homeassistant
+    id: ts_lightning_latest
+    entity_id: ${ha_lightning_latest}
+    on_value:
+      then:
+        - lambda: |-
+            std::string txt = x;
+            if (txt.empty() || txt == "unknown" || txt == "unavailable") txt = "--";
+            lv_label_set_text(id(lbl_lightning_latest), txt.c_str());
 
 # ---------------------------------------------------------------------------
 # Night mode — turn display off at configured time, on again at another time
