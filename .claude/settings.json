@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(/opt/homebrew/bin/python3 -m esphome version)",
+      "Bash(/opt/homebrew/bin/python3 -c \"import esphome\")",
+      "Bash(/opt/homebrew/bin/python3 --version)",
+      "Bash(pipx list *)",
+      "Bash(python3 -m pip show esphome)",
+      "Bash(/opt/homebrew/opt/esphome/libexec/bin/python -c \"import esphome; print\\(esphome.__version__ if hasattr\\(esphome,'__version__'\\) else 'ok'\\)\")",
+      "Bash(/opt/homebrew/opt/esphome/libexec/bin/python -m esphome version)",
+      "Bash(mkdir -p /Users/bjarne/Development/esphome-weather/.vscode)"
+    ],
+    "additionalDirectories": [
+      "/Users/bjarne/Development/esphome-weather"
+    ]
+  }
+}
