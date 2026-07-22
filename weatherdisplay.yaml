@@ -161,7 +161,16 @@ time:
         then:
           - script.execute: lvgl_update_clock
           - script.execute: night_mode_check
-          - script.execute: lightning_relative_time_update
+
+# ---------------------------------------------------------------------------
+# Lightning relative-time label — refreshed independently of the once-a-minute
+# clock tick so "Xs ago" keeps counting up smoothly instead of freezing
+# between minute boundaries.
+# ---------------------------------------------------------------------------
+interval:
+  - interval: 5s
+    then:
+      - script.execute: lightning_relative_time_update
 
 # ---------------------------------------------------------------------------
 # Hardware — I/O expander, display, touch, backlight
@@ -776,7 +785,10 @@ text_sensor:
               norm[10] = ' ';
               ESPTime t{};
               if (ESPTime::strptime(norm, t)) {
-                t.recalc_timestamp_utc();
+                // strptime() only fills year/month/day_of_month/hour/minute/second —
+                // day_of_year is left at 0, so recalc_timestamp_utc() must be told not
+                // to rely on it (default use_day_of_year=true silently yields timestamp=-1).
+                t.recalc_timestamp_utc(false);
                 parsed_epoch = t.timestamp;
               } else {
                 known = false;
