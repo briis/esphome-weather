@@ -331,12 +331,26 @@ script:
           lv_obj_clear_flag(id(forecast_popup_overlay), LV_OBJ_FLAG_HIDDEN);
           lv_obj_clear_flag(id(forecast_popup), LV_OBJ_FLAG_HIDDEN);
       - script.execute: forecast_popup_fetch
+      - script.execute: forecast_popup_auto_close
 
   - id: forecast_popup_close
     then:
+      - script.stop: forecast_popup_auto_close
       - lambda: |-
           lv_obj_add_flag(id(forecast_popup_overlay), LV_OBJ_FLAG_HIDDEN);
           lv_obj_add_flag(id(forecast_popup), LV_OBJ_FLAG_HIDDEN);
+
+  # Safety-net auto-close: mode restart means every fresh open (or re-tap of
+  # the Forecast card while already open) restarts the 2-minute countdown.
+  # The hidden-flag check guards against a stray fire after a manual close.
+  - id: forecast_popup_auto_close
+    mode: restart
+    then:
+      - delay: 2min
+      - lambda: |-
+          if (!lv_obj_has_flag(id(forecast_popup), LV_OBJ_FLAG_HIDDEN)) {
+            id(forecast_popup_close).execute();
+          }
 
   # Parses a "HH:MM|temp|wind|precip%;..." string (up to 5 rows, semicolon
   # separated) into the 5 hourly forecast columns.
@@ -390,7 +404,9 @@ script:
             lv_label_set_text(time_lbl[row], f[0].c_str());
             lv_label_set_text(temp_lbl[row], (f[2] + "°").c_str());
             lv_label_set_text(wind_lbl[row], (f[3] + " m/s " + cardinal).c_str());
-            lv_label_set_text(precip_lbl[row], (f[5] + "%").c_str());
+            std::string precip = f[5];
+            for (char& c : precip) if (c == '.') { c = ','; break; }
+            lv_label_set_text(precip_lbl[row], (precip + " mm").c_str());
 
             row++;
             if (semi == std::string::npos) break;
@@ -401,7 +417,7 @@ script:
             lv_label_set_text(time_lbl[row], "--:--");
             lv_label_set_text(temp_lbl[row], "--°");
             lv_label_set_text(wind_lbl[row], "-- m/s --");
-            lv_label_set_text(precip_lbl[row], "--%");
+            lv_label_set_text(precip_lbl[row], "-- mm");
           }
 
   # Parses "weekday(1-7)|condition|high|low|wind|bearing|precip_mm;..."
@@ -1681,7 +1697,7 @@ lvgl:
                 align: TOP_RIGHT
                 x: -5
                 y: 0
-                text_font: mdi_sm
+                text_font: mdi_md
                 text_color: "${clr_text_dim}"
                 text: "\U000F05AD"
                 on_click:
@@ -1691,7 +1707,7 @@ lvgl:
                 x: 5
                 y: 34
                 text_font: font_sm
-                text_color: "${clr_text_dim}"
+                text_color: "${clr_temp_cool}"
                 text: "Kommende timer"
             - obj:
                 id: forecast_hourly_grid
@@ -1783,7 +1799,7 @@ lvgl:
                       grid_cell_x_align: CENTER
                       text_align: CENTER
                       text_font: font_xs
-                      text_color: "${clr_text_dim}"
+                      text_color: "${clr_text}"
                       text: "-- m/s --"
                   - label:
                       id: lbl_fh0_precip
@@ -1793,7 +1809,7 @@ lvgl:
                       text_align: CENTER
                       text_font: font_xs
                       text_color: "${clr_temp_cold}"
-                      text: "--%"
+                      text: "-- mm"
                   - label:
                       id: lbl_fh1_time
                       grid_cell_column_pos: 2
@@ -1826,7 +1842,7 @@ lvgl:
                       grid_cell_x_align: CENTER
                       text_align: CENTER
                       text_font: font_xs
-                      text_color: "${clr_text_dim}"
+                      text_color: "${clr_text}"
                       text: "-- m/s --"
                   - label:
                       id: lbl_fh1_precip
@@ -1836,7 +1852,7 @@ lvgl:
                       text_align: CENTER
                       text_font: font_xs
                       text_color: "${clr_temp_cold}"
-                      text: "--%"
+                      text: "-- mm"
                   - label:
                       id: lbl_fh2_time
                       grid_cell_column_pos: 3
@@ -1869,7 +1885,7 @@ lvgl:
                       grid_cell_x_align: CENTER
                       text_align: CENTER
                       text_font: font_xs
-                      text_color: "${clr_text_dim}"
+                      text_color: "${clr_text}"
                       text: "-- m/s --"
                   - label:
                       id: lbl_fh2_precip
@@ -1879,7 +1895,7 @@ lvgl:
                       text_align: CENTER
                       text_font: font_xs
                       text_color: "${clr_temp_cold}"
-                      text: "--%"
+                      text: "-- mm"
                   - label:
                       id: lbl_fh3_time
                       grid_cell_column_pos: 4
@@ -1912,7 +1928,7 @@ lvgl:
                       grid_cell_x_align: CENTER
                       text_align: CENTER
                       text_font: font_xs
-                      text_color: "${clr_text_dim}"
+                      text_color: "${clr_text}"
                       text: "-- m/s --"
                   - label:
                       id: lbl_fh3_precip
@@ -1922,7 +1938,7 @@ lvgl:
                       text_align: CENTER
                       text_font: font_xs
                       text_color: "${clr_temp_cold}"
-                      text: "--%"
+                      text: "-- mm"
                   - label:
                       id: lbl_fh4_time
                       grid_cell_column_pos: 5
@@ -1955,7 +1971,7 @@ lvgl:
                       grid_cell_x_align: CENTER
                       text_align: CENTER
                       text_font: font_xs
-                      text_color: "${clr_text_dim}"
+                      text_color: "${clr_text}"
                       text: "-- m/s --"
                   - label:
                       id: lbl_fh4_precip
@@ -1965,13 +1981,13 @@ lvgl:
                       text_align: CENTER
                       text_font: font_xs
                       text_color: "${clr_temp_cold}"
-                      text: "--%"
+                      text: "-- mm"
             - label:
                 align: TOP_LEFT
                 x: 5
                 y: 200
                 text_font: font_sm
-                text_color: "${clr_text_dim}"
+                text_color: "${clr_temp_cool}"
                 text: "Kommende dage"
             - obj:
                 id: forecast_daily_grid
@@ -2063,7 +2079,7 @@ lvgl:
                       grid_cell_x_align: CENTER
                       text_align: CENTER
                       text_font: font_xs
-                      text_color: "${clr_text_dim}"
+                      text_color: "${clr_text}"
                       text: "-- m/s --"
                   - label:
                       id: lbl_fd0_precip
@@ -2106,7 +2122,7 @@ lvgl:
                       grid_cell_x_align: CENTER
                       text_align: CENTER
                       text_font: font_xs
-                      text_color: "${clr_text_dim}"
+                      text_color: "${clr_text}"
                       text: "-- m/s --"
                   - label:
                       id: lbl_fd1_precip
@@ -2149,7 +2165,7 @@ lvgl:
                       grid_cell_x_align: CENTER
                       text_align: CENTER
                       text_font: font_xs
-                      text_color: "${clr_text_dim}"
+                      text_color: "${clr_text}"
                       text: "-- m/s --"
                   - label:
                       id: lbl_fd2_precip
@@ -2192,7 +2208,7 @@ lvgl:
                       grid_cell_x_align: CENTER
                       text_align: CENTER
                       text_font: font_xs
-                      text_color: "${clr_text_dim}"
+                      text_color: "${clr_text}"
                       text: "-- m/s --"
                   - label:
                       id: lbl_fd3_precip
@@ -2235,7 +2251,7 @@ lvgl:
                       grid_cell_x_align: CENTER
                       text_align: CENTER
                       text_font: font_xs
-                      text_color: "${clr_text_dim}"
+                      text_color: "${clr_text}"
                       text: "-- m/s --"
                   - label:
                       id: lbl_fd4_precip

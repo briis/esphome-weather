@@ -947,7 +947,7 @@ script:
           response_template: >-
             {% set fc = (response.values() | first).forecast[:5] %}
             {%- for f in fc -%}
-            {{ as_timestamp(f.datetime) | timestamp_custom('%H:%M', true) }}|{{ f.condition | default('sunny', true) }}|{{ f.temperature | round(0) | int }}|{{ (f.wind_speed | default(0, true)) | round(0) | int }}|{{ (f.wind_bearing | default(0, true)) | round(0) | int }}|{{ (f.precipitation_probability | default(0, true)) | round(0) | int }}{% if not loop.last %};{% endif %}
+            {{ as_timestamp(f.datetime) | timestamp_custom('%H:%M', true) }}|{{ f.condition | default('sunny', true) }}|{{ f.temperature | round(0) | int }}|{{ (f.wind_speed | default(0, true)) | round(0) | int }}|{{ (f.wind_bearing | default(0, true)) | round(0) | int }}|{{ (f.precipitation | default(0, true)) | round(1) }}{% if not loop.last %};{% endif %}
             {%- endfor -%}
           on_success:
             - lambda: |-

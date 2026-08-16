@@ -365,9 +365,9 @@ script:
           int base_hr = id(system_time).now().hour;
           for (int i = 0; i < 5; i++) {
             char row[48];
-            snprintf(row, sizeof(row), "%02d:00|%s|%d|%d|%d|%d",
+            snprintf(row, sizeof(row), "%02d:00|%s|%d|%d|%d|%.1f",
                      (base_hr + i + 1) % 24, mock_conditions[rand() % 11],
-                     2 + rand() % 20, rand() % 10, rand() % 360, rand() % 100);
+                     2 + rand() % 20, rand() % 10, rand() % 360, (rand() % 50) / 10.0f);
             hourly += row;
             if (i < 4) hourly += ";";
           }

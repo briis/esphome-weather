@@ -30,7 +30,8 @@
       "Bash(cp weather-common.yaml secrets.yaml /private/tmp/claude-501/-Users-bjarne-Development-esphome-weather/834b9b7d-4c5b-470a-8c26-4e43654f13cd/scratchpad/)",
       "Bash(cp -r fonts images /private/tmp/claude-501/-Users-bjarne-Development-esphome-weather/834b9b7d-4c5b-470a-8c26-4e43654f13cd/scratchpad/)",
       "Bash(mkdir -p /private/tmp/claude-501/-Users-bjarne-Development-esphome-weather/834b9b7d-4c5b-470a-8c26-4e43654f13cd/scratchpad)",
-      "Bash(python3 - /private/tmp/claude-501/-Users-bjarne-Development-esphome-weather/834b9b7d-4c5b-470a-8c26-4e43654f13cd/scratchpad)"
+      "Bash(python3 - /private/tmp/claude-501/-Users-bjarne-Development-esphome-weather/834b9b7d-4c5b-470a-8c26-4e43654f13cd/scratchpad)",
+      "Bash(awk -F: '$1>1600')"
     ],
     "additionalDirectories": [
       "/Users/bjarne/Development/esphome-weather"
