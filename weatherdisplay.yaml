@@ -933,6 +933,50 @@ script:
             id(backlight).turn_on();
           }
 
+  # Fetches the 5h/5d forecast from the weather entity and renders it into
+  # the popup. Formatting/localisation (local time, weekday) is done in the
+  # response_template Jinja so the device only has to split delimited strings.
+  - id: forecast_popup_fetch
+    then:
+      - homeassistant.action:
+          action: weather.get_forecasts
+          data:
+            entity_id: ${ha_fcast_condition}
+            type: hourly
+          capture_response: true
+          response_template: >-
+            {% set fc = (response.values() | first).forecast[:5] %}
+            {%- for f in fc -%}
+            {{ as_timestamp(f.datetime) | timestamp_custom('%H:%M', true) }}|{{ f.condition | default('sunny', true) }}|{{ f.temperature | round(0) | int }}|{{ (f.wind_speed | default(0, true)) | round(0) | int }}|{{ (f.wind_bearing | default(0, true)) | round(0) | int }}|{{ (f.precipitation_probability | default(0, true)) | round(0) | int }}{% if not loop.last %};{% endif %}
+            {%- endfor -%}
+          on_success:
+            - lambda: |-
+                id(forecast_popup_render_hourly).execute(response["response"].as<std::string>());
+          on_error:
+            - logger.log:
+                level: WARN
+                tag: forecast
+                format: "Hourly forecast fetch failed"
+      - homeassistant.action:
+          action: weather.get_forecasts
+          data:
+            entity_id: ${ha_fcast_condition}
+            type: daily
+          capture_response: true
+          response_template: >-
+            {% set fc = (response.values() | first).forecast[:5] %}
+            {%- for f in fc -%}
+            {{ as_timestamp(f.datetime) | timestamp_custom('%u', true) }}|{{ f.condition | default('sunny', true) }}|{{ f.temperature | round(0) | int }}|{{ (f.templow | default(f.temperature, true)) | round(0) | int }}|{{ (f.wind_speed | default(0, true)) | round(0) | int }}|{{ (f.wind_bearing | default(0, true)) | round(0) | int }}|{{ (f.precipitation | default(0, true)) | round(1) }}{% if not loop.last %};{% endif %}
+            {%- endfor -%}
+          on_success:
+            - lambda: |-
+                id(forecast_popup_render_daily).execute(response["response"].as<std::string>());
+          on_error:
+            - logger.log:
+                level: WARN
+                tag: forecast
+                format: "Daily forecast fetch failed"
+
 packages:
   remote_package_files:
     url: https://git.digitalhomes.dk/briis/esphome-weather

@@ -348,3 +348,40 @@ script:
             lv_obj_clear_flag(id(lightning_popup), LV_OBJ_FLAG_HIDDEN);
             id(lightning_popup_hide).execute();
           }
+
+  # SDL has no `api:`/HA connection, so this stands in for the hardware
+  # target's real weather.get_forecasts action call — same delimited-string
+  # format ("HH:MM|condition|temp|wind|bearing|precip%;..." /
+  # "weekday|condition|hi|lo|wind|bearing|precip_mm;...") so it exercises
+  # the same forecast_popup_render_* parsing, icon mapping and cardinals.
+  - id: forecast_popup_fetch
+    then:
+      - lambda: |-
+          static const char* mock_conditions[] = {
+            "sunny", "partlycloudy", "cloudy", "rainy", "lightning-rainy",
+            "snowy", "fog", "windy", "clear-night", "snowy-rainy", "lightning"
+          };
+          std::string hourly;
+          int base_hr = id(system_time).now().hour;
+          for (int i = 0; i < 5; i++) {
+            char row[48];
+            snprintf(row, sizeof(row), "%02d:00|%s|%d|%d|%d|%d",
+                     (base_hr + i + 1) % 24, mock_conditions[rand() % 11],
+                     2 + rand() % 20, rand() % 10, rand() % 360, rand() % 100);
+            hourly += row;
+            if (i < 4) hourly += ";";
+          }
+          id(forecast_popup_render_hourly).execute(hourly);
+
+          std::string daily;
+          for (int i = 0; i < 5; i++) {
+            int hi = 5 + rand() % 20;
+            int lo = hi - (2 + rand() % 6);
+            char row[56];
+            snprintf(row, sizeof(row), "%d|%s|%d|%d|%d|%d|%.1f",
+                     (i % 7) + 1, mock_conditions[rand() % 11],
+                     hi, lo, rand() % 10, rand() % 360, (rand() % 50) / 10.0f);
+            daily += row;
+            if (i < 4) daily += ";";
+          }
+          id(forecast_popup_render_daily).execute(daily);

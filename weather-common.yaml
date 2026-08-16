@@ -136,17 +136,17 @@ font:
     id: mdi_xs
     size: 14
     bpp: 4
-    glyphs: "\U000F091F\U000F0922\U000F0925\U000F0928\U000F092B\U000F092F\U000F005D\U000F0045\U000F050F\U000F0564\U000F0599\U000F0597\U000F059D\U000F17FE\U000F0510\U000F029A\U000F1594\U000F1595\U000F1598\U000F058C\U000F0595\U000F0D7C\U000F059B\U000F059C\U000F0596\U000F1A73"
+    glyphs: "\U000F091F\U000F0922\U000F0925\U000F0928\U000F092B\U000F092F\U000F005D\U000F0045\U000F050F\U000F0564\U000F0599\U000F0597\U000F059D\U000F17FE\U000F0510\U000F029A\U000F1594\U000F1595\U000F1598\U000F058C\U000F0595\U000F0D7C\U000F059B\U000F059C\U000F0596\U000F1A73\U000F05AD"
   - file: "fonts/materialdesignicons-webfont.ttf"
     id: mdi_sm
     size: 18
     bpp: 4
-    glyphs: "\U000F091F\U000F0922\U000F0925\U000F0928\U000F092B\U000F092F\U000F005D\U000F0045\U000F050F\U000F0564\U000F0599\U000F0597\U000F059D\U000F17FE\U000F0510\U000F029A\U000F1594\U000F1595\U000F1598\U000F058C\U000F0595\U000F0D7C\U000F059B\U000F059C\U000F0596\U000F1A73"
+    glyphs: "\U000F091F\U000F0922\U000F0925\U000F0928\U000F092B\U000F092F\U000F005D\U000F0045\U000F050F\U000F0564\U000F0599\U000F0597\U000F059D\U000F17FE\U000F0510\U000F029A\U000F1594\U000F1595\U000F1598\U000F058C\U000F0595\U000F0D7C\U000F059B\U000F059C\U000F0596\U000F1A73\U000F05AD"
   - file: "fonts/materialdesignicons-webfont.ttf"
     id: mdi_md
     size: 24
     bpp: 4
-    glyphs: "\U000F091F\U000F0922\U000F0925\U000F0928\U000F092B\U000F092F\U000F005D\U000F0045\U000F050F\U000F0564\U000F0599\U000F0597\U000F059D\U000F17FE\U000F0510\U000F029A\U000F1594\U000F1595\U000F1598\U000F058C\U000F0595\U000F0D7C\U000F059B\U000F059C\U000F0596\U000F1A73"
+    glyphs: "\U000F091F\U000F0922\U000F0925\U000F0928\U000F092B\U000F092F\U000F005D\U000F0045\U000F050F\U000F0564\U000F0599\U000F0597\U000F059D\U000F17FE\U000F0510\U000F029A\U000F1594\U000F1595\U000F1598\U000F058C\U000F0595\U000F0D7C\U000F059B\U000F059C\U000F0596\U000F1A73\U000F05AD"
 
 # ---------------------------------------------------------------------------
 # Images
@@ -230,6 +230,74 @@ image:
     type: rgb565
     resize: 64x64
     transparency: alpha_channel
+  # Small (24x24) condition icons for the forecast popup's per-item rows —
+  # same source art as the fimg_* set above, just resized down.
+  - platform: file
+    file: "images/weather/clear-day.png"
+    id: img_sm_clear_day
+    type: rgb565
+    resize: 24x24
+    transparency: alpha_channel
+  - platform: file
+    file: "images/weather/clear-night.png"
+    id: img_sm_clear_night
+    type: rgb565
+    resize: 24x24
+    transparency: alpha_channel
+  - platform: file
+    file: "images/weather/cloudy.png"
+    id: img_sm_cloudy
+    type: rgb565
+    resize: 24x24
+    transparency: alpha_channel
+  - platform: file
+    file: "images/weather/fog.png"
+    id: img_sm_fog
+    type: rgb565
+    resize: 24x24
+    transparency: alpha_channel
+  - platform: file
+    file: "images/weather/lightning.png"
+    id: img_sm_lightning
+    type: rgb565
+    resize: 24x24
+    transparency: alpha_channel
+  - platform: file
+    file: "images/weather/lightning-rainy.png"
+    id: img_sm_lightning_rainy
+    type: rgb565
+    resize: 24x24
+    transparency: alpha_channel
+  - platform: file
+    file: "images/weather/partlycloudy.png"
+    id: img_sm_partlycloudy
+    type: rgb565
+    resize: 24x24
+    transparency: alpha_channel
+  - platform: file
+    file: "images/weather/rainy.png"
+    id: img_sm_rainy
+    type: rgb565
+    resize: 24x24
+    transparency: alpha_channel
+  - platform: file
+    file: "images/weather/snowy.png"
+    id: img_sm_snowy
+    type: rgb565
+    resize: 24x24
+    transparency: alpha_channel
+  - platform: file
+    file: "images/weather/snowy-rainy.png"
+    id: img_sm_snowy_rainy
+    type: rgb565
+    resize: 24x24
+    transparency: alpha_channel
+  - platform: file
+    file: "images/weather/windy.png"
+    id: img_sm_windy
+    type: rgb565
+    resize: 24x24
+    transparency: alpha_channel
 
 # ---------------------------------------------------------------------------
 # Scripts
@@ -252,6 +320,157 @@ script:
       - delay: 12s
       - lambda: |-
           lv_obj_add_flag(id(lightning_popup), LV_OBJ_FLAG_HIDDEN);
+
+  # Forecast popup — opened by tapping the Forecast card. forecast_popup_fetch
+  # is target-specific: weatherdisplay.yaml calls the real weather.get_forecasts
+  # HA action; weatherdisplay-config-sdl.yaml fills in mock data instead (the
+  # SDL build has no `api:`/HA connection at all).
+  - id: forecast_popup_open
+    then:
+      - lambda: |-
+          lv_obj_clear_flag(id(forecast_popup_overlay), LV_OBJ_FLAG_HIDDEN);
+          lv_obj_clear_flag(id(forecast_popup), LV_OBJ_FLAG_HIDDEN);
+      - script.execute: forecast_popup_fetch
+
+  - id: forecast_popup_close
+    then:
+      - lambda: |-
+          lv_obj_add_flag(id(forecast_popup_overlay), LV_OBJ_FLAG_HIDDEN);
+          lv_obj_add_flag(id(forecast_popup), LV_OBJ_FLAG_HIDDEN);
+
+  # Parses a "HH:MM|temp|wind|precip%;..." string (up to 5 rows, semicolon
+  # separated) into the 5 hourly forecast columns.
+  # Parses "HH:MM|condition|temp|wind|bearing|precip%;..." (up to 5 rows) into
+  # the 5 hourly forecast columns. Condition maps to the small img_sm_* icon
+  # (same mapping as the main Forecast card's fimg_* toggle); bearing is
+  # turned into a 16-point Danish cardinal (same table used for current wind).
+  - id: forecast_popup_render_hourly
+    parameters:
+      data: string
+    then:
+      - lambda: |-
+          static const char* cardinals[] = {"N","NNØ","NØ","ØNØ","Ø","ØSØ","SØ","SSØ","S","SSV","SV","VSV","V","VNV","NV","NNV"};
+          lv_obj_t* time_lbl[5]   = { id(lbl_fh0_time),   id(lbl_fh1_time),   id(lbl_fh2_time),   id(lbl_fh3_time),   id(lbl_fh4_time) };
+          lv_obj_t* icon_img[5]   = { id(img_fh0_cond),   id(img_fh1_cond),   id(img_fh2_cond),   id(img_fh3_cond),   id(img_fh4_cond) };
+          lv_obj_t* temp_lbl[5]   = { id(lbl_fh0_temp),   id(lbl_fh1_temp),   id(lbl_fh2_temp),   id(lbl_fh3_temp),   id(lbl_fh4_temp) };
+          lv_obj_t* wind_lbl[5]   = { id(lbl_fh0_wind),   id(lbl_fh1_wind),   id(lbl_fh2_wind),   id(lbl_fh3_wind),   id(lbl_fh4_wind) };
+          lv_obj_t* precip_lbl[5] = { id(lbl_fh0_precip), id(lbl_fh1_precip), id(lbl_fh2_precip), id(lbl_fh3_precip), id(lbl_fh4_precip) };
+
+          size_t pos = 0;
+          int row = 0;
+          while (row < 5 && pos <= data.size()) {
+            size_t semi = data.find(';', pos);
+            std::string token = (semi == std::string::npos) ? data.substr(pos) : data.substr(pos, semi - pos);
+            if (token.empty()) break;
+
+            std::string f[6];
+            size_t fpos = 0;
+            for (int i = 0; i < 6; i++) {
+              size_t bar = token.find('|', fpos);
+              f[i] = (bar == std::string::npos) ? token.substr(fpos) : token.substr(fpos, bar - fpos);
+              fpos = (bar == std::string::npos) ? token.size() : bar + 1;
+            }
+            const std::string& cond = f[1];
+            lv_obj_t* iw = icon_img[row];
+            if      (cond == "clear-night")     lv_img_set_src(iw, id(img_sm_clear_night));
+            else if (cond == "cloudy")          lv_img_set_src(iw, id(img_sm_cloudy));
+            else if (cond == "fog")             lv_img_set_src(iw, id(img_sm_fog));
+            else if (cond == "lightning")       lv_img_set_src(iw, id(img_sm_lightning));
+            else if (cond == "lightning-rainy") lv_img_set_src(iw, id(img_sm_lightning_rainy));
+            else if (cond == "partlycloudy")    lv_img_set_src(iw, id(img_sm_partlycloudy));
+            else if (cond == "rainy")           lv_img_set_src(iw, id(img_sm_rainy));
+            else if (cond == "snowy")           lv_img_set_src(iw, id(img_sm_snowy));
+            else if (cond == "snowy-rainy")     lv_img_set_src(iw, id(img_sm_snowy_rainy));
+            else if (cond == "windy")           lv_img_set_src(iw, id(img_sm_windy));
+            else                                lv_img_set_src(iw, id(img_sm_clear_day));
+
+            int bearing = atoi(f[4].c_str());
+            std::string cardinal = cardinals[(int)((bearing + 11.25f) / 22.5f) % 16];
+
+            lv_label_set_text(time_lbl[row], f[0].c_str());
+            lv_label_set_text(temp_lbl[row], (f[2] + "°").c_str());
+            lv_label_set_text(wind_lbl[row], (f[3] + " m/s " + cardinal).c_str());
+            lv_label_set_text(precip_lbl[row], (f[5] + "%").c_str());
+
+            row++;
+            if (semi == std::string::npos) break;
+            pos = semi + 1;
+          }
+          for (; row < 5; row++) {
+            lv_img_set_src(icon_img[row], id(img_sm_clear_day));
+            lv_label_set_text(time_lbl[row], "--:--");
+            lv_label_set_text(temp_lbl[row], "--°");
+            lv_label_set_text(wind_lbl[row], "-- m/s --");
+            lv_label_set_text(precip_lbl[row], "--%");
+          }
+
+  # Parses "weekday(1-7)|condition|high|low|wind|bearing|precip_mm;..."
+  # (up to 5 rows) into the 5 daily forecast columns. Weekday is ISO
+  # (1=Mon..7=Sun) so the same digit works whether it came from HA's Jinja
+  # %u or the SDL mock. Condition/bearing handled the same way as hourly.
+  - id: forecast_popup_render_daily
+    parameters:
+      data: string
+    then:
+      - lambda: |-
+          static const char* dk_days[8] = {"--", "Man", "Tir", "Ons", "Tor", "Fre", "Lør", "Søn"};
+          static const char* cardinals[] = {"N","NNØ","NØ","ØNØ","Ø","ØSØ","SØ","SSØ","S","SSV","SV","VSV","V","VNV","NV","NNV"};
+          lv_obj_t* day_lbl[5]    = { id(lbl_fd0_day),    id(lbl_fd1_day),    id(lbl_fd2_day),    id(lbl_fd3_day),    id(lbl_fd4_day) };
+          lv_obj_t* icon_img[5]   = { id(img_fd0_cond),   id(img_fd1_cond),   id(img_fd2_cond),   id(img_fd3_cond),   id(img_fd4_cond) };
+          lv_obj_t* temp_lbl[5]   = { id(lbl_fd0_temp),   id(lbl_fd1_temp),   id(lbl_fd2_temp),   id(lbl_fd3_temp),   id(lbl_fd4_temp) };
+          lv_obj_t* wind_lbl[5]   = { id(lbl_fd0_wind),   id(lbl_fd1_wind),   id(lbl_fd2_wind),   id(lbl_fd3_wind),   id(lbl_fd4_wind) };
+          lv_obj_t* precip_lbl[5] = { id(lbl_fd0_precip), id(lbl_fd1_precip), id(lbl_fd2_precip), id(lbl_fd3_precip), id(lbl_fd4_precip) };
+
+          size_t pos = 0;
+          int row = 0;
+          while (row < 5 && pos <= data.size()) {
+            size_t semi = data.find(';', pos);
+            std::string token = (semi == std::string::npos) ? data.substr(pos) : data.substr(pos, semi - pos);
+            if (token.empty()) break;
+
+            std::string f[7];
+            size_t fpos = 0;
+            for (int i = 0; i < 7; i++) {
+              size_t bar = token.find('|', fpos);
+              f[i] = (bar == std::string::npos) ? token.substr(fpos) : token.substr(fpos, bar - fpos);
+              fpos = (bar == std::string::npos) ? token.size() : bar + 1;
+            }
+            const std::string& cond = f[1];
+            lv_obj_t* iw = icon_img[row];
+            if      (cond == "clear-night")     lv_img_set_src(iw, id(img_sm_clear_night));
+            else if (cond == "cloudy")          lv_img_set_src(iw, id(img_sm_cloudy));
+            else if (cond == "fog")             lv_img_set_src(iw, id(img_sm_fog));
+            else if (cond == "lightning")       lv_img_set_src(iw, id(img_sm_lightning));
+            else if (cond == "lightning-rainy") lv_img_set_src(iw, id(img_sm_lightning_rainy));
+            else if (cond == "partlycloudy")    lv_img_set_src(iw, id(img_sm_partlycloudy));
+            else if (cond == "rainy")           lv_img_set_src(iw, id(img_sm_rainy));
+            else if (cond == "snowy")           lv_img_set_src(iw, id(img_sm_snowy));
+            else if (cond == "snowy-rainy")     lv_img_set_src(iw, id(img_sm_snowy_rainy));
+            else if (cond == "windy")           lv_img_set_src(iw, id(img_sm_windy));
+            else                                lv_img_set_src(iw, id(img_sm_clear_day));
+
+            int bearing = atoi(f[5].c_str());
+            std::string cardinal = cardinals[(int)((bearing + 11.25f) / 22.5f) % 16];
+
+            int wd = atoi(f[0].c_str());
+            lv_label_set_text(day_lbl[row], (wd >= 1 && wd <= 7) ? dk_days[wd] : "--");
+            lv_label_set_text(temp_lbl[row], (f[2] + "°/" + f[3] + "°").c_str());
+            lv_label_set_text(wind_lbl[row], (f[4] + " m/s " + cardinal).c_str());
+            std::string precip = f[6];
+            for (char& c : precip) if (c == '.') { c = ','; break; }
+            lv_label_set_text(precip_lbl[row], (precip + " mm").c_str());
+
+            row++;
+            if (semi == std::string::npos) break;
+            pos = semi + 1;
+          }
+          for (; row < 5; row++) {
+            lv_img_set_src(icon_img[row], id(img_sm_clear_day));
+            lv_label_set_text(day_lbl[row], "--");
+            lv_label_set_text(temp_lbl[row], "--°/--°");
+            lv_label_set_text(wind_lbl[row], "-- m/s --");
+            lv_label_set_text(precip_lbl[row], "-- mm");
+          }
 
 # ---------------------------------------------------------------------------
 # LVGL — page layout (display id resolved from host file)
@@ -1030,7 +1249,7 @@ lvgl:
                             text_font: font_xs
                             text: "W/m²"
 
-            # Forecast Widget
+            # Forecast Widget — tap to open the 5h/5d forecast popup
             - obj:
                 styles: widget_4x4
                 bg_color: ${clr_card}
@@ -1038,6 +1257,8 @@ lvgl:
                 grid_cell_row_pos: 8
                 grid_cell_column_span: 4
                 grid_cell_row_span: 4
+                on_click:
+                  - script.execute: forecast_popup_open
                 widgets:
                   # Header icon
                   - label:
@@ -1412,6 +1633,619 @@ lvgl:
                       text_font: font_md
                       text_color: "${clr_text}"
                       text: "--"
+
+      # Forecast popup — full-screen dim overlay + card, opened by tapping the
+      # Forecast widget. forecast_popup_open/close (scripts, above) toggle both.
+      - obj:
+          id: forecast_popup_overlay
+          align: CENTER
+          x: 0
+          y: 0
+          width: 800
+          height: 480
+          hidden: true
+          clickable: true
+          scrollable: false
+          radius: 0
+          bg_color: 0x000000
+          bg_opa: 60%
+          border_width: 0
+          pad_all: 0
+          on_click:
+            - script.execute: forecast_popup_close
+      - obj:
+          id: forecast_popup
+          align: CENTER
+          hidden: true
+          clickable: true
+          scrollable: false
+          width: 740
+          height: 400
+          radius: 12
+          bg_color: ${clr_card}
+          bg_opa: COVER
+          border_width: 2
+          border_color: ${clr_separator}
+          shadow_width: 30
+          shadow_opa: 70%
+          pad_all: 10
+          widgets:
+            - label:
+                align: TOP_LEFT
+                x: 5
+                y: 2
+                text_font: font_md
+                text_color: "${clr_text}"
+                text: "Vejrudsigt"
+            - label:
+                align: TOP_RIGHT
+                x: -5
+                y: 0
+                text_font: mdi_sm
+                text_color: "${clr_text_dim}"
+                text: "\U000F05AD"
+                on_click:
+                  - script.execute: forecast_popup_close
+            - label:
+                align: TOP_LEFT
+                x: 5
+                y: 34
+                text_font: font_sm
+                text_color: "${clr_text_dim}"
+                text: "Kommende timer"
+            - obj:
+                id: forecast_hourly_grid
+                align: TOP_MID
+                y: 56
+                width: 720
+                height: 140
+                clickable: false
+                scrollable: false
+                bg_opa: TRANSP
+                border_width: 0
+                pad_all: 0
+                layout:
+                  type: grid
+                  grid_columns: [fr(2), fr(3), fr(3), fr(3), fr(3), fr(3)]
+                  grid_rows: [fr(1), fr(1), fr(1), fr(1), fr(1)]
+                  grid_column_align: CENTER
+                  grid_row_align: CENTER
+                widgets:
+                  - label:
+                      grid_cell_column_pos: 0
+                      grid_cell_row_pos: 0
+                      grid_cell_x_align: CENTER
+                      text_align: CENTER
+                      text_font: font_xs
+                      text_color: "${clr_text_dim}"
+                      text: "Kl."
+                  - label:
+                      grid_cell_column_pos: 0
+                      grid_cell_row_pos: 1
+                      grid_cell_x_align: CENTER
+                      text_align: CENTER
+                      text_font: font_xs
+                      text_color: "${clr_text_dim}"
+                      text: "Vejr"
+                  - label:
+                      grid_cell_column_pos: 0
+                      grid_cell_row_pos: 2
+                      grid_cell_x_align: CENTER
+                      text_align: CENTER
+                      text_font: font_xs
+                      text_color: "${clr_text_dim}"
+                      text: "Temp"
+                  - label:
+                      grid_cell_column_pos: 0
+                      grid_cell_row_pos: 3
+                      grid_cell_x_align: CENTER
+                      text_align: CENTER
+                      text_font: font_xs
+                      text_color: "${clr_text_dim}"
+                      text: "Vind"
+                  - label:
+                      grid_cell_column_pos: 0
+                      grid_cell_row_pos: 4
+                      grid_cell_x_align: CENTER
+                      text_align: CENTER
+                      text_font: font_xs
+                      text_color: "${clr_text_dim}"
+                      text: "Nedbør"
+                  - label:
+                      id: lbl_fh0_time
+                      grid_cell_column_pos: 1
+                      grid_cell_row_pos: 0
+                      grid_cell_x_align: CENTER
+                      text_align: CENTER
+                      text_font: font_sm
+                      text_color: "${clr_text}"
+                      text: "--:--"
+                  - image:
+                      id: img_fh0_cond
+                      grid_cell_column_pos: 1
+                      grid_cell_row_pos: 1
+                      grid_cell_x_align: CENTER
+                      grid_cell_y_align: CENTER
+                      src: img_sm_clear_day
+                  - label:
+                      id: lbl_fh0_temp
+                      grid_cell_column_pos: 1
+                      grid_cell_row_pos: 2
+                      grid_cell_x_align: CENTER
+                      text_align: CENTER
+                      text_font: font_sm
+                      text_color: "${clr_text}"
+                      text: "--°"
+                  - label:
+                      id: lbl_fh0_wind
+                      grid_cell_column_pos: 1
+                      grid_cell_row_pos: 3
+                      grid_cell_x_align: CENTER
+                      text_align: CENTER
+                      text_font: font_xs
+                      text_color: "${clr_text_dim}"
+                      text: "-- m/s --"
+                  - label:
+                      id: lbl_fh0_precip
+                      grid_cell_column_pos: 1
+                      grid_cell_row_pos: 4
+                      grid_cell_x_align: CENTER
+                      text_align: CENTER
+                      text_font: font_xs
+                      text_color: "${clr_temp_cold}"
+                      text: "--%"
+                  - label:
+                      id: lbl_fh1_time
+                      grid_cell_column_pos: 2
+                      grid_cell_row_pos: 0
+                      grid_cell_x_align: CENTER
+                      text_align: CENTER
+                      text_font: font_sm
+                      text_color: "${clr_text}"
+                      text: "--:--"
+                  - image:
+                      id: img_fh1_cond
+                      grid_cell_column_pos: 2
+                      grid_cell_row_pos: 1
+                      grid_cell_x_align: CENTER
+                      grid_cell_y_align: CENTER
+                      src: img_sm_clear_day
+                  - label:
+                      id: lbl_fh1_temp
+                      grid_cell_column_pos: 2
+                      grid_cell_row_pos: 2
+                      grid_cell_x_align: CENTER
+                      text_align: CENTER
+                      text_font: font_sm
+                      text_color: "${clr_text}"
+                      text: "--°"
+                  - label:
+                      id: lbl_fh1_wind
+                      grid_cell_column_pos: 2
+                      grid_cell_row_pos: 3
+                      grid_cell_x_align: CENTER
+                      text_align: CENTER
+                      text_font: font_xs
+                      text_color: "${clr_text_dim}"
+                      text: "-- m/s --"
+                  - label:
+                      id: lbl_fh1_precip
+                      grid_cell_column_pos: 2
+                      grid_cell_row_pos: 4
+                      grid_cell_x_align: CENTER
+                      text_align: CENTER
+                      text_font: font_xs
+                      text_color: "${clr_temp_cold}"
+                      text: "--%"
+                  - label:
+                      id: lbl_fh2_time
+                      grid_cell_column_pos: 3
+                      grid_cell_row_pos: 0
+                      grid_cell_x_align: CENTER
+                      text_align: CENTER
+                      text_font: font_sm
+                      text_color: "${clr_text}"
+                      text: "--:--"
+                  - image:
+                      id: img_fh2_cond
+                      grid_cell_column_pos: 3
+                      grid_cell_row_pos: 1
+                      grid_cell_x_align: CENTER
+                      grid_cell_y_align: CENTER
+                      src: img_sm_clear_day
+                  - label:
+                      id: lbl_fh2_temp
+                      grid_cell_column_pos: 3
+                      grid_cell_row_pos: 2
+                      grid_cell_x_align: CENTER
+                      text_align: CENTER
+                      text_font: font_sm
+                      text_color: "${clr_text}"
+                      text: "--°"
+                  - label:
+                      id: lbl_fh2_wind
+                      grid_cell_column_pos: 3
+                      grid_cell_row_pos: 3
+                      grid_cell_x_align: CENTER
+                      text_align: CENTER
+                      text_font: font_xs
+                      text_color: "${clr_text_dim}"
+                      text: "-- m/s --"
+                  - label:
+                      id: lbl_fh2_precip
+                      grid_cell_column_pos: 3
+                      grid_cell_row_pos: 4
+                      grid_cell_x_align: CENTER
+                      text_align: CENTER
+                      text_font: font_xs
+                      text_color: "${clr_temp_cold}"
+                      text: "--%"
+                  - label:
+                      id: lbl_fh3_time
+                      grid_cell_column_pos: 4
+                      grid_cell_row_pos: 0
+                      grid_cell_x_align: CENTER
+                      text_align: CENTER
+                      text_font: font_sm
+                      text_color: "${clr_text}"
+                      text: "--:--"
+                  - image:
+                      id: img_fh3_cond
+                      grid_cell_column_pos: 4
+                      grid_cell_row_pos: 1
+                      grid_cell_x_align: CENTER
+                      grid_cell_y_align: CENTER
+                      src: img_sm_clear_day
+                  - label:
+                      id: lbl_fh3_temp
+                      grid_cell_column_pos: 4
+                      grid_cell_row_pos: 2
+                      grid_cell_x_align: CENTER
+                      text_align: CENTER
+                      text_font: font_sm
+                      text_color: "${clr_text}"
+                      text: "--°"
+                  - label:
+                      id: lbl_fh3_wind
+                      grid_cell_column_pos: 4
+                      grid_cell_row_pos: 3
+                      grid_cell_x_align: CENTER
+                      text_align: CENTER
+                      text_font: font_xs
+                      text_color: "${clr_text_dim}"
+                      text: "-- m/s --"
+                  - label:
+                      id: lbl_fh3_precip
+                      grid_cell_column_pos: 4
+                      grid_cell_row_pos: 4
+                      grid_cell_x_align: CENTER
+                      text_align: CENTER
+                      text_font: font_xs
+                      text_color: "${clr_temp_cold}"
+                      text: "--%"
+                  - label:
+                      id: lbl_fh4_time
+                      grid_cell_column_pos: 5
+                      grid_cell_row_pos: 0
+                      grid_cell_x_align: CENTER
+                      text_align: CENTER
+                      text_font: font_sm
+                      text_color: "${clr_text}"
+                      text: "--:--"
+                  - image:
+                      id: img_fh4_cond
+                      grid_cell_column_pos: 5
+                      grid_cell_row_pos: 1
+                      grid_cell_x_align: CENTER
+                      grid_cell_y_align: CENTER
+                      src: img_sm_clear_day
+                  - label:
+                      id: lbl_fh4_temp
+                      grid_cell_column_pos: 5
+                      grid_cell_row_pos: 2
+                      grid_cell_x_align: CENTER
+                      text_align: CENTER
+                      text_font: font_sm
+                      text_color: "${clr_text}"
+                      text: "--°"
+                  - label:
+                      id: lbl_fh4_wind
+                      grid_cell_column_pos: 5
+                      grid_cell_row_pos: 3
+                      grid_cell_x_align: CENTER
+                      text_align: CENTER
+                      text_font: font_xs
+                      text_color: "${clr_text_dim}"
+                      text: "-- m/s --"
+                  - label:
+                      id: lbl_fh4_precip
+                      grid_cell_column_pos: 5
+                      grid_cell_row_pos: 4
+                      grid_cell_x_align: CENTER
+                      text_align: CENTER
+                      text_font: font_xs
+                      text_color: "${clr_temp_cold}"
+                      text: "--%"
+            - label:
+                align: TOP_LEFT
+                x: 5
+                y: 200
+                text_font: font_sm
+                text_color: "${clr_text_dim}"
+                text: "Kommende dage"
+            - obj:
+                id: forecast_daily_grid
+                align: TOP_MID
+                y: 222
+                width: 720
+                height: 140
+                clickable: false
+                scrollable: false
+                bg_opa: TRANSP
+                border_width: 0
+                pad_all: 0
+                layout:
+                  type: grid
+                  grid_columns: [fr(2), fr(3), fr(3), fr(3), fr(3), fr(3)]
+                  grid_rows: [fr(1), fr(1), fr(1), fr(1), fr(1)]
+                  grid_column_align: CENTER
+                  grid_row_align: CENTER
+                widgets:
+                  - label:
+                      grid_cell_column_pos: 0
+                      grid_cell_row_pos: 0
+                      grid_cell_x_align: CENTER
+                      text_align: CENTER
+                      text_font: font_xs
+                      text_color: "${clr_text_dim}"
+                      text: "Dag"
+                  - label:
+                      grid_cell_column_pos: 0
+                      grid_cell_row_pos: 1
+                      grid_cell_x_align: CENTER
+                      text_align: CENTER
+                      text_font: font_xs
+                      text_color: "${clr_text_dim}"
+                      text: "Vejr"
+                  - label:
+                      grid_cell_column_pos: 0
+                      grid_cell_row_pos: 2
+                      grid_cell_x_align: CENTER
+                      text_align: CENTER
+                      text_font: font_xs
+                      text_color: "${clr_text_dim}"
+                      text: "Høj/lav"
+                  - label:
+                      grid_cell_column_pos: 0
+                      grid_cell_row_pos: 3
+                      grid_cell_x_align: CENTER
+                      text_align: CENTER
+                      text_font: font_xs
+                      text_color: "${clr_text_dim}"
+                      text: "Vind"
+                  - label:
+                      grid_cell_column_pos: 0
+                      grid_cell_row_pos: 4
+                      grid_cell_x_align: CENTER
+                      text_align: CENTER
+                      text_font: font_xs
+                      text_color: "${clr_text_dim}"
+                      text: "Nedbør"
+                  - label:
+                      id: lbl_fd0_day
+                      grid_cell_column_pos: 1
+                      grid_cell_row_pos: 0
+                      grid_cell_x_align: CENTER
+                      text_align: CENTER
+                      text_font: font_sm
+                      text_color: "${clr_text}"
+                      text: "--"
+                  - image:
+                      id: img_fd0_cond
+                      grid_cell_column_pos: 1
+                      grid_cell_row_pos: 1
+                      grid_cell_x_align: CENTER
+                      grid_cell_y_align: CENTER
+                      src: img_sm_clear_day
+                  - label:
+                      id: lbl_fd0_temp
+                      grid_cell_column_pos: 1
+                      grid_cell_row_pos: 2
+                      grid_cell_x_align: CENTER
+                      text_align: CENTER
+                      text_font: font_sm
+                      text_color: "${clr_text}"
+                      text: "--°/--°"
+                  - label:
+                      id: lbl_fd0_wind
+                      grid_cell_column_pos: 1
+                      grid_cell_row_pos: 3
+                      grid_cell_x_align: CENTER
+                      text_align: CENTER
+                      text_font: font_xs
+                      text_color: "${clr_text_dim}"
+                      text: "-- m/s --"
+                  - label:
+                      id: lbl_fd0_precip
+                      grid_cell_column_pos: 1
+                      grid_cell_row_pos: 4
+                      grid_cell_x_align: CENTER
+                      text_align: CENTER
+                      text_font: font_xs
+                      text_color: "${clr_temp_cold}"
+                      text: "-- mm"
+                  - label:
+                      id: lbl_fd1_day
+                      grid_cell_column_pos: 2
+                      grid_cell_row_pos: 0
+                      grid_cell_x_align: CENTER
+                      text_align: CENTER
+                      text_font: font_sm
+                      text_color: "${clr_text}"
+                      text: "--"
+                  - image:
+                      id: img_fd1_cond
+                      grid_cell_column_pos: 2
+                      grid_cell_row_pos: 1
+                      grid_cell_x_align: CENTER
+                      grid_cell_y_align: CENTER
+                      src: img_sm_clear_day
+                  - label:
+                      id: lbl_fd1_temp
+                      grid_cell_column_pos: 2
+                      grid_cell_row_pos: 2
+                      grid_cell_x_align: CENTER
+                      text_align: CENTER
+                      text_font: font_sm
+                      text_color: "${clr_text}"
+                      text: "--°/--°"
+                  - label:
+                      id: lbl_fd1_wind
+                      grid_cell_column_pos: 2
+                      grid_cell_row_pos: 3
+                      grid_cell_x_align: CENTER
+                      text_align: CENTER
+                      text_font: font_xs
+                      text_color: "${clr_text_dim}"
+                      text: "-- m/s --"
+                  - label:
+                      id: lbl_fd1_precip
+                      grid_cell_column_pos: 2
+                      grid_cell_row_pos: 4
+                      grid_cell_x_align: CENTER
+                      text_align: CENTER
+                      text_font: font_xs
+                      text_color: "${clr_temp_cold}"
+                      text: "-- mm"
+                  - label:
+                      id: lbl_fd2_day
+                      grid_cell_column_pos: 3
+                      grid_cell_row_pos: 0
+                      grid_cell_x_align: CENTER
+                      text_align: CENTER
+                      text_font: font_sm
+                      text_color: "${clr_text}"
+                      text: "--"
+                  - image:
+                      id: img_fd2_cond
+                      grid_cell_column_pos: 3
+                      grid_cell_row_pos: 1
+                      grid_cell_x_align: CENTER
+                      grid_cell_y_align: CENTER
+                      src: img_sm_clear_day
+                  - label:
+                      id: lbl_fd2_temp
+                      grid_cell_column_pos: 3
+                      grid_cell_row_pos: 2
+                      grid_cell_x_align: CENTER
+                      text_align: CENTER
+                      text_font: font_sm
+                      text_color: "${clr_text}"
+                      text: "--°/--°"
+                  - label:
+                      id: lbl_fd2_wind
+                      grid_cell_column_pos: 3
+                      grid_cell_row_pos: 3
+                      grid_cell_x_align: CENTER
+                      text_align: CENTER
+                      text_font: font_xs
+                      text_color: "${clr_text_dim}"
+                      text: "-- m/s --"
+                  - label:
+                      id: lbl_fd2_precip
+                      grid_cell_column_pos: 3
+                      grid_cell_row_pos: 4
+                      grid_cell_x_align: CENTER
+                      text_align: CENTER
+                      text_font: font_xs
+                      text_color: "${clr_temp_cold}"
+                      text: "-- mm"
+                  - label:
+                      id: lbl_fd3_day
+                      grid_cell_column_pos: 4
+                      grid_cell_row_pos: 0
+                      grid_cell_x_align: CENTER
+                      text_align: CENTER
+                      text_font: font_sm
+                      text_color: "${clr_text}"
+                      text: "--"
+                  - image:
+                      id: img_fd3_cond
+                      grid_cell_column_pos: 4
+                      grid_cell_row_pos: 1
+                      grid_cell_x_align: CENTER
+                      grid_cell_y_align: CENTER
+                      src: img_sm_clear_day
+                  - label:
+                      id: lbl_fd3_temp
+                      grid_cell_column_pos: 4
+                      grid_cell_row_pos: 2
+                      grid_cell_x_align: CENTER
+                      text_align: CENTER
+                      text_font: font_sm
+                      text_color: "${clr_text}"
+                      text: "--°/--°"
+                  - label:
+                      id: lbl_fd3_wind
+                      grid_cell_column_pos: 4
+                      grid_cell_row_pos: 3
+                      grid_cell_x_align: CENTER
+                      text_align: CENTER
+                      text_font: font_xs
+                      text_color: "${clr_text_dim}"
+                      text: "-- m/s --"
+                  - label:
+                      id: lbl_fd3_precip
+                      grid_cell_column_pos: 4
+                      grid_cell_row_pos: 4
+                      grid_cell_x_align: CENTER
+                      text_align: CENTER
+                      text_font: font_xs
+                      text_color: "${clr_temp_cold}"
+                      text: "-- mm"
+                  - label:
+                      id: lbl_fd4_day
+                      grid_cell_column_pos: 5
+                      grid_cell_row_pos: 0
+                      grid_cell_x_align: CENTER
+                      text_align: CENTER
+                      text_font: font_sm
+                      text_color: "${clr_text}"
+                      text: "--"
+                  - image:
+                      id: img_fd4_cond
+                      grid_cell_column_pos: 5
+                      grid_cell_row_pos: 1
+                      grid_cell_x_align: CENTER
+                      grid_cell_y_align: CENTER
+                      src: img_sm_clear_day
+                  - label:
+                      id: lbl_fd4_temp
+                      grid_cell_column_pos: 5
+                      grid_cell_row_pos: 2
+                      grid_cell_x_align: CENTER
+                      text_align: CENTER
+                      text_font: font_sm
+                      text_color: "${clr_text}"
+                      text: "--°/--°"
+                  - label:
+                      id: lbl_fd4_wind
+                      grid_cell_column_pos: 5
+                      grid_cell_row_pos: 3
+                      grid_cell_x_align: CENTER
+                      text_align: CENTER
+                      text_font: font_xs
+                      text_color: "${clr_text_dim}"
+                      text: "-- m/s --"
+                  - label:
+                      id: lbl_fd4_precip
+                      grid_cell_column_pos: 5
+                      grid_cell_row_pos: 4
+                      grid_cell_x_align: CENTER
+                      text_align: CENTER
+                      text_font: font_xs
+                      text_color: "${clr_temp_cold}"
+                      text: "-- mm"
 
             # Barometer Widget
             # - obj:

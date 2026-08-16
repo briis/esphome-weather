@@ -15,7 +15,22 @@
       "Bash(esphome config *)",
       "Bash(esphome compile *)",
       "Bash(git commit -m ' *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "WebSearch",
+      "WebFetch(domain:esphome.io)",
+      "Bash(grep -n \"Forecast popup\\\\|forecast_popup_overlay\\\\|forecast_popup:\\\\|id: forecast_popup$\\\\|forecast_hourly_grid\\\\|Barometer Widget\" /Users/bjarne/Development/esphome-weather/weather-common.yaml)",
+      "Bash(awk 'NR>=1512 && NR<=1530 {printf \"%d:[%s]\\\\n\", NR, $0}' /Users/bjarne/Development/esphome-weather/weather-common.yaml)",
+      "Bash(grep -n \"id: lightning_popup$\\\\|grid_cell_row_pos: 8$\" /Users/bjarne/Development/esphome-weather/weather-common.yaml)",
+      "Bash(awk 'NR==1310 || NR==1425 || NR==1426 || NR==1427 {printf \"%d:[%s]\\\\n\", NR, $0}' /Users/bjarne/Development/esphome-weather/weather-common.yaml)",
+      "Bash(awk 'NR>=1427 && NR<=1445 {printf \"%d:[%s]\\\\n\", NR, $0}' /Users/bjarne/Development/esphome-weather/weather-common.yaml)",
+      "Bash(awk 'NR>=1522 && NR<=1560 {printf \"%d:[%s]\\\\n\", NR, $0}' /Users/bjarne/Development/esphome-weather/weather-common.yaml)",
+      "Bash(awk 'NR>=1578 && NR<=1650 {printf \"%d:[%s]\\\\n\", NR, $0}' /Users/bjarne/Development/esphome-weather/weather-common.yaml)",
+      "Bash(timeout 590 esphome compile weatherdisplay-sdl.yaml)",
+      "Bash(sed 's|^packages:|packages: {}\\\\n_disabled_packages:|' weatherdisplay.yaml)",
+      "Bash(cp weather-common.yaml secrets.yaml /private/tmp/claude-501/-Users-bjarne-Development-esphome-weather/834b9b7d-4c5b-470a-8c26-4e43654f13cd/scratchpad/)",
+      "Bash(cp -r fonts images /private/tmp/claude-501/-Users-bjarne-Development-esphome-weather/834b9b7d-4c5b-470a-8c26-4e43654f13cd/scratchpad/)",
+      "Bash(mkdir -p /private/tmp/claude-501/-Users-bjarne-Development-esphome-weather/834b9b7d-4c5b-470a-8c26-4e43654f13cd/scratchpad)",
+      "Bash(python3 - /private/tmp/claude-501/-Users-bjarne-Development-esphome-weather/834b9b7d-4c5b-470a-8c26-4e43654f13cd/scratchpad)"
     ],
     "additionalDirectories": [
       "/Users/bjarne/Development/esphome-weather"
