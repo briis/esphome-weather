@@ -979,10 +979,10 @@ script:
 
 packages:
   remote_package_files:
-    url: https://git.digitalhomes.dk/briis/esphome-weather
+    url: https://github.com/briis/esphome-weather
     files:
       - weather-common.yaml
     ref: main
     username: briis
-    password: !secret forgejo_token
+    password: !secret esphome_weather_token
     refresh: 10s

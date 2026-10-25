@@ -7,16 +7,16 @@ Design: 3-column dark card grid on pure black background.
 
 ## Current phase
 
-**Phase 3 complete.** All cards populated with live HA sensors. Extended with humidity display, sunrise/sunset times, configurable night mode, and split file structure for Forgejo-driven deployment. Verified on Waveshare ESP32-S3-Touch-LCD-7.
+**Phase 3 complete.** All cards populated with live HA sensors. Extended with humidity display, sunrise/sunset times, configurable night mode, and split file structure for GitHub-driven deployment. Verified on Waveshare ESP32-S3-Touch-LCD-7.
 
 ## Files
 
 | File | Purpose |
 | --- | --- |
-| `weather-common.yaml` | Shared: fonts, images, LVGL layout, `lvgl_update_clock` script. Pulled from Forgejo by hardware; included locally by SDL. |
-| `weatherdisplay.yaml` | Hardware run file — thin wrapper. Declares `packages: remote_package_files:` pointing to Forgejo. Rarely needs editing. |
+| `weather-common.yaml` | Shared: fonts, images, LVGL layout, `lvgl_update_clock` script. Pulled from GitHub by hardware; included locally by SDL. |
+| `weatherdisplay.yaml` | Hardware run file — thin wrapper. Declares `packages: remote_package_files:` pointing to GitHub. Rarely needs editing. |
 | `weatherdisplay-sdl.yaml` | SDL run file — thin wrapper. Includes `weatherdisplay-config-sdl.yaml` and `weather-common.yaml` locally. |
-| `weatherdisplay-config-hw.yaml` | Full hardware config: ESP32-S3 board, PSRAM sdkconfig, WiFi, HA sensors, night mode, substitutions. Lives on Forgejo. |
+| `weatherdisplay-config-hw.yaml` | Full hardware config: ESP32-S3 board, PSRAM sdkconfig, WiFi, HA sensors, night mode, substitutions. Lives on GitHub. |
 | `weatherdisplay-config-sdl.yaml` | SDL simulator config: host platform, SDL display, mock data scripts. Local only. |
 | `fonts/materialdesignicons-webfont.ttf` | MDI icon font. |
 | `images/wind_bearing_indicator.png` | Current wind bearing needle (24×24). |
@@ -38,7 +38,7 @@ Flash to hardware (initial flash or after changing board-level config):
 esphome run weatherdisplay.yaml
 ```
 
-**Normal workflow for layout / sensor changes:** push `weather-common.yaml` and/or `weatherdisplay-config-hw.yaml` to Forgejo `main`. The device picks up changes on next OTA from the HA ESPHome add-on — no local flash needed.
+**Normal workflow for layout / sensor changes:** push `weather-common.yaml` and/or `weatherdisplay-config-hw.yaml` to GitHub `main`. The device picks up changes on next OTA from the HA ESPHome add-on — no local flash needed.
 
 ## Deployment — package strategy
 
@@ -47,19 +47,19 @@ esphome run weatherdisplay.yaml
 ```yaml
 packages:
   remote_package_files:
-    url: https://git.digitalhomes.dk/briis/esphome-weather
+    url: https://github.com/briis/esphome-weather
     files:
       - weatherdisplay-config-hw.yaml
       - weather-common.yaml
     ref: main
     username: briis
-    password: !secret forgejo_token
+    password: !secret esphome_weather_token
     refresh: 10s
 ```
 
-Both config files are pulled from Forgejo at compile time. Pushing a change to either file on `main` propagates to the device on the next OTA without touching the ESPHome add-on UI.
+Both config files are pulled from GitHub at compile time. Pushing a change to either file on `main` propagates to the device on the next OTA without touching the ESPHome add-on UI.
 
-`weatherdisplay-sdl.yaml` uses a local `!include` for both files — no Forgejo dependency.
+`weatherdisplay-sdl.yaml` uses a local `!include` for both files — no GitHub dependency.
 
 **Note on HA add-on cache:** The add-on can serve a stale copy even with `refresh: 10s`. If the device shows an older layout, compile and flash locally: `esphome run weatherdisplay.yaml --device /dev/cu.usbmodemXXXX`.
 
@@ -400,7 +400,7 @@ Board: Waveshare ESP32-S3-Touch-LCD-7 · 16 MB flash · 8 MB octal PSRAM
 - **ESPHome rejects negative `pivot_x`** — the YAML schema validator requires `pivot_x >= 0`. Use `0` as a placeholder and fix with `lv_obj_set_style_transform_pivot_x` in `on_boot`. Must also fix `x` offset and `pivot_y` — all three are linked (see Bearing indicator section above).
 - **`lv_image_set_pivot` is wrong for meter indicators** — use `lv_obj_set_style_transform_pivot_x/y` instead. The indicator object is an `lv_obj_t*`; `lv_image_set_pivot` targets the image zoom pivot, not the rotation transform pivot.
 - **HA sensor substitutions belong in the hardware target** — defined as placeholders in `weather-common.yaml` but overridden in `weatherdisplay-config-hw.yaml`. Main-file substitutions take precedence over package substitutions in ESPHome.
-- **`weatherdisplay-config-hw.yaml` must stay in sync** — the copy on Forgejo is what the device compiles from. If you edit locally and don't push, the next OTA will revert the change.
+- **`weatherdisplay-config-hw.yaml` must stay in sync** — the copy on GitHub is what the device compiles from. If you edit locally and don't push, the next OTA will revert the change.
 - **Time component id must be `system_time`** — `weather-common.yaml`'s `lvgl_update_clock` script references `id(system_time)`. Both SDL (host time) and hardware (HA time) must use this id.
 - **String HA entities must be `text_sensor:`** — entities like `sensor.next_sunrise` deliver a string, not a float. Declaring them under `sensor:` (numeric platform) causes a `LoadProhibited` crash at runtime when the `on_value` lambda applies `%s` formatting to a float pointer. Use `text_sensor:` + `lv_label_set_text(id(lbl_foo), x.c_str())`.
 - **NaN + `CONFIG_SPIRAM_RODATA` crash** — forecast sensors send NaN on first boot while the HA weather integration is initialising. With `CONFIG_SPIRAM_RODATA: "y"`, the ROM `_svfprintf_r` crashes when formatting NaN with `%.1f` (PSRAM cache access issue in ROM code). Fix: add `filters: - filter_out: nan` to every forecast sensor that uses `%.1f` in its `on_value` lambda.

@@ -28,9 +28,9 @@ Dark-themed 3-column card grid with the following widgets:
 
 | File | Purpose |
 | --- | --- |
-| `weather-common.yaml` | Shared layout, fonts, widgets — pulled from Forgejo by the hardware target |
-| `weatherdisplay.yaml` | Hardware run file — thin wrapper pointing to Forgejo packages |
-| `weatherdisplay-config-hw.yaml` | Full hardware config: board, sensors, night mode, substitutions — lives on Forgejo |
+| `weather-common.yaml` | Shared layout, fonts, widgets — pulled from GitHub by the hardware target |
+| `weatherdisplay.yaml` | Hardware run file — thin wrapper pointing to GitHub packages |
+| `weatherdisplay-config-hw.yaml` | Full hardware config: board, sensors, night mode, substitutions — lives on GitHub |
 | `weatherdisplay-sdl.yaml` | SDL run file — thin wrapper for local simulator |
 | `weatherdisplay-config-sdl.yaml` | SDL simulator config: mock data scripts, host platform |
 
@@ -52,7 +52,7 @@ esphome run weatherdisplay.yaml
 
 ## Deployment
 
-`weatherdisplay.yaml` is a thin wrapper that pulls `weatherdisplay-config-hw.yaml` and `weather-common.yaml` from the Forgejo repository at compile time. The normal workflow for config or layout changes is to **push to Forgejo `main`** — the device picks up the update on the next OTA triggered from the HA ESPHome add-on, without needing a local flash.
+`weatherdisplay.yaml` is a thin wrapper that pulls `weatherdisplay-config-hw.yaml` and `weather-common.yaml` from the GitHub repository at compile time. The normal workflow for config or layout changes is to **push to GitHub `main`** — the device picks up the update on the next OTA triggered from the HA ESPHome add-on, without needing a local flash.
 
 ## Home Assistant integration
 
