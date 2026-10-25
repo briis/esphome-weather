@@ -113,6 +113,7 @@ psram:
 wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_password
+  use_address: 192.168.50.71
   ap:
     ssid: "WeatherDisplay Fallback"
   on_connect:
@@ -128,11 +129,10 @@ wifi:
 
 api:
   encryption:
-    key: !secret ha_api_key
-
+    key: !secret encryptionkey_weatherdisplay
 ota:
   - platform: esphome
-    password: !secret ota_password
+    encryption: 
     on_begin:
       then:
         switch.turn_off: backlight
