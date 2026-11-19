@@ -250,7 +250,7 @@ script:
             id(fimg_partlycloudy), id(fimg_rainy), id(fimg_snowy),
             id(fimg_snowy_rainy), id(fimg_windy)
           };
-          for (auto* o : all) lv_obj_add_flag(o, LV_OBJ_FLAG_HIDDEN);
+          for (auto* o : all) lv_obj_set_hidden(o, true);
           lv_obj_t* show = id(fimg_clear_day);
           if      (cond == "clear-night")     show = id(fimg_clear_night);
           else if (cond == "cloudy")          show = id(fimg_cloudy);
@@ -262,7 +262,7 @@ script:
           else if (cond == "snowy")           show = id(fimg_snowy);
           else if (cond == "snowy-rainy")     show = id(fimg_snowy_rainy);
           else if (cond == "windy")           show = id(fimg_windy);
-          lv_obj_clear_flag(show, LV_OBJ_FLAG_HIDDEN);
+          lv_obj_set_hidden(show, false);
           lv_label_set_text(id(lbl_fcst_condition), labels[idx]);
           lv_label_set_text(id(lbl_fcst_description), descriptions[idx]);
 
@@ -345,7 +345,7 @@ script:
             lv_label_set_text(id(lbl_popup_lightning_latest), lv_label_get_text(id(lbl_lightning_latest)));
             lv_label_set_text(id(lbl_popup_lightning_count), lv_label_get_text(id(lbl_lightning_count)));
             lv_label_set_text(id(lbl_popup_lightning_distance), lv_label_get_text(id(lbl_lightning_distance)));
-            lv_obj_clear_flag(id(lightning_popup), LV_OBJ_FLAG_HIDDEN);
+            lv_obj_set_hidden(id(lightning_popup), false);
             id(lightning_popup_hide).execute();
           }
 
