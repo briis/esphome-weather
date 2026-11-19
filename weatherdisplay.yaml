@@ -9,7 +9,7 @@
 substitutions:
   name: "Weather Display"
   device: "weatherdisplay"
-  version: 1.0.7
+  version: 1.0.8
   created_by: "Bjarne Riis"
   display_rotation: "180"
 
@@ -97,11 +97,12 @@ esp32:
     type: esp-idf
     sdkconfig_options:
       CONFIG_ESP32S3_DATA_CACHE_LINE_SIZE: "64"
-      CONFIG_LCD_RGB_ISR_IRAM_SAFE: "y"
-      CONFIG_ESPTOOLPY_FLASHMODE_DIO: "y"
-      CONFIG_SPIRAM_FETCH_INSTRUCTIONS: "y"
-      CONFIG_SPIRAM_RODATA: "y"
-
+      CONFIG_LCD_RGB_ISR_IRAM_SAFE: y
+      CONFIG_ESPTOOLPY_FLASHMODE_DIO: y
+      CONFIG_SPIRAM_FETCH_INSTRUCTIONS: y
+      CONFIG_SPIRAM_RODATA: y
+    advanced:
+      flash_chip: generic
 psram:
   mode: octal
   speed: 80MHz
@@ -139,7 +140,7 @@ ota:
 captive_portal:
 
 logger:
-  level: ERROR
+  level: WARN
 
 # ---------------------------------------------------------------------------
 # Time — syncs from HA; on_time_sync gives immediate display update.
@@ -671,16 +672,17 @@ sensor:
   - platform: homeassistant
     id: sensor_lightning_distance
     entity_id: ${ha_lightning_distance}
-    filters:
-      - filter_out: nan
     on_value:
       then:
         - lambda: |-
+            if (std::isnan(x)) {
+              lv_label_set_text(id(lbl_lightning_distance), "--");
+              return;
+            }
             char buf[12];
             snprintf(buf, sizeof(buf), "%.1f km", x);
             for (char* p = buf; *p; p++) if (*p == '.') { *p = ','; break; }
             lv_label_set_text(id(lbl_lightning_distance), buf);
-
 
 text_sensor:
   # ---------------------------------------------------------------------------
