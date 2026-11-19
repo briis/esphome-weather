@@ -319,7 +319,7 @@ script:
     then:
       - delay: 12s
       - lambda: |-
-          lv_obj_add_flag(id(lightning_popup), LV_OBJ_FLAG_HIDDEN);
+          lv_obj_set_hidden(id(lightning_popup), true);
 
   # Forecast popup — opened by tapping the Forecast card. forecast_popup_fetch
   # is target-specific: weatherdisplay.yaml calls the real weather.get_forecasts
@@ -328,8 +328,8 @@ script:
   - id: forecast_popup_open
     then:
       - lambda: |-
-          lv_obj_clear_flag(id(forecast_popup_overlay), LV_OBJ_FLAG_HIDDEN);
-          lv_obj_clear_flag(id(forecast_popup), LV_OBJ_FLAG_HIDDEN);
+          lv_obj_set_hidden(id(forecast_popup_overlay), false);
+          lv_obj_set_hidden(id(forecast_popup), false);
       - script.execute: forecast_popup_fetch
       - script.execute: forecast_popup_auto_close
 
@@ -337,8 +337,8 @@ script:
     then:
       - script.stop: forecast_popup_auto_close
       - lambda: |-
-          lv_obj_add_flag(id(forecast_popup_overlay), LV_OBJ_FLAG_HIDDEN);
-          lv_obj_add_flag(id(forecast_popup), LV_OBJ_FLAG_HIDDEN);
+          lv_obj_set_hidden(id(forecast_popup_overlay), true);
+          lv_obj_set_hidden(id(forecast_popup), true);
 
   # Safety-net auto-close: mode restart means every fresh open (or re-tap of
   # the Forecast card while already open) restarts the 2-minute countdown.
@@ -348,7 +348,7 @@ script:
     then:
       - delay: 2min
       - lambda: |-
-          if (!lv_obj_has_flag(id(forecast_popup), LV_OBJ_FLAG_HIDDEN)) {
+          if (!lv_obj_is_hidden(id(forecast_popup))) {
             id(forecast_popup_close).execute();
           }
 
@@ -880,12 +880,12 @@ lvgl:
                 grid_cell_row_span: 2
                 on_click:
                   - lambda: |-
-                      if (lv_obj_has_flag(id(additional_lightning_grid), LV_OBJ_FLAG_HIDDEN)) {
-                        lv_obj_add_flag(id(additional_temp_grid), LV_OBJ_FLAG_HIDDEN);
-                        lv_obj_clear_flag(id(additional_lightning_grid), LV_OBJ_FLAG_HIDDEN);
+                      if (lv_obj_is_hidden(id(additional_lightning_grid))) {
+                        lv_obj_set_hidden(id(additional_temp_grid), true);
+                        lv_obj_set_hidden(id(additional_lightning_grid), false);
                       } else {
-                        lv_obj_clear_flag(id(additional_temp_grid), LV_OBJ_FLAG_HIDDEN);
-                        lv_obj_add_flag(id(additional_lightning_grid), LV_OBJ_FLAG_HIDDEN);
+                        lv_obj_set_hidden(id(additional_temp_grid), false);
+                        lv_obj_set_hidden(id(additional_lightning_grid), true);
                       }
                 widgets:
                   - obj:

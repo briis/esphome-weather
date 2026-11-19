@@ -98,7 +98,6 @@ esp32:
     sdkconfig_options:
       CONFIG_ESP32S3_DATA_CACHE_LINE_SIZE: "64"
       CONFIG_LCD_RGB_ISR_IRAM_SAFE: "y"
-      CONFIG_ESPTOOLPY_FLASH_MODE_AUTO_DETECT: ""
       CONFIG_ESPTOOLPY_FLASHMODE_DIO: "y"
       CONFIG_SPIRAM_FETCH_INSTRUCTIONS: "y"
       CONFIG_SPIRAM_RODATA: "y"
@@ -699,7 +698,7 @@ text_sensor:
               id(fimg_partlycloudy), id(fimg_rainy), id(fimg_snowy),
               id(fimg_snowy_rainy), id(fimg_windy)
             };
-            for (auto* o : all) lv_obj_add_flag(o, LV_OBJ_FLAG_HIDDEN);
+            for (auto* o : all) lv_obj_set_hidden(o, true);
             lv_obj_t* show = id(fimg_clear_day);
             if      (x == "clear-night")     show = id(fimg_clear_night);
             else if (x == "cloudy")          show = id(fimg_cloudy);
@@ -711,7 +710,7 @@ text_sensor:
             else if (x == "snowy")           show = id(fimg_snowy);
             else if (x == "snowy-rainy")     show = id(fimg_snowy_rainy);
             else if (x == "windy")           show = id(fimg_windy);
-            lv_obj_clear_flag(show, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_set_hidden(show, false);
 
   - platform: homeassistant
     id: ts_fcast_condition_txt
@@ -825,7 +824,7 @@ text_sensor:
             }
             lv_label_set_text(id(lbl_popup_lightning_distance), dbuf);
 
-            lv_obj_clear_flag(id(lightning_popup), LV_OBJ_FLAG_HIDDEN);
+            lv_obj_set_hidden(id(lightning_popup), false);
             id(lightning_popup_hide).execute();
 
 # ---------------------------------------------------------------------------
